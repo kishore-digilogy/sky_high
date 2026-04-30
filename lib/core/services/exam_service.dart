@@ -3,6 +3,7 @@ import 'package:sky_high/data/models/exam_category_model.dart';
 import 'package:sky_high/data/models/testimonial_model.dart';
 import 'package:sky_high/data/models/free_exam_model.dart';
 import 'package:sky_high/data/models/study_material_model.dart';
+import 'package:sky_high/data/models/mock_question_model.dart';
 
 class ExamService {
   final Dio _dio = Dio();
@@ -84,6 +85,75 @@ class ExamService {
       return [];
     } catch (e) {
       throw Exception('Failed to load study materials: $e');
+    }
+  }
+
+  Future<List<MockQuestionModel>> getMockQuestions({
+    required String setName,
+    String language = 'English',
+    int limit = 200,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '$baseUrl/mock-tests/questions-by-set',
+        queryParameters: {
+          'language': language,
+          'limit': limit,
+          'setName': setName,
+        },
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data
+            .map(
+              (json) =>
+                  MockQuestionModel.fromJson(json as Map<String, dynamic>),
+            )
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      throw Exception('Failed to load mock questions: $e');
+    }
+  }
+
+  Future<bool> submitMockTest({
+    required int userId,
+    required String category,
+    required String language,
+    required String setName,
+    required int score,
+    required int totalQuestions,
+    int? categoryId,
+    int? subcategoryId,
+    dynamic companyId,
+    String? subcategoryName,
+    String? companyName,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '$baseUrl/mock-tests/submit',
+        data: {
+          "user_id": userId,
+          "category": category,
+          "language": language,
+          "set_name": setName,
+          "score": score,
+          "total_questions": totalQuestions,
+          "category_id": categoryId,
+          "subcategory_id": subcategoryId,
+          "company_id": companyId is String && companyId == "free"
+              ? null
+              : companyId,
+          "subcategory_name": subcategoryName,
+          "company_name": companyName,
+        },
+      );
+    
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print('Error submitting test: $e');
+      return false;
     }
   }
 }

@@ -21,29 +21,36 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final Dio _dio = Dio();
   final StorageService _storage = GetIt.I<StorageService>();
-  
+
   List<StudyLayerModel> _layers = [];
+  List<StudyLayerModel> _apiLayers = [];
+  List<dynamic> _moduleContent = [];
   int _selectedModuleIndex = 0;
   bool _isLoading = true;
+  bool _isContentLoading = false;
   String? _error;
   bool _isPaidUser = false;
 
   @override
   void initState() {
+    // TODO: implement initState
     super.initState();
+    _layers = _getMockLayers();
     _checkSubscription();
-    _fetchLayers();
+    _fetchApiLayers();
   }
 
   void _checkSubscription() {
     final userData = _storage.getUserData();
     if (userData != null) {
       // Assuming 'subscription_status' or similar field
-      _isPaidUser = userData['subscription_status'] == 'paid' || userData['is_paid'] == true;
+      _isPaidUser =
+          userData['subscription_status'] == 'paid' ||
+          userData['is_paid'] == true;
     }
   }
 
-  Future<void> _fetchLayers() async {
+  Future<void> _fetchApiLayers() async {
     try {
       final queryParams = {'company_id': widget.company.id};
       if (widget.jobId != null) {
@@ -58,42 +65,133 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         setState(() {
-          _layers = data.map((json) => StudyLayerModel.fromJson(json)).toList();
-          if (_layers.isEmpty) {
-            _layers = _getMockLayers();
-          }
+          _apiLayers = data
+              .map((json) => StudyLayerModel.fromJson(json))
+              .toList();
           _isLoading = false;
         });
+
+        // If Syllabus is selected (index 1), trigger content load
+        if (_selectedModuleIndex == 1 && _apiLayers.isNotEmpty) {
+          _fetchModuleMaterials(_apiLayers[0].id);
+        }
+
         // Open drawer by default after loading
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _scaffoldKey.currentState?.openDrawer();
         });
-      } else {
-        setState(() {
-          _error = 'Failed to load journey';
-          _isLoading = false;
-        });
       }
     } catch (e) {
       setState(() {
-        _error = 'Something went wrong';
         _isLoading = false;
-        // Fallback to mock for testing
-        _layers = _getMockLayers();
       });
+    }
+  }
+
+  Future<void> _fetchModuleMaterials(int layerId) async {
+    setState(() {
+      _isContentLoading = true;
+      _moduleContent = [];
+    });
+
+    try {
+      final queryParams = {
+        'company_id': widget.company.id,
+        'layer_id': layerId,
+      };
+      if (widget.jobId != null) {
+        queryParams['job_id'] = widget.jobId!;
+      }
+
+      // Fetch both content (PDFs) and mcq-sets
+      final contentRes = await _dio.get(
+        'https://skyhighapi.digilogy.dev/api/admin/content',
+        queryParameters: queryParams,
+      );
+
+      final mcqRes = await _dio.get(
+        'https://skyhighapi.digilogy.dev/api/admin/mcq-sets',
+        queryParameters: queryParams,
+      );
+
+      List<dynamic> combinedContent = [];
+      if (contentRes.statusCode == 200) {
+        combinedContent.addAll(contentRes.data);
+      }
+      if (mcqRes.statusCode == 200) {
+        combinedContent.addAll(mcqRes.data);
+      }
+
+      setState(() {
+        _moduleContent = combinedContent;
+        _isContentLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isContentLoading = false;
+      });
+      print('Error fetching module materials: $e');
     }
   }
 
   List<StudyLayerModel> _getMockLayers() {
     return [
-      StudyLayerModel(id: 1, title: 'Basic Information', moduleNumber: 1, points: 50, description: 'Information about organisation'),
-      StudyLayerModel(id: 2, title: 'Syllabus', moduleNumber: 2, points: 75, description: 'Exam syllabus and topics'),
-      StudyLayerModel(id: 3, title: 'Preparation Plan', moduleNumber: 3, points: 100, description: 'How to prepare effectively'),
-      StudyLayerModel(id: 4, title: 'Chapter-wise / Topic-wise ...', moduleNumber: 4, points: 150, description: 'Detailed study materials'),
-      StudyLayerModel(id: 5, title: 'Chapter-wise / Topic-wise ...', moduleNumber: 5, points: 200, description: 'Deep dive topics'),
-      StudyLayerModel(id: 6, title: 'Chapter-wise / Topic-wise ...', moduleNumber: 6, points: 250, description: 'Advanced concepts'),
-      StudyLayerModel(id: 7, title: 'Chapter-wise / Topic-wise ...', moduleNumber: 7, points: 350, description: 'Revision materials'),
-      StudyLayerModel(id: 8, title: 'Online Test Series', moduleNumber: 8, points: 300, description: 'Practice exams'),
+      StudyLayerModel(
+        id: 1,
+        title: 'Basic Information',
+        moduleNumber: 1,
+        points: 50,
+        description: 'Information about organisation',
+      ),
+      StudyLayerModel(
+        id: 2,
+        title: 'Syllabus',
+        moduleNumber: 2,
+        points: 75,
+        description: 'Exam syllabus and topics',
+      ),
+      StudyLayerModel(
+        id: 3,
+        title: 'Preparation Plan',
+        moduleNumber: 3,
+        points: 100,
+        description: 'How to prepare effectively',
+      ),
+      StudyLayerModel(
+        id: 4,
+        title: 'Chapter-wise / Topic-wise ...',
+        moduleNumber: 4,
+        points: 150,
+        description: 'Detailed study materials',
+      ),
+      StudyLayerModel(
+        id: 5,
+        title: 'Chapter-wise / Topic-wise ...',
+        moduleNumber: 5,
+        points: 200,
+        description: 'Deep dive topics',
+      ),
+      StudyLayerModel(
+        id: 6,
+        title: 'Chapter-wise / Topic-wise ...',
+        moduleNumber: 6,
+        points: 250,
+        description: 'Advanced concepts',
+      ),
+      StudyLayerModel(
+        id: 7,
+        title: 'Chapter-wise / Topic-wise ...',
+        moduleNumber: 7,
+        points: 350,
+        description: 'Revision materials',
+      ),
+      StudyLayerModel(
+        id: 8,
+        title: 'Online Test Series',
+        moduleNumber: 8,
+        points: 300,
+        description: 'Practice exams',
+      ),
     ];
   }
 
@@ -106,7 +204,11 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF64748B), size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Color(0xFF64748B),
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -139,7 +241,11 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 color: Colors.blue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.menu_open_rounded, color: Colors.blue, size: 20),
+              child: const Icon(
+                Icons.menu_open_rounded,
+                color: Colors.blue,
+                size: 20,
+              ),
             ),
             onPressed: () => _scaffoldKey.currentState?.openDrawer(),
           ),
@@ -151,9 +257,9 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
         backgroundColor: Colors.white,
         child: SafeArea(child: _buildSidebar()),
       ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
-        : _buildMainContent(),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _buildMainContent(),
     );
   }
 
@@ -177,7 +283,11 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               ),
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close_rounded, color: Color(0xFF94A3B8), size: 20),
+                icon: const Icon(
+                  Icons.close_rounded,
+                  color: Color(0xFF94A3B8),
+                  size: 20,
+                ),
                 visualDensity: VisualDensity.compact,
               ),
             ],
@@ -200,7 +310,12 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     );
   }
 
-  Widget _buildModuleTile(StudyLayerModel layer, int index, bool isSelected, bool isLocked) {
+  Widget _buildModuleTile(
+    StudyLayerModel layer,
+    int index,
+    bool isSelected,
+    bool isLocked,
+  ) {
     final colors = [
       const Color(0xFF6366F1),
       const Color(0xFFEC4899),
@@ -214,10 +329,18 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     final color = colors[index % colors.length];
 
     return InkWell(
-      onTap: isLocked ? () => _showLockedDialog() : () {
-        setState(() => _selectedModuleIndex = index);
-        Navigator.pop(context); // Close drawer
-      },
+      onTap: isLocked
+          ? () => _showLockedDialog()
+          : () {
+              setState(() => _selectedModuleIndex = index);
+              // Only Syllabus (index 1) has dynamic content for now
+              if (index == 1 && _apiLayers.isNotEmpty) {
+                _fetchModuleMaterials(_apiLayers[0].id);
+              } else {
+                setState(() => _moduleContent = []);
+              }
+              Navigator.pop(context); // Close drawer
+            },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         padding: const EdgeInsets.all(12),
@@ -236,7 +359,9 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
-                isLocked ? Icons.lock_outline_rounded : _getModuleIcon(layer.moduleNumber),
+                isLocked
+                    ? Icons.lock_outline_rounded
+                    : _getModuleIcon(layer.moduleNumber),
                 color: isSelected ? Colors.white : color,
                 size: 20,
               ),
@@ -272,18 +397,29 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             else ...[
               if (layer.points > 0)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.yellow.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.star_rounded, size: 8, color: Colors.orange),
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 8,
+                        color: Colors.orange,
+                      ),
                       const SizedBox(width: 2),
                       Text(
                         '${layer.points}',
-                        style: GoogleFonts.outfit(fontSize: 9, color: Colors.orange, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.outfit(
+                          fontSize: 9,
+                          color: Colors.orange,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -291,14 +427,21 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               const SizedBox(width: 4),
               if (layer.isFree)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.orange.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     'FREE',
-                    style: GoogleFonts.outfit(fontSize: 9, color: Colors.orange, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.outfit(
+                      fontSize: 9,
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
             ],
@@ -310,18 +453,24 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
 
   IconData _getModuleIcon(int modNum) {
     switch (modNum) {
-      case 1: return Icons.info_outline_rounded;
-      case 2: return Icons.menu_book_rounded;
-      case 3: return Icons.track_changes_rounded;
-      case 4: return Icons.article_outlined;
-      case 8: return Icons.quiz_outlined;
-      default: return Icons.layers_outlined;
+      case 1:
+        return Icons.info_outline_rounded;
+      case 2:
+        return Icons.menu_book_rounded;
+      case 3:
+        return Icons.track_changes_rounded;
+      case 4:
+        return Icons.article_outlined;
+      case 8:
+        return Icons.quiz_outlined;
+      default:
+        return Icons.layers_outlined;
     }
   }
 
   Widget _buildMainContent() {
     final selectedLayer = _layers[_selectedModuleIndex];
-    
+
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -386,7 +535,11 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 const SizedBox(width: 6),
                 Text(
                   'MODULE ${layer.moduleNumber}',
-                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -402,11 +555,9 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            layer.description ?? 'Complete this module to progress in your learning journey.',
-            style: GoogleFonts.outfit(
-              fontSize: 16,
-              color: Colors.white70,
-            ),
+            layer.description ??
+                'Complete this module to progress in your learning journey.',
+            style: GoogleFonts.outfit(fontSize: 16, color: Colors.white70),
           ),
         ],
       ),
@@ -429,59 +580,63 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   color: const Color(0xFF1E293B),
                 ),
               ),
+              if (!_isContentLoading && _moduleContent.isNotEmpty)
+                Text(
+                  '${_moduleContent.length} items',
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
             ],
           ),
         ),
         const Divider(height: 1),
         Expanded(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Icon(Icons.assignment_outlined, size: 48, color: Colors.blue.withOpacity(0.3)),
+          child: _isContentLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _moduleContent.isEmpty
+              ? _buildEmptyContent()
+              : ListView.builder(
+                  padding: const EdgeInsets.all(20),
+                  itemCount: _moduleContent.length,
+                  itemBuilder: (context, index) {
+                    final item = _moduleContent[index];
+                    return _buildMaterialItem(item);
+                  },
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'Coming Soon!',
-                  style: GoogleFonts.outfit(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Premium materials are being prepared for this module.\nCheck back soon!',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(color: const Color(0xFF64748B), height: 1.5),
-                ),
-              ],
-            ),
-          ),
         ),
         Padding(
           padding: const EdgeInsets.all(24.0),
           child: TextButton(
-            onPressed: () {},
+            onPressed: () {
+              if (_selectedModuleIndex < _layers.length - 1) {
+                setState(() => _selectedModuleIndex++);
+                if (_selectedModuleIndex == 1 && _apiLayers.isNotEmpty) {
+                  _fetchModuleMaterials(_apiLayers[0].id);
+                } else {
+                  setState(() => _moduleContent = []);
+                }
+              }
+            },
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFF4F46E5),
               padding: const EdgeInsets.symmetric(vertical: 16),
               minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Color(0xFFE2E8F0))),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   'Complete & Next Module',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 const Icon(Icons.arrow_forward_rounded, size: 20),
@@ -490,6 +645,97 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildEmptyContent() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Icon(
+              Icons.assignment_outlined,
+              size: 48,
+              color: Colors.blue.withOpacity(0.3),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Coming Soon!',
+            style: GoogleFonts.outfit(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Premium materials are being prepared for this module.\nCheck back soon!',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              color: const Color(0xFF64748B),
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMaterialItem(dynamic item) {
+    final bool isPdf = item['fileType'] == 'pdf' || item['fileName'] != null;
+    final String title = item['title'] ?? item['setName'] ?? 'Untitled';
+    final String subtitle =
+        item['description'] ??
+        (isPdf ? 'Detailed study document' : 'Practice test series');
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+              ),
+              Icon(
+                isPdf ? Icons.picture_as_pdf : Icons.quiz,
+                color: isPdf ? Colors.red : Colors.blue,
+                size: 20,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: GoogleFonts.outfit(
+              fontSize: 13,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -507,11 +753,19 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             children: [
               Text(
                 'Overall Progress',
-                style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
+                ),
               ),
               Text(
                 '${(_selectedModuleIndex + 1) * 12}%',
-                style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue),
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                ),
               ),
             ],
           ),
@@ -539,7 +793,10 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           children: [
             const Icon(Icons.lock_rounded, color: Colors.orange),
             const SizedBox(width: 10),
-            Text('Premium Content', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+            Text(
+              'Premium Content',
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         content: Text(
@@ -549,7 +806,10 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Maybe Later', style: GoogleFonts.outfit(color: Colors.grey)),
+            child: Text(
+              'Maybe Later',
+              style: GoogleFonts.outfit(color: Colors.grey),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -558,9 +818,14 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: Text('Upgrade Now', style: GoogleFonts.outfit(color: Colors.white)),
+            child: Text(
+              'Upgrade Now',
+              style: GoogleFonts.outfit(color: Colors.white),
+            ),
           ),
         ],
       ),

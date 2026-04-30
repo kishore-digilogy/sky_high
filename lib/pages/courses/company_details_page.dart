@@ -19,8 +19,11 @@ class CompanyDetailsPage extends StatefulWidget {
 class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
   final Dio _dio = Dio();
   List<JobModel> _jobs = [];
+  List<JobModel> _filteredJobs = [];
   bool _isLoading = true;
   String? _error;
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -39,6 +42,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
         final List<dynamic> data = response.data;
         setState(() {
           _jobs = data.map((json) => JobModel.fromJson(json)).toList();
+          _filteredJobs = _jobs;
           _isLoading = false;
         });
       } else {
@@ -53,6 +57,24 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
         _isLoading = false;
       });
     }
+  }
+
+  void _filterJobs(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredJobs = _jobs;
+      } else {
+        _filteredJobs = _jobs
+            .where((job) => job.title.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -78,12 +100,12 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                     'Available Paths',
                     _jobs.length,
                   ).animate().fadeIn(delay: 200.ms),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   _isLoading
                       ? _buildLoadingState()
-                      : _jobs.isEmpty
-                      ? _buildEmptyState().animate().fadeIn()
-                      : _buildJobsList(),
+                      : _filteredJobs.isEmpty
+                          ? _buildEmptyState().animate().fadeIn()
+                          : _buildJobsList(),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -105,16 +127,55 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
           color: Colors.white,
           size: 20,
         ),
-        onPressed: () => Navigator.pop(context),
+        onPressed: () {
+          if (_isSearching) {
+            setState(() {
+              _isSearching = false;
+              _searchController.clear();
+              _filterJobs('');
+            });
+          } else {
+            Navigator.pop(context);
+          }
+        },
       ),
-      title: Text(
-        widget.company.name,
-        style: GoogleFonts.outfit(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
+      title: _isSearching
+          ? Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: _filterJobs,
+                autofocus: true,
+                style: GoogleFonts.outfit(color: Colors.white, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'Search jobs...',
+                  hintStyle: GoogleFonts.outfit(color: Colors.white60),
+                  prefixIcon: const Icon(Icons.search,
+                      color: Colors.white70, size: 18),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+              ),
+            )
+          : Text(
+              widget.company.name,
+              style: GoogleFonts.outfit(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+      actions: [
+        if (!_isSearching)
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.white),
+            onPressed: () => setState(() => _isSearching = true),
+          ),
+      ],
     );
   }
 
@@ -292,6 +353,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
     );
   }
 
+
   Widget _buildSectionHeader(String title, int count) {
     return Row(
       children: [
@@ -329,10 +391,10 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _jobs.length,
+      itemCount: _filteredJobs.length,
       padding: EdgeInsets.zero,
       itemBuilder: (context, index) {
-        final job = _jobs[index];
+        final job = _filteredJobs[index];
         return _buildJobCard(job, index);
       },
     );

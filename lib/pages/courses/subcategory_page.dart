@@ -5,10 +5,49 @@ import 'package:sky_high/data/models/exam_category_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sky_high/pages/courses/company_details_page.dart';
 
-class SubcategoryPage extends StatelessWidget {
+class SubcategoryPage extends StatefulWidget {
   final ExamCategoryModel category;
 
   const SubcategoryPage({super.key, required this.category});
+
+  @override
+  State<SubcategoryPage> createState() => _SubcategoryPageState();
+}
+
+class _SubcategoryPageState extends State<SubcategoryPage> {
+  late List<ExamSubcategoryModel> _filteredSubcategories;
+  late List<ExamItemModel> _filteredItems;
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredSubcategories = widget.category.subcategories;
+    _filteredItems = widget.category.items;
+  }
+
+  void _filterResults(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredSubcategories = widget.category.subcategories;
+        _filteredItems = widget.category.items;
+      } else {
+        _filteredSubcategories = widget.category.subcategories
+            .where((sub) => sub.name.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+        _filteredItems = widget.category.items
+            .where((item) => item.name.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,19 +62,58 @@ class SubcategoryPage extends StatelessWidget {
             color: Color(0xFF1E293B),
             size: 20,
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (_isSearching) {
+              setState(() {
+                _isSearching = false;
+                _searchController.clear();
+                _filterResults('');
+              });
+            } else {
+              Navigator.pop(context);
+            }
+          },
         ),
-        title: Text(
-          category.title,
-          style: GoogleFonts.outfit(
-            color: const Color(0xFF1E293B),
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-        centerTitle: true,
+        title: _isSearching
+            ? Container(
+                height: 45,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: _filterResults,
+                  autofocus: true,
+                  style: GoogleFonts.outfit(fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: 'Search companies...',
+                    hintStyle:
+                        GoogleFonts.outfit(color: const Color(0xFF94A3B8)),
+                    prefixIcon: const Icon(Icons.search,
+                        color: Color(0xFF94A3B8), size: 20),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              )
+            : Text(
+                widget.category.title,
+                style: GoogleFonts.outfit(
+                  color: const Color(0xFF1E293B),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+        actions: [
+          if (!_isSearching)
+            IconButton(
+              icon: const Icon(Icons.search, color: Color(0xFF1E293B)),
+              onPressed: () => setState(() => _isSearching = true),
+            ),
+        ],
       ),
-      body: (category.items.isEmpty && category.subcategories.isEmpty)
+      body: (_filteredSubcategories.isEmpty && _filteredItems.isEmpty)
           ? _buildEmptyState()
           : _buildItemsList(),
     );
@@ -75,15 +153,15 @@ class SubcategoryPage extends StatelessWidget {
   }
 
   Widget _buildItemsList() {
-    final totalCount = category.subcategories.length + category.items.length;
+    final totalCount = _filteredSubcategories.length + _filteredItems.length;
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       itemCount: totalCount,
       itemBuilder: (context, index) {
-        final isSubcategory = index < category.subcategories.length;
+        final isSubcategory = index < _filteredSubcategories.length;
 
         if (isSubcategory) {
-          final sub = category.subcategories[index];
+          final sub = _filteredSubcategories[index];
           return GestureDetector(
             onTap: () {
               final mappedCategory = ExamCategoryModel(
@@ -107,8 +185,8 @@ class SubcategoryPage extends StatelessWidget {
             child: _buildListTile(sub.name, sub.type, sub.fullLogoUrl, index),
           );
         } else {
-          final itemIndex = index - category.subcategories.length;
-          final item = category.items[itemIndex];
+          final itemIndex = index - _filteredSubcategories.length;
+          final item = _filteredItems[itemIndex];
           return GestureDetector(
             onTap: () {
               Navigator.push(
@@ -171,7 +249,7 @@ class SubcategoryPage extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Color(category.displayColorValue).withOpacity(0.1),
+                      color: Color(widget.category.displayColorValue).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -179,7 +257,7 @@ class SubcategoryPage extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: Color(category.displayColorValue),
+                        color: Color(widget.category.displayColorValue),
                       ),
                     ),
                   ),

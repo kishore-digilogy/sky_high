@@ -15,9 +15,12 @@ import 'package:sky_high/pages/courses/subcategory_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sky_high/widgets/category_icon.dart';
 import 'package:sky_high/pages/study_materials/pdf_viewer_page.dart';
+import 'package:sky_high/pages/exams/mock_test_page.dart';
 import 'package:sky_high/pages/subscription/payment_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:sky_high/pages/dashboard/notification_page.dart';
+import 'package:sky_high/core/services/notification_service.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -36,6 +39,8 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<List<TestimonialModel>>? _testimonialsFuture;
   Future<List<FreeExamModel>>? _freeExamsFuture;
   Future<List<StudyMaterialModel>>? _studyMaterialsFuture;
+  int _notificationCount = 0;
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
@@ -44,6 +49,16 @@ class _DashboardPageState extends State<DashboardPage> {
     _testimonialsFuture = ExamService().getTestimonials();
     _freeExamsFuture = ExamService().getFreeExams();
     _studyMaterialsFuture = ExamService().getStudyMaterials();
+    _loadNotificationCount();
+  }
+
+  Future<void> _loadNotificationCount() async {
+    final count = await _notificationService.getNotificationCount();
+    if (mounted) {
+      setState(() {
+        _notificationCount = count;
+      });
+    }
   }
 
   @override
@@ -971,42 +986,115 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ],
           ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.1),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                const Icon(
-                  Icons.notifications_outlined,
-                  color: Color(0xFF1E293B),
-                  size: 24,
-                ),
-                Positioned(
-                  right: 2,
-                  top: 2,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: secondaryColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 1.5),
+          Row(
+            children: [
+              if (GetIt.I<StorageService>().getToken() == null ||
+                  GetIt.I<StorageService>().getToken()!.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginPage(),
+                        ),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: primaryColor.withOpacity(0.5)),
+                      ),
+                    ),
+                    child: Text(
+                      'Login',
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
-              ],
-            ),
-          ).animate().fadeIn(duration: 600.ms).scale(),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NotificationPage(),
+                    ),
+                  ).then((_) => _loadNotificationCount());
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      const Icon(
+                        Icons.notifications_outlined,
+                        color: Color(0xFF1E293B),
+                        size: 24,
+                      ),
+                      if (_notificationCount > 0)
+                        Positioned(
+                          right: -2,
+                          top: -2,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: secondaryColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Text(
+                              '$_notificationCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        Positioned(
+                          right: 2,
+                          top: 2,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: secondaryColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ).animate().fadeIn(duration: 600.ms).scale(),
+            ],
+          ),
         ],
       ),
     );
@@ -1749,7 +1837,18 @@ class _DashboardPageState extends State<DashboardPage> {
                           // Start button
                           SizedBox(
                             width: double.infinity,
-                            child: _ShimmerButton(color: color),
+                            child: _ShimmerButton(
+                              color: color,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        MockTestPage(setName: exam.setName),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ],
                       ),
