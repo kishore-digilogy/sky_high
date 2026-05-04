@@ -61,12 +61,16 @@ class StudyMaterialModel {
 
   String get fullThumbnailUrl {
     if (thumbnailPath == null || thumbnailPath!.isEmpty) return '';
-    final cleanPath = thumbnailPath!.startsWith('/') ? thumbnailPath!.substring(1) : thumbnailPath!;
+    final cleanPath = thumbnailPath!.startsWith('/')
+        ? thumbnailPath!.substring(1)
+        : thumbnailPath!;
     return 'https://digilogy-skyhigh.s3.eu-north-1.amazonaws.com/$cleanPath';
   }
 
   String get fullFileUrl {
-    final cleanPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+    final cleanPath = filePath.startsWith('/')
+        ? filePath.substring(1)
+        : filePath;
     return 'https://digilogy-skyhigh.s3.eu-north-1.amazonaws.com/$cleanPath';
   }
 }

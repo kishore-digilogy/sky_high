@@ -11,9 +11,22 @@ import 'package:shimmer/shimmer.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class MockTestPage extends StatefulWidget {
-  final String setName;
+  final String? setName;
+  final String? companyName;
+  final int? companyId;
+  final int? chapterId;
+  final int? topicId;
+  final String? questionType;
 
-  const MockTestPage({super.key, required this.setName});
+  const MockTestPage({
+    super.key,
+    this.setName,
+    this.companyName,
+    this.companyId,
+    this.chapterId,
+    this.topicId,
+    this.questionType,
+  });
 
   @override
   State<MockTestPage> createState() => _MockTestPageState();
@@ -61,9 +74,27 @@ class _MockTestPageState extends State<MockTestPage> {
 
   Future<void> _loadQuestions() async {
     try {
-      final questions = await _examService.getMockQuestions(
-        setName: widget.setName,
-      );
+      List<MockQuestionModel> questions;
+      if (widget.questionType != null && widget.companyId != null) {
+        questions = await _examService.getMcqQuestions(
+          companyId: widget.companyId!,
+          questionType: widget.questionType!,
+          chapterId: widget.chapterId,
+          topicId: widget.topicId,
+          setName: widget.setName,
+        );
+      } else if (widget.companyName != null && widget.companyId != null) {
+        questions = await _examService.getMockQuestionsByCompany(
+          companyName: widget.companyName!,
+          companyId: widget.companyId!,
+          setName: widget.setName,
+        );
+      } else {
+        questions = await _examService.getMockQuestions(
+          setName: widget.setName ?? '',
+        );
+      }
+
       setState(() {
         _questions = questions;
         _isLoading = false;
@@ -216,7 +247,7 @@ class _MockTestPageState extends State<MockTestPage> {
         userId: userId,
         category: firstQ.category ?? "free",
         language: firstQ.language ?? "English",
-        setName: widget.setName,
+        setName: widget.setName ?? "",
         score: score,
         totalQuestions: _questions.length,
         categoryId: firstQ.categoryId,
@@ -349,6 +380,82 @@ class _MockTestPageState extends State<MockTestPage> {
       return Scaffold(
         backgroundColor: Colors.white,
         body: _buildSkeleton(isMobile),
+      );
+    }
+    if (_questions.isEmpty && !_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF0F172A),
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text(
+            'Back to Learning',
+            style: GoogleFonts.outfit(color: Colors.white, fontSize: 16),
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF1F5F9),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.assignment_late_rounded,
+                  size: 64,
+                  color: Color(0xFF94A3B8),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'No Questions Found',
+                style: GoogleFonts.outfit(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: Text(
+                  'We couldn\'t find any questions for this test set at the moment. Please check back later.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    fontSize: 15,
+                    color: const Color(0xFF64748B),
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                label: const Text('GO BACK'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0F172A),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -497,12 +604,15 @@ class _MockTestPageState extends State<MockTestPage> {
                     color: Colors.white.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.assignment_rounded,
-                      color: Colors.white, size: 40),
+                  child: const Icon(
+                    Icons.assignment_rounded,
+                    color: Colors.white,
+                    size: 40,
+                  ),
                 ).animate().scale(duration: 400.ms),
                 const SizedBox(height: 20),
                 Text(
-                  widget.setName,
+                  widget.setName ?? "Untitled",
                   textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
                     fontSize: 26,
@@ -529,11 +639,19 @@ class _MockTestPageState extends State<MockTestPage> {
                     children: [
                       Row(
                         children: [
-                          _buildStatCard(Icons.help_outline, 'Questions',
-                              '$totalQuestions', const Color(0xFF3B82F6)),
+                          _buildStatCard(
+                            Icons.help_outline,
+                            'Questions',
+                            '$totalQuestions',
+                            const Color(0xFF3B82F6),
+                          ),
                           const SizedBox(width: 12),
-                          _buildStatCard(Icons.timer_outlined, 'Minutes',
-                              '$totalMinutes', const Color(0xFF22C55E)),
+                          _buildStatCard(
+                            Icons.timer_outlined,
+                            'Minutes',
+                            '$totalMinutes',
+                            const Color(0xFF22C55E),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 30),
@@ -551,14 +669,22 @@ class _MockTestPageState extends State<MockTestPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      _buildRuleItem(Icons.check_circle_outline,
-                          'Each question carries 1 mark.'),
-                      _buildRuleItem(Icons.info_outline,
-                          'Total duration is $totalMinutes minutes.'),
-                      _buildRuleItem(Icons.lock_clock_outlined,
-                          'The test will auto-submit when time is up.'),
-                      _buildRuleItem(Icons.language,
-                          'Questions are available in English.'),
+                      _buildRuleItem(
+                        Icons.check_circle_outline,
+                        'Each question carries 1 mark.',
+                      ),
+                      _buildRuleItem(
+                        Icons.info_outline,
+                        'Total duration is $totalMinutes minutes.',
+                      ),
+                      _buildRuleItem(
+                        Icons.lock_clock_outlined,
+                        'The test will auto-submit when time is up.',
+                      ),
+                      _buildRuleItem(
+                        Icons.language,
+                        'Questions are available in English.',
+                      ),
                       const SizedBox(height: 40),
                       SizedBox(
                         width: double.infinity,
@@ -577,8 +703,9 @@ class _MockTestPageState extends State<MockTestPage> {
                               borderRadius: BorderRadius.circular(15),
                             ),
                             elevation: 8,
-                            shadowColor:
-                                const Color(0xFF3B82F6).withOpacity(0.4),
+                            shadowColor: const Color(
+                              0xFF3B82F6,
+                            ).withOpacity(0.4),
                           ),
                           child: Text(
                             'START TEST NOW',
@@ -601,7 +728,12 @@ class _MockTestPageState extends State<MockTestPage> {
     );
   }
 
-  Widget _buildStatCard(IconData icon, String label, String value, Color color) {
+  Widget _buildStatCard(
+    IconData icon,
+    String label,
+    String value,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -732,7 +864,7 @@ class _MockTestPageState extends State<MockTestPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            widget.setName,
+            widget.setName ?? "Untitled",
             style: GoogleFonts.outfit(
               fontSize: isMobile ? 14 : 16,
               fontWeight: FontWeight.bold,
@@ -860,10 +992,7 @@ class _MockTestPageState extends State<MockTestPage> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                ),
+                BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10),
               ],
             ),
             child: Text(
@@ -917,7 +1046,11 @@ class _MockTestPageState extends State<MockTestPage> {
                     color: Colors.white,
                   ),
                 ),
-                const Icon(Icons.arrow_drop_down, size: 16, color: Colors.white),
+                const Icon(
+                  Icons.arrow_drop_down,
+                  size: 16,
+                  color: Colors.white,
+                ),
               ],
             ),
           ),
@@ -1870,16 +2003,12 @@ class MockTestResultPage extends StatelessWidget {
           ? SvgPicture.asset(
               assetPath,
               fit: BoxFit.contain,
-              placeholderBuilder: (context) => const Center(
-                child: CircularProgressIndicator(),
-              ),
+              placeholderBuilder: (context) =>
+                  const Center(child: CircularProgressIndicator()),
             )
           : ClipRRect(
               borderRadius: BorderRadius.circular(20),
-              child: Image.asset(
-                assetPath,
-                fit: BoxFit.contain,
-              ),
+              child: Image.asset(assetPath, fit: BoxFit.contain),
             ),
     ).animate().scale(duration: 600.ms, curve: Curves.elasticOut);
   }
@@ -2026,7 +2155,8 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
                 backgroundColor: const Color(0xFF3B82F6),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: const Text('Restart Test'),
             ),
@@ -2052,8 +2182,11 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.search_off_rounded,
-                      size: 64, color: Color(0xFFE2E8F0)),
+                  const Icon(
+                    Icons.search_off_rounded,
+                    size: 64,
+                    color: Color(0xFFE2E8F0),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No matching questions found',
@@ -2078,9 +2211,10 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                        color: isCorrect
-                            ? const Color(0xFF22C55E).withOpacity(0.1)
-                            : const Color(0xFFEF4444).withOpacity(0.1)),
+                      color: isCorrect
+                          ? const Color(0xFF22C55E).withOpacity(0.1)
+                          : const Color(0xFFEF4444).withOpacity(0.1),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.03),
@@ -2096,7 +2230,9 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: isCorrect
                                   ? const Color(0xFF22C55E).withOpacity(0.1)
@@ -2158,7 +2294,8 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
                             child: CachedNetworkImage(
                               imageUrl: question.fullQuestionImage,
                               placeholder: (context, url) => const Center(
-                                  child: CircularProgressIndicator()),
+                                child: CircularProgressIndicator(),
+                              ),
                               errorWidget: (context, url, error) =>
                                   const Icon(Icons.error),
                             ),
@@ -2182,8 +2319,8 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
                             : "Not Answered",
                         userAnswer != null
                             ? (isCorrect
-                                ? const Color(0xFF22C55E)
-                                : const Color(0xFFEF4444))
+                                  ? const Color(0xFF22C55E)
+                                  : const Color(0xFFEF4444))
                             : const Color(0xFF94A3B8),
                       ),
                       if (!isCorrect) ...[
@@ -2204,15 +2341,19 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
                             color: const Color(0xFF3B82F6).withOpacity(0.05),
                             borderRadius: BorderRadius.circular(15),
                             border: Border.all(
-                                color: const Color(0xFF3B82F6).withOpacity(0.1)),
+                              color: const Color(0xFF3B82F6).withOpacity(0.1),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.lightbulb_outline,
-                                      size: 16, color: Color(0xFF3B82F6)),
+                                  const Icon(
+                                    Icons.lightbulb_outline,
+                                    size: 16,
+                                    color: Color(0xFF3B82F6),
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     'EXPLANATION',

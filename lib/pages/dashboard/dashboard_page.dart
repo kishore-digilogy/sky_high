@@ -21,6 +21,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sky_high/pages/dashboard/notification_page.dart';
 import 'package:sky_high/core/services/notification_service.dart';
+import 'package:sky_high/pages/study_materials/all_study_materials_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -99,11 +100,16 @@ class _DashboardPageState extends State<DashboardPage> {
             _buildCoursesSection(),
             const SizedBox(height: 30),
             _buildFreeExamsSection(),
-            const SizedBox(height: 30),
+            const SizedBox(height: 0),
             _buildStudyMaterialsSection(),
             const SizedBox(height: 30),
+            // _buildTestimonialsSection(),
+            _buildWhatsAppSection(),
+            const SizedBox(height: 40),
+            // _buildWhatsAppSection(),
             _buildTestimonialsSection(),
-            const SizedBox(height: 100), // Padding for Bottom Nav
+            const SizedBox(height: 00),
+            _buildAboutUsSection(),
           ],
         ),
       ),
@@ -1292,45 +1298,9 @@ class _DashboardPageState extends State<DashboardPage> {
           return _buildCourseSkeleton();
         }
 
-        if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text(
-                'Failed to load courses',
-                style: GoogleFonts.outfit(color: Colors.red),
-              ),
-            ),
-          );
-        }
-
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(40.0),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.inbox_outlined,
-                    size: 48,
-                    color: Colors.blueGrey[300],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'No courses available',
-                    style: GoogleFonts.outfit(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1E293B),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ).animate().fadeIn();
-        }
-
-        final categories = snapshot.data!;
+        final categories = snapshot.hasData
+            ? snapshot.data!
+            : <ExamCategoryModel>[];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1348,41 +1318,8 @@ class _DashboardPageState extends State<DashboardPage> {
                       color: const Color(0xFF1E293B),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              AllCategoriesPage(categories: categories),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      'See All',
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF94A3B8),
-                      ),
-                    ),
-                  ),
-                ],
-              ).animate().fadeIn(delay: 300.ms),
-            ),
-            const SizedBox(height: 15),
-            SizedBox(
-              height: 200,
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length > 5
-                    ? 6
-                    : categories
-                          .length, // Show up to 5 initially + 1 See More button
-                itemBuilder: (context, index) {
-                  if (index == 5) {
-                    return GestureDetector(
+                  if (categories.isNotEmpty)
+                    GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
@@ -1392,164 +1329,153 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                         );
                       },
-                      child: Container(
-                        width: 160,
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 5,
+                      child: Text(
+                        'See All',
+                        style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: primaryColor,
                         ),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.arrow_forward_rounded,
-                                color: Color(0xFFF9A826),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'See More',
-                              style: GoogleFonts.outfit(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF1E293B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ).animate().fadeIn(delay: 650.ms).slideX(begin: 0.1),
-                    );
-                  }
-
-                  final category = categories[index];
-                  final colorValue = category.displayColorValue;
-                  final color = Color(colorValue);
-
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              SubcategoryPage(category: category),
-                        ),
-                      );
-                    },
-                    child:
-                        Container(
-                              width: 160,
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 5,
-                              ),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.03),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: Stack(
-                                children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      CategoryIcon(
-                                        categoryName: category.title,
-                                        fallbackEmoji: category.displayIcon,
-                                        backgroundColor: color.withOpacity(0.1),
-                                      ),
-                                      const Spacer(),
-                                      Text(
-                                        category.title,
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
-                                          color: const Color(0xFF1E293B),
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      if (category.subtitle != null &&
-                                          category.subtitle!.isNotEmpty)
-                                        Text(
-                                          category.subtitle!,
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 12,
-                                            color: const Color(0xFF94A3B8),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                    ],
-                                  ),
-                                  // Positioned(
-                                  //   top: 0,
-                                  //   right: 0,
-                                  //   child: Container(
-                                  //     padding: const EdgeInsets.symmetric(
-                                  //       horizontal: 8,
-                                  //       vertical: 4,
-                                  //     ),
-                                  //     decoration: BoxDecoration(
-                                  //       color: color.withOpacity(0.1),
-                                  //       borderRadius: BorderRadius.circular(12),
-                                  //     ),
-                                  //     child: Row(
-                                  //       mainAxisSize: MainAxisSize.min,
-                                  //       children: [
-                                  //         Icon(
-                                  //           Icons.chat_bubble_outline_rounded,
-                                  //           size: 10,
-                                  //           color: color,
-                                  //         ),
-                                  //         const SizedBox(width: 4),
-                                  //         Text(
-                                  //           '${category.totalCount}',
-                                  //           style: GoogleFonts.outfit(
-                                  //             fontSize: 10,
-                                  //             fontWeight: FontWeight.bold,
-                                  //             color: color,
-                                  //           ),
-                                  //         ),
-                                  //       ],
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                ],
-                              ),
-                            )
-                            .animate()
-                            .fadeIn(delay: (400 + (50 * index)).ms)
-                            .slideX(begin: 0.1),
-                  );
-                },
+                      ),
+                    ),
+                ],
               ),
-            ),
+            ).animate().fadeIn(delay: 300.ms),
+            const SizedBox(height: 15),
+            if (snapshot.hasError || categories.isEmpty)
+              _buildEmptyState(
+                'No courses available right now',
+                'assets/Icons/courses_icon.svg',
+              )
+            else
+              SizedBox(
+                height: 200,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: categories.length > 5 ? 6 : categories.length,
+                  itemBuilder: (context, index) {
+                    if (index == 5) {
+                      return _buildSeeMoreCard(categories);
+                    }
+                    return _buildCategoryCard(categories[index], index);
+                  },
+                ),
+              ),
           ],
         );
       },
     );
+  }
+
+  Widget _buildSeeMoreCard(List<ExamCategoryModel> categories) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AllCategoriesPage(categories: categories),
+          ),
+        );
+      },
+      child: Container(
+        width: 160,
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.arrow_forward_rounded, color: primaryColor),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'See More',
+              style: GoogleFonts.outfit(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF1E293B),
+              ),
+            ),
+          ],
+        ),
+      ).animate().fadeIn(delay: 650.ms).slideX(begin: 0.1),
+    );
+  }
+
+  Widget _buildCategoryCard(ExamCategoryModel category, int index) {
+    final colorValue = category.displayColorValue;
+    final color = Color(colorValue);
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SubcategoryPage(category: category),
+          ),
+        );
+      },
+      child: Container(
+        width: 160,
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CategoryIcon(
+              categoryName: category.title,
+              fallbackEmoji: category.displayIcon,
+              backgroundColor: color.withOpacity(0.1),
+            ),
+            const Spacer(),
+            Text(
+              category.title,
+              style: GoogleFonts.outfit(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF1E293B),
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            if (category.subtitle != null && category.subtitle!.isNotEmpty)
+              Text(
+                category.subtitle!,
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  color: const Color(0xFF94A3B8),
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(delay: (400 + (50 * index)).ms).slideX(begin: 0.1);
   }
 
   // ─── Free Exams Section ─────────────────────────────────────────
@@ -1570,11 +1496,7 @@ class _DashboardPageState extends State<DashboardPage> {
           return _buildFreeExamSkeleton();
         }
 
-        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-          return const SizedBox.shrink();
-        }
-
-        final exams = snapshot.data!;
+        final exams = snapshot.hasData ? snapshot.data! : <FreeExamModel>[];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1583,19 +1505,7 @@ class _DashboardPageState extends State<DashboardPage> {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
                 children: [
-                  // Container(
-                  //   padding: const EdgeInsets.all(8),
-                  //   decoration: BoxDecoration(
-                  //     color: const Color(0xFFEDE9FE),
-                  //     borderRadius: BorderRadius.circular(10),
-                  //   ),
-                  //   child: const Icon(
-                  //     Icons.quiz_rounded,
-                  //     color: Color(0xFF6366F1),
-                  //     size: 20,
-                  //   ),
-                  // ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 0),
                   Text(
                     'Free Mock Tests',
                     style: GoogleFonts.outfit(
@@ -1627,17 +1537,23 @@ class _DashboardPageState extends State<DashboardPage> {
               ).animate().fadeIn(delay: 400.ms),
             ),
             const SizedBox(height: 15),
-            SizedBox(
-              height: 230,
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                scrollDirection: Axis.horizontal,
-                itemCount: exams.length,
-                itemBuilder: (context, index) {
-                  return _buildFreeExamCard(exams[index], index);
-                },
+            if (snapshot.hasError || exams.isEmpty)
+              _buildEmptyState(
+                'No mock tests available',
+                'assets/Icons/exam_icon.svg',
+              )
+            else
+              SizedBox(
+                height: 230,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: exams.length,
+                  itemBuilder: (context, index) {
+                    return _buildFreeExamCard(exams[index], index);
+                  },
+                ),
               ),
-            ),
           ],
         );
       },
@@ -1874,18 +1790,12 @@ class _DashboardPageState extends State<DashboardPage> {
           return _buildMaterialSkeleton();
         }
 
-        if (snapshot.hasError || !snapshot.hasData) {
-          return const SizedBox.shrink();
-        }
-
-        final allMaterials = snapshot.data!;
+        final allMaterials = snapshot.hasData
+            ? snapshot.data!
+            : <StudyMaterialModel>[];
         final materials = allMaterials
             .where((m) => m.visibility.toLowerCase() == 'free')
             .toList();
-
-        if (materials.isEmpty) {
-          return const SizedBox.shrink();
-        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1903,29 +1813,45 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
                   const Spacer(),
-                  Text(
-                    'New Resources',
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF94A3B8),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AllStudyMaterialsPage(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'See All',
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: primaryColor,
+                      ),
                     ),
                   ),
                 ],
               ).animate().fadeIn(delay: 450.ms),
             ),
             const SizedBox(height: 15),
-            SizedBox(
-              height: 240,
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                scrollDirection: Axis.horizontal,
-                itemCount: materials.length,
-                itemBuilder: (context, index) {
-                  return _buildMaterialCard(materials[index], index);
-                },
+            if (snapshot.hasError || materials.isEmpty)
+              _buildEmptyState(
+                'No free materials available',
+                'assets/Icons/study_icon.svg',
+              )
+            else
+              SizedBox(
+                height: 100,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: materials.length,
+                  itemBuilder: (context, index) {
+                    return _buildMaterialCard(materials[index], index);
+                  },
+                ),
               ),
-            ),
           ],
         );
       },
@@ -1948,8 +1874,9 @@ class _DashboardPageState extends State<DashboardPage> {
         }
       },
       child: Container(
-        width: 180,
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        width: 280,
+        margin: const EdgeInsets.only(right: 16, bottom: 10, top: 5),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
@@ -1960,122 +1887,119 @@ class _DashboardPageState extends State<DashboardPage> {
               offset: const Offset(0, 5),
             ),
           ],
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: const Color(0xFFF1F5F9)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            // Thumbnail or Placeholder
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
-              ),
-              child: Container(
-                height: 100,
-                width: double.infinity,
+            // Left Side: Icon Chip
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Center(
                 child:
                     material.thumbnailPath != null &&
                         material.thumbnailPath!.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: material.fullThumbnailUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(color),
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: CachedNetworkImage(
+                          imageUrl: material.fullThumbnailUrl,
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Center(
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  color,
+                                ),
+                              ),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: SvgPicture.asset(
+                              'assets/Images/pdf_icon.svg',
+                              // width: 28,
+                              // height: 28,
+                            ),
                           ),
                         ),
-                        errorWidget: (context, url, error) => Icon(
-                          material.isVideo
-                              ? Icons.play_circle_outline
-                              : Icons.picture_as_pdf_outlined,
-                          color: color,
-                          size: 30,
-                        ),
                       )
-                    : Icon(
-                        material.isVideo
-                            ? Icons.play_circle_outline
-                            : Icons.picture_as_pdf_outlined,
-                        color: color,
-                        size: 30,
+                    : SvgPicture.asset(
+                        'assets/Images/pdf_icon.svg',
+                        width: 28,
+                        height: 28,
                       ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(12),
+            const SizedBox(width: 16),
+            // Middle: Text Content
+            Expanded(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      material.displayCategory.toUpperCase(),
-                      style: GoogleFonts.outfit(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        color: color,
-                        letterSpacing: 0.5,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  Text(
+                    material.displayCategory.toUpperCase(),
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Text(
                     material.title,
                     style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
                       color: const Color(0xFF1E293B),
-                      height: 1.2,
                     ),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
                       Icon(
                         material.isVideo
                             ? Icons.videocam_outlined
                             : Icons.description_outlined,
-                        size: 14,
+                        size: 12,
                         color: const Color(0xFF94A3B8),
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        material.fileType.toUpperCase(),
+                        material.isVideo ? 'Video' : 'PDF Document',
                         style: GoogleFonts.outfit(
                           fontSize: 11,
-                          color: const Color(0xFF64748B),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 12,
-                          color: Color(0xFF1E293B),
+                          color: const Color(0xFF94A3B8),
                         ),
                       ),
                     ],
                   ),
                 ],
+              ),
+            ),
+            // Right Side: Arrow Icon
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 12,
+                color: Color(0xFF94A3B8),
               ),
             ),
           ],
@@ -2181,133 +2105,71 @@ class _DashboardPageState extends State<DashboardPage> {
         }
 
         if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF3E0),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.format_quote_rounded,
-                        color: Color(0xFFF9A826),
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'What Students Say',
-                      style: GoogleFonts.outfit(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1E293B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 24),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 40,
-                  horizontal: 24,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 15,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF3E0).withOpacity(0.5),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.chat_bubble_outline_rounded,
-                        color: Color(0xFFF9A826),
-                        size: 36,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No Feedback Yet',
-                      style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Be the first to share your experience\nand help fellow students!',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        color: const Color(0xFF94A3B8),
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1),
-            ],
+          return _buildEmptyState(
+            'No student feedback yet',
+            Icons.rate_review_outlined,
           );
         }
 
         final testimonials = snapshot.data!;
-
+        
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
+            const SizedBox(height: 40),
+            // Centered Header
+            Center(
+              child: Column(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF3E0),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.format_quote_rounded,
-                      color: Color(0xFFF9A826),
-                      size: 20,
-                    ),
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Positioned(
+                        bottom: 0,
+                        child: Container(
+                          height: 10,
+                          width: 120,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFD54F).withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        'What Our Students Say',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.outfit(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF1E293B),
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'What Students Say',
-                    style: GoogleFonts.outfit(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF1E293B),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Text(
+                      'Our Students send us bunch of smilies with our services and we love them',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        color: const Color(0xFF64748B),
+                        height: 1.5,
+                      ),
                     ),
                   ),
                 ],
-              ).animate().fadeIn(delay: 500.ms),
+              ),
             ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 40),
+            // Horizontal Scrollable Cards
             SizedBox(
-              height: 210,
+              height: 420,
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
                 itemCount: testimonials.length,
                 itemBuilder: (context, index) {
                   return _buildTestimonialCard(testimonials[index], index);
@@ -2324,161 +2186,179 @@ class _DashboardPageState extends State<DashboardPage> {
     final gradientColors = _avatarGradients[index % _avatarGradients.length];
 
     return Container(
-      width: 300,
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: avatar + name + stars
-          Row(
-            children: [
-              // Gradient avatar with initials
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: gradientColors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: gradientColors[0].withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    testimonial.initials,
-                    style: GoogleFonts.outfit(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      testimonial.userName,
-                      style: GoogleFonts.outfit(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      testimonial.timeAgo,
-                      style: GoogleFonts.outfit(
-                        fontSize: 11,
-                        color: const Color(0xFF94A3B8),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Star rating badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF8E1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.star_rounded,
-                      color: Color(0xFFF59E0B),
-                      size: 14,
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      '${testimonial.stars}',
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFFF59E0B),
-                      ),
-                    ),
-                  ],
-                ),
+          width: 320,
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          // Content with quote styling
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Decorative quotation marks
+              Positioned(
+                top: 140,
+                left: 20,
+                child: Icon(
                   Icons.format_quote_rounded,
-                  size: 18,
-                  color: gradientColors[0].withOpacity(0.25),
+                  size: 100,
+                  color: const Color(0xFFF1F5F9).withOpacity(0.8),
                 ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    testimonial.content,
-                    style: GoogleFonts.outfit(
-                      fontSize: 13,
-                      height: 1.5,
-                      color: const Color(0xFF475569),
-                      fontWeight: FontWeight.w500,
-                      fontStyle: FontStyle.italic,
-                    ),
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
+              ),
+              Positioned(
+                bottom: 40,
+                right: 20,
+                child: Transform.rotate(
+                  angle: 3.14159,
+                  child: Icon(
+                    Icons.format_quote_rounded,
+                    size: 100,
+                    color: const Color(0xFFF1F5F9).withOpacity(0.8),
                   ),
                 ),
-              ],
-            ),
-          ),
-          // Bottom: stars row
-          Row(
-            children: List.generate(5, (i) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 2),
-                child: Icon(
-                  i < testimonial.stars
-                      ? Icons.star_rounded
-                      : Icons.star_outline_rounded,
-                  size: 16,
-                  color: i < testimonial.stars
-                      ? const Color(0xFFF59E0B)
-                      : const Color(0xFFE2E8F0),
+              ),
+
+              // Main Content
+              Padding(
+                padding: const EdgeInsets.all(30),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    // Large Centered Avatar
+                    Center(
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: gradientColors,
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 4),
+                          boxShadow: [
+                            BoxShadow(
+                              color: gradientColors[0].withOpacity(0.3),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            testimonial.initials,
+                            style: GoogleFonts.outfit(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Name
+                    Text(
+                      testimonial.userName,
+                      style: GoogleFonts.outfit(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Role/Time
+                    Text(
+                      'Student • ${testimonial.timeAgo}',
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Star Rating
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        5,
+                        (i) => Icon(
+                          Icons.star_rounded,
+                          color: i < testimonial.stars
+                              ? const Color(0xFFFFB300)
+                              : const Color(0xFFE2E8F0),
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Centered Testimonial Text
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          testimonial.content,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            fontSize: 15,
+                            color: const Color(0xFF475569),
+                            height: 1.6,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          maxLines: 4,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
                 ),
-              );
-            }),
+              ),
+
+              // Decorative colorful dots (blobs)
+              Positioned(
+                top: 40,
+                left: 30,
+                child: _buildDecorativeDot(const Color(0xFFF472B6), 8),
+              ),
+              Positioned(
+                top: 100,
+                right: 40,
+                child: _buildDecorativeDot(const Color(0xFF60A5FA), 12),
+              ),
+              Positioned(
+                bottom: 60,
+                left: 50,
+                child: _buildDecorativeDot(const Color(0xFFFB923C), 10),
+              ),
+            ],
           ),
-        ],
+        )
+        .animate()
+        .fadeIn(delay: (200 + (index * 100)).ms)
+        .scale(
+          begin: const Offset(0.95, 0.95),
+          duration: 500.ms,
+          curve: Curves.easeOutBack,
+        );
+  }
+
+  Widget _buildDecorativeDot(Color color, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.4),
+        shape: BoxShape.circle,
       ),
-    ).animate().fadeIn(delay: (600 + (120 * index)).ms).slideX(begin: 0.1);
+    );
   }
 
   // ─── Skeleton Loaders ─────────────────────────────────────────
@@ -2795,6 +2675,312 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWhatsAppSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            'Connect & Learn',
+            style: GoogleFonts.outfit(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+        ),
+        const SizedBox(height: 15),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+            border: Border.all(color: const Color(0xFFF1F5F9)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF25D366).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.chat_outlined,
+                      color: const Color.fromARGB(255, 24, 154, 72),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Join Community',
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF1E293B),
+                          ),
+                        ),
+                        Text(
+                          'Connect with 50,000+ Aspirants',
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            color: const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => _showWIPAlert(context, 'WhatsApp Community'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 17, 168, 72),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Get Started on WhatsApp',
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward_rounded, size: 18),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAboutUsSection() {
+    return Container(
+      width: double.infinity,
+      // color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(24, 40, 24, 20),
+      child: Column(
+        children: [
+          // const Divider(color: Color(0xFFF1F5F9), thickness: 1),
+          const SizedBox(height: 40),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.school_rounded,
+                color: Color(0xFF64748B),
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'SKY HIGH',
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF1E293B),
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            "India's leading learning platform for government exams.",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              fontSize: 13,
+              color: const Color(0xFF94A3B8),
+            ),
+          ),
+          const SizedBox(height: 30),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildMinimalFooterIcon(Icons.email_outlined),
+              _buildMinimalFooterIcon(Icons.phone_outlined),
+              _buildMinimalFooterIcon(Icons.location_on_outlined),
+              _buildMinimalFooterIcon(Icons.facebook_rounded),
+            ],
+          ),
+          const SizedBox(height: 40),
+          Text(
+            '© 2026 SkyHigh Learning',
+            style: GoogleFonts.outfit(
+              fontSize: 12,
+              color: const Color(0xFFCBD5E1),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 100),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMinimalFooterIcon(IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Icon(icon, color: const Color(0xFF94A3B8), size: 20),
+    );
+  }
+
+  Widget _buildEmptyState(String message, dynamic icon) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            // Decorative Background Elements
+            Positioned(
+              top: -30,
+              right: -30,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: primaryColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -40,
+              left: -20,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: secondaryColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Positioned(top: 20, left: 20, child: _buildDotPattern()),
+            Positioned(bottom: 20, right: 20, child: _buildDotPattern()),
+
+            // Main Content
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        shape: BoxShape.circle,
+                      ),
+                      child: icon is IconData
+                          ? Icon(icon, size: 32, color: const Color(0xFF94A3B8))
+                          : SvgPicture.asset(
+                              icon as String,
+                              width: 32,
+                              height: 32,
+                              colorFilter: const ColorFilter.mode(
+                                Color(0xFF94A3B8),
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    message,
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      color: const Color(0xFF475569),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Check back later for new updates',
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn().scale(begin: const Offset(0.95, 0.95));
+  }
+
+  Widget _buildDotPattern() {
+    return Opacity(
+      opacity: 0.2,
+      child: Column(
+        children: List.generate(
+          3,
+          (i) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(
+              3,
+              (j) => Container(
+                width: 3,
+                height: 3,
+                margin: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFCBD5E1),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );

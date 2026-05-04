@@ -37,11 +37,15 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
         'https://skyhighapi.digilogy.dev/api/admin/posted-jobs',
         queryParameters: {'company_id': widget.company.id},
       );
-
+      // print("res:${response.data}");
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
+        final allJobs = data.map((json) => JobModel.fromJson(json)).toList();
+
         setState(() {
-          _jobs = data.map((json) => JobModel.fromJson(json)).toList();
+          _jobs = allJobs
+              .where((job) => job.title.toUpperCase() != "GET")
+              .toList();
           _filteredJobs = _jobs;
           _isLoading = false;
         });
@@ -65,7 +69,9 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
         _filteredJobs = _jobs;
       } else {
         _filteredJobs = _jobs
-            .where((job) => job.title.toLowerCase().contains(query.toLowerCase()))
+            .where(
+              (job) => job.title.toLowerCase().contains(query.toLowerCase()),
+            )
             .toList();
       }
     });
@@ -96,16 +102,16 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                       .fadeIn(duration: 600.ms)
                       .slideY(begin: 0.2),
                   const SizedBox(height: 24),
-                  _buildSectionHeader(
-                    'Available Paths',
-                    _jobs.length,
-                  ).animate().fadeIn(delay: 200.ms),
                   const SizedBox(height: 24),
                   _isLoading
                       ? _buildLoadingState()
-                      : _filteredJobs.isEmpty
-                          ? _buildEmptyState().animate().fadeIn()
-                          : _buildJobsList(),
+                      : Column(
+                          children: [
+                            _filteredJobs.isEmpty
+                                ? _buildEmptyState().animate().fadeIn()
+                                : _buildJobsList(),
+                          ],
+                        ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -154,8 +160,11 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                 decoration: InputDecoration(
                   hintText: 'Search jobs...',
                   hintStyle: GoogleFonts.outfit(color: Colors.white60),
-                  prefixIcon: const Icon(Icons.search,
-                      color: Colors.white70, size: 18),
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    color: Colors.white70,
+                    size: 18,
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -353,7 +362,6 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
     );
   }
 
-
   Widget _buildSectionHeader(String title, int count) {
     return Row(
       children: [
@@ -510,7 +518,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                         style: GoogleFonts.outfit(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFF6366F1),
+                          color: Color(0xFF6366F1),
                         ),
                       ),
                     ],

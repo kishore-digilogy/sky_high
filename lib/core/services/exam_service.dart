@@ -4,6 +4,7 @@ import 'package:sky_high/data/models/testimonial_model.dart';
 import 'package:sky_high/data/models/free_exam_model.dart';
 import 'package:sky_high/data/models/study_material_model.dart';
 import 'package:sky_high/data/models/mock_question_model.dart';
+import 'package:sky_high/data/models/mcq_set_model.dart';
 
 class ExamService {
   final Dio _dio = Dio();
@@ -53,6 +54,7 @@ class ExamService {
         '$baseUrl/mock-tests/free-sets',
         queryParameters: {'language': language},
       );
+
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         return data
@@ -117,6 +119,92 @@ class ExamService {
     }
   }
 
+  Future<List<MockQuestionModel>> getMockQuestionsByCompany({
+    required String companyName,
+    required int companyId,
+    String? setName,
+    String language = 'English',
+    int limit = 200,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '$baseUrl/mock-tests/questions/$companyName',
+        queryParameters: {
+          'language': language,
+          'limit': limit,
+          'setName': setName == 'Untitled' ? null : setName,
+          'company_id': companyId,
+        },
+      );
+      if (response.statusCode == 200 || response.statusCode == 304) {
+        final List<dynamic> data = response.data;
+        return data
+            .map(
+              (json) =>
+                  MockQuestionModel.fromJson(json as Map<String, dynamic>),
+            )
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      throw Exception('Failed to load mock questions: $e');
+    }
+  }
+
+  Future<List<McqSetModel>> getMcqSets({
+    required int companyId,
+    required String questionType,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '$baseUrl/mock-tests/mcq-sets',
+        queryParameters: {
+          'company_id': companyId,
+          'question_type': questionType,
+        },
+      );
+      if (response.statusCode == 200 || response.statusCode == 304) {
+        final List<dynamic> data = response.data;
+        return data
+            .map((json) => McqSetModel.fromJson(json as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      throw Exception('Failed to load MCQ sets: $e');
+    }
+  }
+
+  Future<List<MockQuestionModel>> getMcqQuestions({
+    required int companyId,
+    required String questionType,
+    int? chapterId,
+    int? topicId,
+    String? setName,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '$baseUrl/mock-tests/questions',
+        queryParameters: {
+          'question_type': questionType,
+          'company_id': companyId,
+          'chapter_id': chapterId,
+          'topic_id': topicId,
+          'set_name': setName,
+        },
+      );
+      if (response.statusCode == 200 || response.statusCode == 304) {
+        final List<dynamic> data = response.data;
+        return data
+            .map((json) => MockQuestionModel.fromJson(json as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      throw Exception('Failed to load MCQ questions: $e');
+    }
+  }
+
   Future<bool> submitMockTest({
     required int userId,
     required String category,
@@ -149,7 +237,7 @@ class ExamService {
           "company_name": companyName,
         },
       );
-    
+
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
       print('Error submitting test: $e');
