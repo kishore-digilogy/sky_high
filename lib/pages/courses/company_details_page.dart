@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sky_high/data/models/exam_category_model.dart';
 import 'package:sky_high/data/models/job_model.dart';
 import 'package:sky_high/pages/courses/study_layers_page.dart';
+import 'package:sky_high/pages/courses/sub_posted_jobs_page.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class CompanyDetailsPage extends StatefulWidget {
@@ -24,6 +25,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
   String? _error;
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
+  List<dynamic> _subJobs = []; // To store sub-posted jobs
 
   @override
   void initState() {
@@ -41,6 +43,15 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         final allJobs = data.map((json) => JobModel.fromJson(json)).toList();
+
+        // Fetch Sub-posted jobs
+        final subRes = await _dio.get(
+          'https://skyhighapi.digilogy.dev/api/admin/sub-posted-jobs',
+          queryParameters: {'company_id': widget.company.id},
+        );
+        if (subRes.statusCode == 200) {
+          _subJobs = subRes.data;
+        }
 
         setState(() {
           _jobs = allJobs
@@ -432,13 +443,31 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
       ),
       child: InkWell(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  StudyLayersPage(company: widget.company, jobId: job.id),
-            ),
-          );
+          // Check if this job has sub-posts
+          final matchingSubJobs = _subJobs
+              .where((sj) => sj['parent_job_id'] == job.id)
+              .toList();
+
+          if (matchingSubJobs.isNotEmpty) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SubPostedJobsPage(
+                  parentJob: job,
+                  subJobs: matchingSubJobs,
+                  company: widget.company,
+                ),
+              ),
+            );
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    StudyLayersPage(company: widget.company, jobId: job.id),
+              ),
+            );
+          }
         },
         borderRadius: BorderRadius.circular(24),
         child: Padding(

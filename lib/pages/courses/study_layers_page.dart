@@ -13,6 +13,7 @@ import 'package:sky_high/pages/study_materials/pdf_viewer_page.dart';
 import 'package:sky_high/data/models/mock_test_set_model.dart';
 import 'package:sky_high/data/models/mcq_set_model.dart';
 import 'package:sky_high/pages/exams/mock_test_page.dart';
+import 'package:sky_high/pages/courses/video_player_page.dart';
 
 class StudyLayersPage extends StatefulWidget {
   final ExamItemModel company;
@@ -33,6 +34,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
   int _selectedModuleIndex = 0;
   bool _isLoading = true;
   bool _isPaidUser = false;
+  bool _isLoggedIn = false;
   String _currentLangCode = 'en'; // Default to English
 
   List<MockTestSetModel> _mockTests = [];
@@ -90,11 +92,14 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
 
   void _checkSubscription() {
     final userData = _storage.getUserData();
+    _isLoggedIn = _storage.getToken() != null;
     if (userData != null) {
       // Assuming 'subscription_status' or similar field
       _isPaidUser =
           userData['subscription_status'] == 'paid' ||
           userData['is_paid'] == true;
+    } else {
+      _isPaidUser = false;
     }
   }
 
@@ -102,7 +107,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     try {
       final queryParams = {'company_id': widget.company.id};
       if (widget.jobId != null) {
-        queryParams['job_id'] = widget.jobId!;
+        queryParams['sub_job_id'] = widget.jobId!;
       }
 
       final response = await _dio.get(
@@ -318,6 +323,19 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
 
     return InkWell(
       onTap: () {
+        // First 3 modules are free (index 0, 1, 2)
+        // From Mod 4 to 8 (index 3-7), check for login and subscription
+        if (index >= 3) {
+          if (!_isLoggedIn) {
+            _showLoginRequiredDialog();
+            return;
+          }
+          if (!_isPaidUser) {
+            _showLockedDialog();
+            return;
+          }
+        }
+
         setState(() => _selectedModuleIndex = index);
         if (index == 4) {
           _fetchMcqSets('pyq');
@@ -795,8 +813,15 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             ),
           );
         } else if (isVideo) {
-          // Navigate to video player
-          _showWIPAlert();
+          debugPrint('🎯 Watch Video Button Tapped!');
+          debugPrint('🎬 Full Video URL: $url');
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  VideoPlayerPage(videoUrl: url, title: title),
+            ),
+          );
         }
       },
       style: ElevatedButton.styleFrom(

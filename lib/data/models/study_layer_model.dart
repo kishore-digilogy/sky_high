@@ -72,37 +72,59 @@ class StudyLayerModel {
 
   String getLocalizedTitle(String langCode) {
     switch (langCode.toLowerCase()) {
-      case 'ta': return titleTa ?? title;
-      case 'te': return titleTe ?? title;
-      case 'kn': return titleKn ?? title;
-      case 'ml': return titleMl ?? title;
-      default: return title;
+      case 'ta':
+        return titleTa ?? title;
+      case 'te':
+        return titleTe ?? title;
+      case 'kn':
+        return titleKn ?? title;
+      case 'ml':
+        return titleMl ?? title;
+      default:
+        return title;
     }
   }
 
   String? getLocalizedContent(String langCode) {
     switch (langCode.toLowerCase()) {
-      case 'ta': return contentTa ?? content;
-      case 'te': return contentTe ?? content;
-      case 'kn': return contentKn ?? content;
-      case 'ml': return contentMl ?? content;
-      default: return content;
+      case 'ta':
+        return contentTa ?? content;
+      case 'te':
+        return contentTe ?? content;
+      case 'kn':
+        return contentKn ?? content;
+      case 'ml':
+        return contentMl ?? content;
+      default:
+        return content;
     }
   }
 
   String? getLocalizedUrl(String langCode) {
     String? resolvedUrl;
     switch (langCode.toLowerCase()) {
-      case 'ta': resolvedUrl = urlTa ?? url; break;
-      case 'te': resolvedUrl = urlTe ?? url; break;
-      case 'kn': resolvedUrl = urlKn ?? url; break;
-      case 'ml': resolvedUrl = urlMl ?? url; break;
-      default: resolvedUrl = url; break;
+      case 'ta':
+        resolvedUrl = urlTa ?? url;
+        break;
+      case 'te':
+        resolvedUrl = urlTe ?? url;
+        break;
+      case 'kn':
+        resolvedUrl = urlKn ?? url;
+        break;
+      case 'ml':
+        resolvedUrl = urlMl ?? url;
+        break;
+      default:
+        resolvedUrl = url;
+        break;
     }
-    
+
     if (resolvedUrl == null || resolvedUrl.isEmpty) return null;
     if (resolvedUrl.startsWith('http')) return resolvedUrl;
-    final cleanPath = resolvedUrl.startsWith('/') ? resolvedUrl.substring(1) : resolvedUrl;
+    final cleanPath = resolvedUrl.startsWith('/')
+        ? resolvedUrl.substring(1)
+        : resolvedUrl;
     return 'https://digilogy-skyhigh.s3.eu-north-1.amazonaws.com/$cleanPath';
   }
 
@@ -121,12 +143,18 @@ class StudyLayerModel {
 
   int get moduleNumber {
     switch (layer.toLowerCase()) {
-      case 'basic_info': return 1;
-      case 'syllabus': return 2;
-      case 'preparation_plan': return 3;
-      case 'notes': return 4;
-      case 'video': return 7;
-      default: return 0;
+      case 'basic_info':
+        return 1;
+      case 'syllabus':
+        return 2;
+      case 'preparation_plan':
+        return 3;
+      case 'notes':
+        return 4;
+      case 'video':
+        return 7;
+      default:
+        return 0;
     }
   }
 }

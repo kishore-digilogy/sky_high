@@ -131,61 +131,92 @@ class _DashboardPageState extends State<DashboardPage> {
 
     if (!isLoggedIn) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.person_outline,
-              size: 80,
-              color: Color(0xFF94A3B8),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Not Logged In',
-              style: GoogleFonts.outfit(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF1E293B),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Login to access your profile and saved courses.',
-              style: GoogleFonts.outfit(
-                fontSize: 14,
-                color: const Color(0xFF64748B),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 40,
-                  vertical: 15,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: Text(
-                'Login Now',
-                style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
                   color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFF9A826).withOpacity(0.1),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-          ],
-        ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1),
+                child: const Icon(
+                  Icons.person_search_rounded,
+                  size: 50,
+                  color: Color(0xFF94A3B8),
+                ),
+              ).animate().scale(duration: 600.ms, curve: Curves.easeInOut),
+              const SizedBox(height: 32),
+              Text(
+                'Identity Required',
+                style: GoogleFonts.outfit(
+                     fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF0F172A),
+                  letterSpacing: -0.5,
+                ),
+              ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
+              const SizedBox(height: 12),
+              Text(
+                'Sign in to sync your progress, access premium certificates, and join the elite community.',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: const Color(0xFF64748B),
+                  height: 1.5,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
+              const SizedBox(height: 40),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFF9A826), Color(0xFFF59E0B)],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFF9A826).withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    'SIGN IN NOW',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+              ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2),
+            ],
+          ),
+        ),
       );
     }
 
@@ -580,7 +611,10 @@ class _DashboardPageState extends State<DashboardPage> {
   void _showLoginDialog(BuildContext context) {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
+    final otpController = TextEditingController();
     bool isLoading = false;
+    bool isOtpLogin = false;
+    bool otpSent = false;
 
     showDialog(
       context: context,
@@ -677,49 +711,110 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    style: GoogleFonts.outfit(
-                      fontSize: 15,
-                      color: const Color(0xFF1E293B),
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Password',
-                      hintStyle: GoogleFonts.outfit(
-                        color: const Color(0xFF64748B),
+                  if (!isOtpLogin)
+                    TextField(
+                      controller: passwordController,
+                      obscureText: true,
+                      style: GoogleFonts.outfit(
                         fontSize: 15,
+                        color: const Color(0xFF1E293B),
                       ),
-                      prefixIcon: const Icon(
-                        Icons.lock_outline_rounded,
-                        color: Color(0xFF64748B),
-                        size: 20,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF94A3B8),
-                          width: 0.5,
+                      decoration: InputDecoration(
+                        hintText: 'Password',
+                        hintStyle: GoogleFonts.outfit(
+                          color: const Color(0xFF64748B),
+                          fontSize: 15,
                         ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF94A3B8),
-                          width: 0.5,
+                        prefixIcon: const Icon(
+                          Icons.lock_outline_rounded,
+                          color: Color(0xFF64748B),
+                          size: 20,
                         ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFF9A826),
-                          width: 1.5,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF94A3B8),
+                            width: 0.5,
+                          ),
                         ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF94A3B8),
+                            width: 0.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFF9A826),
+                            width: 1.5,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                    )
+                  else if (otpSent)
+                    TextField(
+                      controller: otpController,
+                      keyboardType: TextInputType.number,
+                      style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        color: const Color(0xFF1E293B),
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Enter 6-digit OTP',
+                        hintStyle: GoogleFonts.outfit(
+                          color: const Color(0xFF64748B),
+                          fontSize: 15,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.security_rounded,
+                          color: Color(0xFF64748B),
+                          size: 20,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF94A3B8),
+                            width: 0.5,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF94A3B8),
+                            width: 0.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFF9A826),
+                            width: 1.5,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () {
+                      setDialogState(() {
+                        isOtpLogin = !isOtpLogin;
+                        otpSent = false;
+                      });
+                    },
+                    child: Text(
+                      isOtpLogin ? 'Use Password Login' : 'Login with OTP',
+                      style: GoogleFonts.outfit(
+                        color: const Color(0xFFF9A826),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -734,76 +829,141 @@ class _DashboardPageState extends State<DashboardPage> {
                       onPressed: isLoading
                           ? null
                           : () async {
-                              if (emailController.text.isEmpty ||
-                                  passwordController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Please enter email and password',
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
+                              if (isOtpLogin) {
+                                if (otpSent) {
+                                  // Verify OTP
+                                  if (otpController.text.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Please enter the OTP')),
+                                    );
+                                    return;
+                                  }
+                                  setDialogState(() => isLoading = true);
+                                  try {
+                                    final dio = Dio();
+                                    final response = await dio.post(
+                                      'https://skyhighapi.digilogy.dev/api/auth/verify-otp',
+                                      data: {
+                                        'email': emailController.text.trim(),
+                                        'otp': otpController.text.trim(),
+                                        'device_fingerprint': 'SkyHighApp_Mobile_Client_v1.0'
+                                      },
+                                    );
+                                     if (response.statusCode == 200) {
+                                       final verifyData = response.data;
+                                       final resetToken = verifyData['resetToken'];
 
-                              setDialogState(() => isLoading = true);
+                                       if (resetToken != null) {
+                                         // Step 2: Login with OTP using the resetToken
+                                         final loginResponse = await dio.post(
+                                           'https://skyhighapi.digilogy.dev/api/auth/login-with-otp',
+                                           data: {
+                                             'email': emailController.text.trim(),
+                                             'resetToken': resetToken,
+                                             'device_fingerprint': 'SkyHighApp_Mobile_Client_v1.0',
+                                           },
+                                         );
 
-                              try {
-                                final dio = Dio();
-                                final response = await dio.post(
-                                  'https://skyhighapi.digilogy.dev/api/auth/login',
-                                  data: {
-                                    'email': emailController.text.trim(),
-                                    'password': passwordController.text,
-                                  },
-                                );
+                                         if (loginResponse.statusCode == 200) {
+                                           final data = loginResponse.data;
+                                           final token = data['token'];
+                                           final user = data['user'];
 
-                                if (response.statusCode == 200) {
-                                  final token = response.data['token'];
-                                  final user = response.data['user'];
+                                           if (token != null) {
+                                             final storage = GetIt.I<StorageService>();
+                                             await storage.setToken(token);
+                                             if (user != null) {
+                                               await storage.setUserData(user);
+                                             }
 
-                                  final storage = GetIt.I<StorageService>();
-                                  await storage.setToken(token);
-                                  await storage.setUserData(user);
-
-                                  if (context.mounted) {
-                                    Navigator.pop(context); // Close dialog
-                                    if (user?['subscription_status'] !=
-                                        'paid') {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const PaymentScreen(),
-                                        ),
-                                      ).then((_) {
-                                        setState(() {});
-                                      });
-                                    } else {
-                                      setState(() {});
+                                             if (context.mounted) {
+                                               Navigator.pop(context);
+                                               setState(() {});
+                                             }
+                                           }
+                                         }
+                                       }
+                                     }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Invalid OTP or verification failed.')),
+                                      );
                                     }
+                                  } finally {
+                                    if (context.mounted) setDialogState(() => isLoading = false);
                                   }
                                 } else {
-                                  if (context.mounted) {
+                                  // Send OTP
+                                  if (emailController.text.isEmpty) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Invalid credentials'),
-                                      ),
+                                      const SnackBar(content: Text('Please enter your email')),
                                     );
+                                    return;
+                                  }
+                                  setDialogState(() => isLoading = true);
+                                  try {
+                                    final dio = Dio();
+                                    await dio.post(
+                                      'https://skyhighapi.digilogy.dev/api/auth/send-otp',
+                                      data: {'email': emailController.text.trim()},
+                                    );
+                                    setDialogState(() => otpSent = true);
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Failed to send OTP')),
+                                      );
+                                    }
+                                  } finally {
+                                    if (context.mounted) setDialogState(() => isLoading = false);
                                   }
                                 }
-                              } catch (e) {
-                                if (context.mounted) {
+                              } else {
+                                // Password Login
+                                if (emailController.text.isEmpty ||
+                                    passwordController.text.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Login failed. Please try again.',
-                                      ),
-                                    ),
+                                    const SnackBar(content: Text('Please enter email and password')),
                                   );
+                                  return;
                                 }
-                              } finally {
-                                if (context.mounted) {
-                                  setDialogState(() => isLoading = false);
+
+                                setDialogState(() => isLoading = true);
+
+                                try {
+                                  final dio = Dio();
+                                  final response = await dio.post(
+                                    'https://skyhighapi.digilogy.dev/api/auth/login',
+                                    data: {
+                                      'email': emailController.text.trim(),
+                                      'password': passwordController.text,
+                                    },
+                                  );
+
+                                  if (response.statusCode == 200) {
+                                    final token = response.data['token'];
+                                    final user = response.data['user'];
+
+                                    final storage = GetIt.I<StorageService>();
+                                    await storage.setToken(token);
+                                    await storage.setUserData(user);
+
+                                    if (context.mounted) {
+                                      Navigator.pop(context); // Close dialog
+                                      setState(() {}); 
+                                    }
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Invalid credentials')),
+                                    );
+                                  }
+                                } finally {
+                                  if (context.mounted) {
+                                    setDialogState(() => isLoading = false);
+                                  }
                                 }
                               }
                             },
@@ -817,7 +977,9 @@ class _DashboardPageState extends State<DashboardPage> {
                               ),
                             )
                           : Text(
-                              'Sign In',
+                              isOtpLogin
+                                  ? (otpSent ? 'Verify & Login' : 'Send OTP')
+                                  : 'Sign In',
                               style: GoogleFonts.outfit(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -844,15 +1006,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
     return GestureDetector(
       onTap: () {
-        final token = GetIt.I<StorageService>().getToken();
-        if (token != null && token.isNotEmpty) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const PaymentScreen()),
-          );
-        } else {
-          _showLoginDialog(context);
-        }
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const PaymentScreen()),
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(left: 24, right: 24, top: 30),
@@ -2112,7 +2269,7 @@ class _DashboardPageState extends State<DashboardPage> {
         }
 
         final testimonials = snapshot.data!;
-        
+
         return Column(
           children: [
             const SizedBox(height: 40),
