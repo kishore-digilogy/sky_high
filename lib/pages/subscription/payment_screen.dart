@@ -26,6 +26,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   late Razorpay _razorpay;
   late ConfettiController _confettiController;
   bool _isProcessing = false;
+  String? _currentOrderId;
 
   @override
   void initState() {
@@ -81,7 +82,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
 
     final payload = {
-      "razorpay_order_id": response.orderId ?? "",
+      "razorpay_order_id": _currentOrderId ?? response.orderId ?? "",
       "razorpay_payment_id": response.paymentId ?? "",
       "razorpay_signature": response.signature ?? "",
       "user_details": {
@@ -92,6 +93,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
       },
     };
 
+    debugPrint("--- VERIFY PAYMENT START ---");
+    debugPrint("URL: https://skyhighapi.digilogy.dev/api/payment/verify");
+    debugPrint("Payload: $payload");
+
     try {
       final dio = Dio();
       final token = GetIt.I<StorageService>().getToken();
@@ -101,6 +106,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
         data: payload,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
+
+      debugPrint("Verify Response Status: ${apiResponse.statusCode}");
+      debugPrint("Verify Response Data: ${apiResponse.data}");
 
       if (apiResponse.statusCode == 200 &&
           apiResponse.data['success'] == true) {
@@ -120,8 +128,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
         );
       }
     } catch (e) {
+      debugPrint("--- VERIFY PAYMENT ERROR ---");
+      if (e is DioException) {
+        debugPrint("Verify Error Status: ${e.response?.statusCode}");
+        debugPrint("Verify Error Data: ${e.response?.data}");
+        debugPrint("Verify Error Message: ${e.message}");
+      } else {
+        debugPrint("General Verify Error: $e");
+      }
       _showStatusScreen(success: false, message: "Error verifying payment: $e");
     } finally {
+      debugPrint("--- VERIFY PAYMENT END ---");
       setState(() => _isProcessing = false);
     }
   }
@@ -139,7 +156,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  void _startPayment() {
+  Future<void> _startPayment() async {
     if (_fathersNameController.text.isEmpty ||
         _dobController.text.isEmpty ||
         _educationController.text.isEmpty ||
@@ -150,24 +167,41 @@ class _PaymentScreenState extends State<PaymentScreen> {
       return;
     }
 
-    final userData = GetIt.I<StorageService>().getUserData();
-    final options = {
-      'key': 'rzp_test_SDCzPYcvdghetb',
-      'amount': 118000, // 1180.00 * 100
-      'name': 'Sky High Elite',
-      'description': 'One Year Access — Annual Payment',
-      'prefill': {
-        'contact': userData?['phone'] ?? '',
-        'email': userData?['email'] ?? '',
-      },
-      'external': {
-        'wallets': ['paytm'],
-      },
-    };
+    setState(() => _isProcessing = true);
 
     try {
-      _razorpay.open(options);
+      final dio = Dio();
+      final token = GetIt.I<StorageService>().getToken();
+      final receiptId = "receipt_${DateTime.now().millisecondsSinceEpoch}";
+
+      final orderResponse = await dio.post(
+        'https://skyhighapi.digilogy.dev/api/payment/create-order',
+        data: {'amount': 1180, 'currency': 'INR', 'receipt': receiptId},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (orderResponse.statusCode == 200) {
+        _currentOrderId = orderResponse.data['id'];
+        final razorpayAmount = orderResponse.data['amount'];
+        final userData = GetIt.I<StorageService>().getUserData();
+
+        final options = {
+          'key': 'rzp_test_SDCzPYcvdghetb',
+          'amount': razorpayAmount,
+          'name': 'Sky High Elite',
+          'description': 'One Year Access — Annual Payment',
+          'prefill': {
+            'contact': userData?['phone'] ?? '',
+            'email': userData?['email'] ?? '',
+          },
+          'external': {
+            'wallets': ['paytm'],
+          },
+        };
+        _razorpay.open(options);
+      }
     } catch (e) {
+      setState(() => _isProcessing = false);
       debugPrint('Error starting Razorpay: $e');
     }
   }

@@ -8,8 +8,13 @@ import 'package:sky_high/widgets/category_icon.dart';
 
 class AllCategoriesPage extends StatefulWidget {
   final List<ExamCategoryModel> categories;
+  final bool initialIsSearching;
 
-  const AllCategoriesPage({super.key, required this.categories});
+  const AllCategoriesPage({
+    super.key,
+    required this.categories,
+    this.initialIsSearching = false,
+  });
 
   @override
   State<AllCategoriesPage> createState() => _AllCategoriesPageState();
@@ -18,12 +23,13 @@ class AllCategoriesPage extends StatefulWidget {
 class _AllCategoriesPageState extends State<AllCategoriesPage> {
   late List<ExamCategoryModel> _filteredCategories;
   final TextEditingController _searchController = TextEditingController();
-  bool _isSearching = false;
+  late bool _isSearching;
 
   @override
   void initState() {
     super.initState();
     _filteredCategories = widget.categories;
+    _isSearching = widget.initialIsSearching;
   }
 
   void _filterCategories(String query) {
@@ -61,7 +67,7 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
             size: 20,
           ),
           onPressed: () {
-            if (_isSearching) {
+            if (_isSearching && !widget.initialIsSearching) {
               setState(() {
                 _isSearching = false;
                 _searchController.clear();

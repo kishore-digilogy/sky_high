@@ -813,8 +813,8 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             ),
           );
         } else if (isVideo) {
-          debugPrint('🎯 Watch Video Button Tapped!');
-          debugPrint('🎬 Full Video URL: $url');
+          // debugPrint('🎯 Watch Video Button Tapped!');
+          // debugPrint('🎬 Full Video URL: $url');
           Navigator.push(
             context,
             MaterialPageRoute(

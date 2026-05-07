@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -42,6 +43,40 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<List<StudyMaterialModel>>? _studyMaterialsFuture;
   int _notificationCount = 0;
   final NotificationService _notificationService = NotificationService();
+  final FocusNode _searchFocusNode = FocusNode();
+  final PageController _bannerController = PageController(
+    initialPage: 300,
+  ); // High multiple of _banners.length
+  int _currentBannerPage = 0;
+  Timer? _bannerTimer;
+  final Set<int> _expandedBanners = {};
+
+  final List<Map<String, dynamic>> _banners = [
+    {
+      'title': 'Master Modern Tech',
+      'subtitle': 'Curated industry paths',
+      'detail': 'Learn Python, Cloud, AI & more with hands-on labs.',
+      'btnText': 'Start',
+      'colors': [const Color(0xFF0EA5E9), const Color(0xFF2DD4BF)],
+      'image': 'assets/Icons/banner2.png',
+    },
+    {
+      'title': 'Perfect Score',
+      'subtitle': '500+ mock tests',
+      'detail': 'Detailed analysis and daily practice sets for exam success.',
+      'btnText': 'Try Now',
+      'colors': [const Color(0xFFF59E0B), const Color(0xFFEF4444)],
+      'image': 'assets/Icons/banner3.png',
+    },
+    {
+      'title': 'Upgrade Your Skills',
+      'subtitle': 'Unlock Your Future today',
+      'detail': 'Top-rated industry experts and real-world projects.',
+      'btnText': 'Explore',
+      'colors': [const Color(0xFF6366F1), const Color(0xFF8B5CF6)],
+      'image': 'assets/Icons/banner1.png',
+    },
+  ];
 
   @override
   void initState() {
@@ -51,6 +86,28 @@ class _DashboardPageState extends State<DashboardPage> {
     _freeExamsFuture = ExamService().getFreeExams();
     _studyMaterialsFuture = ExamService().getStudyMaterials();
     _loadNotificationCount();
+    _startBannerTimer();
+  }
+
+  void _startBannerTimer() {
+    _bannerTimer?.cancel();
+    _bannerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_bannerController.hasClients) {
+        _bannerController.animateToPage(
+          _bannerController.page!.toInt() - 1,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOutCubic,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchFocusNode.dispose();
+    _bannerTimer?.cancel();
+    _bannerController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadNotificationCount() async {
@@ -81,36 +138,38 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildDashboardTab() {
-    return SafeArea(
-      bottom: false,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 25),
-            _buildSearchBar(),
-            _buildSubscriptionBanner(),
-            // const SizedBox(height: 30),
-            // _buildSectionTitle('Categories', 'See All'),
-            // const SizedBox(height: 15),
-            // _buildCategories(),
-            const SizedBox(height: 30),
-            _buildCoursesSection(),
-            const SizedBox(height: 30),
-            _buildFreeExamsSection(),
-            const SizedBox(height: 0),
-            _buildStudyMaterialsSection(),
-            const SizedBox(height: 30),
-            // _buildTestimonialsSection(),
-            _buildWhatsAppSection(),
-            const SizedBox(height: 40),
-            // _buildWhatsAppSection(),
-            _buildTestimonialsSection(),
-            const SizedBox(height: 00),
-            _buildAboutUsSection(),
-          ],
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: SafeArea(
+        bottom: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 25),
+              _buildSearchBar(),
+              const SizedBox(height: 25),
+              _buildBannerCarousel(),
+              const SizedBox(height: 30),
+              _buildCoursesSection(),
+              const SizedBox(height: 30),
+              _buildFreeExamsSection(),
+              const SizedBox(height: 0),
+              _buildStudyMaterialsSection(),
+              const SizedBox(height: 30),
+              // _buildTestimonialsSection(),
+              _buildWhatsAppSection(),
+              const SizedBox(height: 40),
+              // _buildWhatsAppSection(),
+              _buildTestimonialsSection(),
+              const SizedBox(height: 00),
+              _buildAboutUsSection(),
+            ],
+          ),
         ),
       ),
     );
@@ -161,7 +220,7 @@ class _DashboardPageState extends State<DashboardPage> {
               Text(
                 'Identity Required',
                 style: GoogleFonts.outfit(
-                     fontSize: 28,
+                  fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: const Color(0xFF0F172A),
                   letterSpacing: -0.5,
@@ -287,6 +346,8 @@ class _DashboardPageState extends State<DashboardPage> {
                     color: const Color(0xFF94A3B8),
                   ),
                 ),
+                const SizedBox(height: 8),
+                _buildSubscriptionBanner(),
                 const SizedBox(height: 24),
 
                 // Stats Row
@@ -339,8 +400,20 @@ class _DashboardPageState extends State<DashboardPage> {
                 _buildSettingsItem(
                   Icons.workspace_premium_outlined,
                   'Premium Status',
-                  () {},
+                  () {
+                    if (user?['subscription_status'] == 'paid') {
+                      _showPlanDetailsSheet(context);
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PaymentScreen(),
+                        ),
+                      );
+                    }
+                  },
                   isPremium: true,
+                  premiumStatus: user?['subscription_status'] ?? 'free',
                 ),
                 _buildSettingsItem(
                   Icons.logout_rounded,
@@ -389,6 +462,7 @@ class _DashboardPageState extends State<DashboardPage> {
     String title,
     VoidCallback onTap, {
     bool isPremium = false,
+    String premiumStatus = 'free',
     bool isDestructive = false,
   }) {
     return GestureDetector(
@@ -421,10 +495,10 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             if (isPremium)
               Text(
-                'Inactive',
+                premiumStatus == 'paid' ? 'Active' : 'Inactive',
                 style: GoogleFonts.outfit(
                   fontSize: 12,
-                  color: Colors.orange,
+                  color: premiumStatus == 'paid' ? Colors.green : Colors.orange,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -555,6 +629,196 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
       ),
     ).animate().fadeIn(duration: 400.ms).scale(delay: 100.ms);
+  }
+
+  void _showPlanDetailsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.7,
+        builder: (_, controller) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          child: ListView(
+            controller: controller,
+            children: [
+              const SizedBox(height: 12),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF00897B), Color(0xFF00796B)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF00897B).withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.workspace_premium_rounded,
+                      color: Colors.white,
+                      size: 48,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Sky High Elite',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'One Year Unlimited Access',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Current Plan Details',
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildPlanDetailRow(
+                Icons.calendar_today_rounded,
+                'Duration',
+                '365 Days',
+              ),
+              _buildPlanDetailRow(
+                Icons.payments_outlined,
+                'Price Paid',
+                '₹1,180.00',
+              ),
+              _buildPlanDetailRow(
+                Icons.check_circle_outline_rounded,
+                'Status',
+                'Active',
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Plan Benefits',
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildBenefitItem('Access to all Premium Learning Modules'),
+              _buildBenefitItem('Unlimited Mock Tests & PYQs'),
+              _buildBenefitItem('Priority Customer Support'),
+              _buildBenefitItem('Downloadable Study Materials'),
+              const SizedBox(height: 40),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF1F5F9),
+                    foregroundColor: const Color(0xFF475569),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Close',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlanDetailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: const Color(0xFF64748B)),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              color: const Color(0xFF64748B),
+              fontSize: 14,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: GoogleFonts.outfit(
+              color: const Color(0xFF1E293B),
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBenefitItem(String benefit) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          const Icon(Icons.check_rounded, color: Color(0xFF10B981), size: 18),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              benefit,
+              style: GoogleFonts.outfit(
+                color: const Color(0xFF475569),
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showLogoutDialog(BuildContext context) {
@@ -751,7 +1015,9 @@ class _DashboardPageState extends State<DashboardPage> {
                             width: 1.5,
                           ),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                        ),
                       ),
                     )
                   else if (otpSent)
@@ -794,7 +1060,9 @@ class _DashboardPageState extends State<DashboardPage> {
                             width: 1.5,
                           ),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                        ),
                       ),
                     ),
                   const SizedBox(height: 12),
@@ -834,7 +1102,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                   // Verify OTP
                                   if (otpController.text.isEmpty) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Please enter the OTP')),
+                                      const SnackBar(
+                                        content: Text('Please enter the OTP'),
+                                      ),
                                     );
                                     return;
                                   }
@@ -846,58 +1116,74 @@ class _DashboardPageState extends State<DashboardPage> {
                                       data: {
                                         'email': emailController.text.trim(),
                                         'otp': otpController.text.trim(),
-                                        'device_fingerprint': 'SkyHighApp_Mobile_Client_v1.0'
+                                        'device_fingerprint':
+                                            'SkyHighApp_Mobile_Client_v1.0',
                                       },
                                     );
-                                     if (response.statusCode == 200) {
-                                       final verifyData = response.data;
-                                       final resetToken = verifyData['resetToken'];
+                                    if (response.statusCode == 200) {
+                                      final verifyData = response.data;
+                                      final resetToken =
+                                          verifyData['resetToken'];
 
-                                       if (resetToken != null) {
-                                         // Step 2: Login with OTP using the resetToken
-                                         final loginResponse = await dio.post(
-                                           'https://skyhighapi.digilogy.dev/api/auth/login-with-otp',
-                                           data: {
-                                             'email': emailController.text.trim(),
-                                             'resetToken': resetToken,
-                                             'device_fingerprint': 'SkyHighApp_Mobile_Client_v1.0',
-                                           },
-                                         );
+                                      if (resetToken != null) {
+                                        // Step 2: Login with OTP using the resetToken
+                                        final loginResponse = await dio.post(
+                                          'https://skyhighapi.digilogy.dev/api/auth/login-with-otp',
+                                          data: {
+                                            'email': emailController.text
+                                                .trim(),
+                                            'resetToken': resetToken,
+                                            'device_fingerprint':
+                                                'SkyHighApp_Mobile_Client_v1.0',
+                                          },
+                                        );
 
-                                         if (loginResponse.statusCode == 200) {
-                                           final data = loginResponse.data;
-                                           final token = data['token'];
-                                           final user = data['user'];
+                                        if (loginResponse.statusCode == 200) {
+                                          final data = loginResponse.data;
+                                          final token = data['token'];
+                                          final user = data['user'];
 
-                                           if (token != null) {
-                                             final storage = GetIt.I<StorageService>();
-                                             await storage.setToken(token);
-                                             if (user != null) {
-                                               await storage.setUserData(user);
-                                             }
+                                          if (token != null) {
+                                            final storage =
+                                                GetIt.I<StorageService>();
+                                            await storage.setToken(token);
+                                            if (user != null) {
+                                              await storage.setUserData(user);
+                                            }
 
-                                             if (context.mounted) {
-                                               Navigator.pop(context);
-                                               setState(() {});
-                                             }
-                                           }
-                                         }
-                                       }
-                                     }
+                                            if (context.mounted) {
+                                              Navigator.pop(context);
+                                              setState(() {});
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
                                   } catch (e) {
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Invalid OTP or verification failed.')),
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Invalid OTP or verification failed.',
+                                          ),
+                                        ),
                                       );
                                     }
                                   } finally {
-                                    if (context.mounted) setDialogState(() => isLoading = false);
+                                    if (context.mounted)
+                                      setDialogState(() => isLoading = false);
                                   }
                                 } else {
                                   // Send OTP
                                   if (emailController.text.isEmpty) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Please enter your email')),
+                                      const SnackBar(
+                                        content: Text(
+                                          'Please enter your email',
+                                        ),
+                                      ),
                                     );
                                     return;
                                   }
@@ -906,17 +1192,24 @@ class _DashboardPageState extends State<DashboardPage> {
                                     final dio = Dio();
                                     await dio.post(
                                       'https://skyhighapi.digilogy.dev/api/auth/send-otp',
-                                      data: {'email': emailController.text.trim()},
+                                      data: {
+                                        'email': emailController.text.trim(),
+                                      },
                                     );
                                     setDialogState(() => otpSent = true);
                                   } catch (e) {
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Failed to send OTP')),
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Failed to send OTP'),
+                                        ),
                                       );
                                     }
                                   } finally {
-                                    if (context.mounted) setDialogState(() => isLoading = false);
+                                    if (context.mounted)
+                                      setDialogState(() => isLoading = false);
                                   }
                                 }
                               } else {
@@ -924,7 +1217,11 @@ class _DashboardPageState extends State<DashboardPage> {
                                 if (emailController.text.isEmpty ||
                                     passwordController.text.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Please enter email and password')),
+                                    const SnackBar(
+                                      content: Text(
+                                        'Please enter email and password',
+                                      ),
+                                    ),
                                   );
                                   return;
                                 }
@@ -951,13 +1248,15 @@ class _DashboardPageState extends State<DashboardPage> {
 
                                     if (context.mounted) {
                                       Navigator.pop(context); // Close dialog
-                                      setState(() {}); 
+                                      setState(() {});
                                     }
                                   }
                                 } catch (e) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Invalid credentials')),
+                                      const SnackBar(
+                                        content: Text('Invalid credentials'),
+                                      ),
                                     );
                                   }
                                 } finally {
@@ -1263,69 +1562,299 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  Widget _buildBannerCarousel() {
+    final bannerIndex = _currentBannerPage % _banners.length;
+    final isExpanded = _expandedBanners.contains(bannerIndex);
+
+    return Column(
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          height: isExpanded ? 200 : 150,
+          child: PageView.builder(
+            controller: _bannerController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentBannerPage = index;
+              });
+              _startBannerTimer(); // Reset timer on manual or auto scroll
+            },
+            itemBuilder: (context, index) {
+              final bIndex = index % _banners.length;
+              return _buildBannerCard(_banners[bIndex], bIndex);
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            _banners.length,
+            (index) => AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              height: 6,
+              width: _currentBannerPage == index ? 24 : 6,
+              decoration: BoxDecoration(
+                color: _currentBannerPage == index
+                    ? primaryColor
+                    : const Color(0xFFCBD5E1),
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBannerCard(Map<String, dynamic> banner, int index) {
+    final isExpanded = _expandedBanners.contains(index);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: banner['colors'] as List<Color>,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: (banner['colors'] as List<Color>)[0].withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            // Full Size Background Image
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.35,
+                child: Image.asset(
+                  banner['image'] as String,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            // Gradient Overlay for readability
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      (banner['colors'] as List<Color>)[0].withOpacity(0.8),
+                      (banner['colors'] as List<Color>)[1].withOpacity(0.4),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 7,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          banner['title'] as String,
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          banner['subtitle'] as String,
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.9),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final detailText = banner['detail'] as String;
+                            final textStyle = GoogleFonts.outfit(
+                              fontSize: 10,
+                              color: Colors.white.withOpacity(0.8),
+                              fontWeight: FontWeight.w400,
+                            );
+
+                            // Detect overflow
+                            final tp = TextPainter(
+                              text: TextSpan(
+                                text: detailText,
+                                style: textStyle,
+                              ),
+                              maxLines: 2,
+                              textDirection: TextDirection.ltr,
+                            )..layout(maxWidth: constraints.maxWidth);
+
+                            final hasOverflow = tp.didExceedMaxLines;
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  detailText,
+                                  style: textStyle,
+                                  maxLines: isExpanded ? 10 : 2,
+                                  overflow: isExpanded
+                                      ? TextOverflow.visible
+                                      : TextOverflow.ellipsis,
+                                ),
+                                if (hasOverflow)
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        if (isExpanded) {
+                                          _expandedBanners.remove(index);
+                                        } else {
+                                          _expandedBanners.add(index);
+                                        }
+                                      });
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(
+                                        isExpanded ? 'Read Less' : 'Read More',
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 10,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            banner['btnText'] as String,
+                            style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: (banner['colors'] as List<Color>)[0],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(flex: 3),
+                ],
+              ),
+            ),
+            // Floating Right Bottom Image
+            Positioned(
+              right: -15,
+              bottom: -15,
+              child:
+                  Image.asset(
+                        banner['image'] as String,
+                        height: 140,
+                        width: 140,
+                        fit: BoxFit.contain,
+                      )
+                      .animate()
+                      .fadeIn(duration: 600.ms)
+                      .scale(
+                        begin: const Offset(0.7, 0.7),
+                        curve: Curves.easeOutBack,
+                      )
+                      .move(
+                        begin: const Offset(30, 30),
+                        duration: 800.ms,
+                        curve: Curves.easeOutCubic,
+                      ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              height: 56,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 20,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 20),
-                  const Icon(
-                    Icons.search_rounded,
-                    color: Color(0xFF94A3B8),
-                    size: 22,
-                  ),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: TextField(
-                      style: GoogleFonts.outfit(fontSize: 15),
-                      decoration: InputDecoration(
-                        hintText: 'Search',
-                        hintStyle: GoogleFonts.outfit(
-                          color: const Color(0xFF94A3B8),
-                          fontSize: 15,
-                        ),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.1),
-          const SizedBox(width: 15),
-          Container(
-            height: 56,
-            width: 56,
-            decoration: BoxDecoration(
-              color: primaryColor,
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(
-                  color: primaryColor.withOpacity(0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
+      child: GestureDetector(
+        onTap: () async {
+          final categories = await _categoriesFuture;
+          if (categories != null && mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AllCategoriesPage(
+                  categories: categories,
+                  initialIsSearching: true,
                 ),
-              ],
-            ),
-            child: const Icon(Icons.tune_rounded, color: Colors.white),
-          ).animate().fadeIn(delay: 300.ms).scale(),
-        ],
+              ),
+            );
+          }
+        },
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 20,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              const SizedBox(width: 20),
+              const Icon(
+                Icons.search_rounded,
+                color: Color(0xFF94A3B8),
+                size: 22,
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Text(
+                  'Search courses...',
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF94A3B8),
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+            ],
+          ),
+        ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.1),
       ),
     );
   }

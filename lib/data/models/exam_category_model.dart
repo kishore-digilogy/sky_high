@@ -171,7 +171,9 @@ class ExamSubcategoryModel {
   String get fullLogoUrl {
     if (thumbnailImage == null || thumbnailImage!.isEmpty) return '';
     if (thumbnailImage!.startsWith('http')) return thumbnailImage!;
-    final cleanPath = thumbnailImage!.startsWith('/') ? thumbnailImage!.substring(1) : thumbnailImage!;
+    final cleanPath = thumbnailImage!.startsWith('/')
+        ? thumbnailImage!.substring(1)
+        : thumbnailImage!;
     return 'https://digilogy-skyhigh.s3.eu-north-1.amazonaws.com/$cleanPath';
   }
 }

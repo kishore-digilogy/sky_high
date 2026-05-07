@@ -6,6 +6,7 @@ import 'package:get_it/get_it.dart';
 import 'package:sky_high/core/services/storage_service.dart';
 import 'package:sky_high/pages/dashboard/dashboard_page.dart';
 import 'dart:math' as math;
+import 'dart:async';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,13 +23,28 @@ class _LoginPageState extends State<LoginPage> {
   bool _isOtpLogin = true;
   bool _otpSent = false;
   bool _obscurePassword = true;
+  Timer? _resendTimer;
+  int _resendSeconds = 0;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     _otpController.dispose();
+    _resendTimer?.cancel();
     super.dispose();
+  }
+
+  void _startResendTimer() {
+    setState(() => _resendSeconds = 60);
+    _resendTimer?.cancel();
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_resendSeconds > 0) {
+        setState(() => _resendSeconds--);
+      } else {
+        _resendTimer?.cancel();
+      }
+    });
   }
 
   Future<void> _handleLogin() async {
@@ -64,6 +80,7 @@ class _LoginPageState extends State<LoginPage> {
         _otpSent = true;
         _isLoading = false;
       });
+      _startResendTimer();
       _showSnackBar('OTP sent to your email');
     } catch (e) {
       setState(() => _isLoading = false);
@@ -264,14 +281,33 @@ class _LoginPageState extends State<LoginPage> {
                         keyboardType: TextInputType.emailAddress,
                       ),
                       const SizedBox(height: 16),
-                      if (_isOtpLogin && _otpSent)
+                      if (_isOtpLogin && _otpSent) ...[
                         _buildModernInput(
                           controller: _otpController,
                           hint: '6-digit OTP Code',
                           icon: Icons.security_rounded,
                           keyboardType: TextInputType.number,
-                        ).animate().fadeIn().slideY(begin: 0.1)
-                      else if (!_isOtpLogin)
+                        ).animate().fadeIn().slideY(begin: 0.1),
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: GestureDetector(
+                            onTap: _resendSeconds == 0 ? _sendOtp : null,
+                            child: Text(
+                              _resendSeconds > 0
+                                  ? "Resend OTP in ${_resendSeconds}s"
+                                  : "Resend OTP",
+                              style: GoogleFonts.outfit(
+                                color: _resendSeconds > 0
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF3B82F6),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ).animate().fadeIn(delay: 200.ms),
+                      ] else if (!_isOtpLogin)
                         _buildModernInput(
                           controller: _passwordController,
                           hint: 'Password',

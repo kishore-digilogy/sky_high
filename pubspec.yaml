@@ -45,13 +45,15 @@ dependencies:
   shared_preferences: ^2.5.5
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
-  syncfusion_flutter_pdfviewer: ^33.2.4
+  syncfusion_flutter_pdfviewer: ^28.1.37
   screen_protector: ^1.5.1
   razorpay_flutter: ^1.4.5
   confetti: ^0.8.0
   video_player: ^2.10.1
   chewie: ^1.13.1
   
+dependency_overrides:
+  device_info_plus: 10.1.2
 
 dev_dependencies:
   flutter_test:
