@@ -25,6 +25,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
   String? _error;
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
+  bool _isTitleExpanded = false;
   List<dynamic> _subJobs = []; // To store sub-posted jobs
 
   @override
@@ -156,6 +157,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
           }
         },
       ),
+      toolbarHeight: 75,
       title: _isSearching
           ? Container(
               height: 40,
@@ -188,6 +190,8 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.visible,
             ),
       actions: [
         if (!_isSearching)
@@ -414,155 +418,14 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
       padding: EdgeInsets.zero,
       itemBuilder: (context, index) {
         final job = _filteredJobs[index];
-        return _buildJobCard(job, index);
+        return ExpandableJobCard(
+          job: job,
+          index: index,
+          company: widget.company,
+          subJobs: _subJobs,
+        );
       },
     );
-  }
-
-  Widget _buildJobCard(JobModel job, int index) {
-    final colors = [
-      const Color(0xFF6366F1),
-      const Color(0xFF10B981),
-      const Color(0xFFF59E0B),
-      const Color(0xFFEC4899),
-    ];
-    final color = colors[index % colors.length];
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withOpacity(0.04),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () {
-          // Check if this job has sub-posts
-          final matchingSubJobs = _subJobs
-              .where((sj) => sj['parent_job_id'] == job.id)
-              .toList();
-
-          if (matchingSubJobs.isNotEmpty) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SubPostedJobsPage(
-                  parentJob: job,
-                  subJobs: matchingSubJobs,
-                  company: widget.company,
-                ),
-              ),
-            );
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    StudyLayersPage(company: widget.company, jobId: job.id),
-              ),
-            );
-          }
-        },
-        borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(Icons.stars_rounded, color: color, size: 28),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          job.title,
-                          style: GoogleFonts.outfit(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF1E293B),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.schedule,
-                              size: 14,
-                              color: Color(0xFF94A3B8),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Updated Recently',
-                              style: GoogleFonts.outfit(
-                                fontSize: 13,
-                                color: const Color(0xFF94A3B8),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 16,
-                    color: Color(0xFFCBD5E1),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.rocket_launch_rounded,
-                        color: Color(0xFF6366F1),
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Start Learning Path',
-                        style: GoogleFonts.outfit(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF6366F1),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: const Color(0xFF6366F1).withOpacity(0.5),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    ).animate().fadeIn(delay: (100 * index).ms).slideY(begin: 0.1);
   }
 
   Widget _buildEmptyState() {
@@ -658,6 +521,398 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
       child: const Center(
         child: Icon(Icons.business_rounded, size: 32, color: Color(0xFF94A3B8)),
       ),
+    );
+  }
+}
+
+class ExpandableJobCard extends StatefulWidget {
+  final JobModel job;
+  final int index;
+  final ExamItemModel company;
+  final List<dynamic> subJobs;
+
+  const ExpandableJobCard({
+    super.key,
+    required this.job,
+    required this.index,
+    required this.company,
+    required this.subJobs,
+  });
+
+  @override
+  State<ExpandableJobCard> createState() => _ExpandableJobCardState();
+}
+
+class _ExpandableJobCardState extends State<ExpandableJobCard> {
+  bool _isExpanded = false;
+  bool _isLoadingContent = false;
+  List<dynamic> _matchingSubJobs = [];
+  String? _syllabusContent;
+  final Dio _dio = Dio();
+
+  @override
+  void initState() {
+    super.initState();
+    _matchingSubJobs = widget.subJobs
+        .where((sj) => sj['parent_job_id'] == widget.job.id)
+        .toList();
+  }
+
+  void _toggleExpansion() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+    });
+    if (_isExpanded &&
+        _matchingSubJobs.isEmpty &&
+        _syllabusContent == null &&
+        !_isLoadingContent) {
+      _fetchSyllabus();
+    }
+  }
+
+  Future<void> _fetchSyllabus() async {
+    setState(() => _isLoadingContent = true);
+    try {
+      final response = await _dio.get(
+        'https://skyhighapi.digilogy.dev/api/admin/study-layers',
+        queryParameters: {
+          'company_id': widget.company.id,
+          'sub_job_id': widget.job.id,
+        },
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        // Find syllabus layer
+        final syllabusLayer = data.firstWhere(
+          (l) => l['layer'].toString().toLowerCase() == 'syllabus',
+          orElse: () => null,
+        );
+        setState(() {
+          if (syllabusLayer != null) {
+            _syllabusContent =
+                syllabusLayer['content_en'] ??
+                syllabusLayer['content_hi'] ??
+                'Syllabus tree coming soon...';
+          } else {
+            _syllabusContent =
+                'Detailed syllabus tree will be available shortly.';
+          }
+          _isLoadingContent = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _syllabusContent = 'Failed to load syllabus. Please try again.';
+        _isLoadingContent = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = [
+      const Color(0xFF6366F1),
+      const Color(0xFF10B981),
+      const Color(0xFFF59E0B),
+      const Color(0xFFEC4899),
+    ];
+    final cardColor = colors[widget.index % colors.length];
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: cardColor.withOpacity(_isExpanded ? 0.08 : 0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+        border: Border.all(
+          color: _isExpanded
+              ? cardColor.withOpacity(0.2)
+              : const Color(0xFFF1F5F9),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: _toggleExpansion,
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFF1F5F9)),
+                    ),
+                    child: Icon(
+                      Icons.auto_awesome_outlined,
+                      color: cardColor.withOpacity(0.5),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.job.title,
+                          style: GoogleFonts.outfit(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF1E293B),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.bolt_rounded,
+                              size: 14,
+                              color: Colors.amber[700],
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _matchingSubJobs.isNotEmpty
+                                  ? '${_matchingSubJobs.length} specialized sub-posts available'
+                                  : 'Premium Learning Path',
+                              style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                color: const Color(0xFF94A3B8),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: _isExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 300),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: Color(0xFF94A3B8),
+                      size: 24,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_isExpanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                  const SizedBox(height: 16),
+                  _isLoadingContent
+                      ? const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : _matchingSubJobs.isNotEmpty
+                      ? _buildSubJobsList(cardColor)
+                      : _buildSyllabusTree(cardColor),
+                ],
+              ),
+            ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.02),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubJobsList(Color themeColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Select Your Stage',
+          style: GoogleFonts.outfit(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF64748B),
+            letterSpacing: 1.1,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ..._matchingSubJobs.map((sj) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFF1F5F9)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.rocket_launch_rounded,
+                    color: themeColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        sj['title'] ?? 'Sub Post',
+                        style: GoogleFonts.outfit(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          _buildBadge(Icons.play_circle_outline, 'Video'),
+                          _buildBadge(Icons.description_outlined, 'Materials'),
+                          _buildBadge(Icons.emoji_events_outlined, 'Mock Test'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StudyLayersPage(
+                          company: widget.company,
+                          jobId: sj['id'],
+                        ),
+                      ),
+                    );
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: themeColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('Start'),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildBadge(IconData icon, String label) {
+    return Row(
+      children: [
+        Icon(icon, size: 12, color: const Color(0xFF94A3B8)),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontSize: 10,
+            color: const Color(0xFF94A3B8),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSyllabusTree(Color themeColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.account_tree_rounded, size: 18, color: themeColor),
+            const SizedBox(width: 8),
+            Text(
+              'Syllabus Tree',
+              style: GoogleFonts.outfit(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF1E293B),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: themeColor.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: themeColor.withOpacity(0.1)),
+          ),
+          child: Text(
+            _syllabusContent ?? 'Loading syllabus...',
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              color: const Color(0xFF475569),
+              height: 1.6,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => StudyLayersPage(
+                    company: widget.company,
+                    jobId: widget.job.id,
+                  ),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: themeColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('START TRAINING'),
+          ),
+        ),
+      ],
     );
   }
 }

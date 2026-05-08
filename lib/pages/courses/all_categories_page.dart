@@ -194,7 +194,7 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
                           ),
                         const SizedBox(height: 8),
                         Text(
-                          '${category.totalCount} Items',
+                          '${category.totalCount} Companies',
                           style: GoogleFonts.outfit(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,

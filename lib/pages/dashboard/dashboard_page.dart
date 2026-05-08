@@ -94,7 +94,7 @@ class _DashboardPageState extends State<DashboardPage> {
     _bannerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       if (_bannerController.hasClients) {
         _bannerController.animateToPage(
-          _bannerController.page!.toInt() - 1,
+          _bannerController.page!.toInt() + 1,
           duration: const Duration(milliseconds: 800),
           curve: Curves.easeInOutCubic,
         );
@@ -225,7 +225,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   color: const Color(0xFF0F172A),
                   letterSpacing: -0.5,
                 ),
-              ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
+              ).animate().slideY(begin: 0.2),
               const SizedBox(height: 12),
               Text(
                 'Sign in to sync your progress, access premium certificates, and join the elite community.',
@@ -236,14 +236,20 @@ class _DashboardPageState extends State<DashboardPage> {
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
-              ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
+              ).animate().slideY(begin: 0.2),
               const SizedBox(height: 40),
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  final success = await Navigator.push<bool>(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const LoginPage(returnToPreviousPage: true),
+                    ),
                   );
+                  if (success == true) {
+                    setState(() {});
+                  }
                 },
                 child: Container(
                   width: double.infinity,
@@ -272,7 +278,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
                 ),
-              ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2),
+              ).animate().slideY(begin: 0.2),
             ],
           ),
         ),
@@ -427,7 +433,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
           const SizedBox(height: 120), // padding for bottom nav
         ],
-      ).animate().fadeIn(duration: 600.ms),
+      ).animate(),
     );
   }
 
@@ -628,7 +634,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
       ),
-    ).animate().fadeIn(duration: 400.ms).scale(delay: 100.ms);
+    ).animate().scale(delay: 100.ms);
   }
 
   void _showPlanDetailsSheet(BuildContext context) {
@@ -1408,7 +1414,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
       ),
-    ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1);
+    ).animate().slideY(begin: 0.1);
   }
 
   Widget _buildHeader() {
@@ -1447,7 +1453,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ),
             ],
-          ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.1),
+          ).animate().slideX(begin: -0.1),
           Row(
             children: [
               if (GetIt.I<StorageService>().getToken() == null ||
@@ -1554,7 +1560,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ],
                   ),
                 ),
-              ).animate().fadeIn(duration: 600.ms).scale(),
+              ).animate().scale(),
             ],
           ),
         ],
@@ -1612,191 +1618,181 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildBannerCard(Map<String, dynamic> banner, int index) {
     final isExpanded = _expandedBanners.contains(index);
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: banner['colors'] as List<Color>,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: (banner['colors'] as List<Color>)[0].withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+    return GestureDetector(
+      onTap: () => _showWIPAlert(context, banner['title'] as String),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: banner['colors'] as List<Color>,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            // Full Size Background Image
-            Positioned.fill(
-              child: Opacity(
-                opacity: 0.35,
-                child: Image.asset(
-                  banner['image'] as String,
-                  fit: BoxFit.cover,
-                ),
-              ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: (banner['colors'] as List<Color>)[0].withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
-            // Gradient Overlay for readability
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [
-                      (banner['colors'] as List<Color>)[0].withOpacity(0.8),
-                      (banner['colors'] as List<Color>)[1].withOpacity(0.4),
-                    ],
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              // Full Size Background Image
+              Positioned.fill(
+                child: Opacity(
+                  opacity: 0.35,
+                  child: Image.asset(
+                    banner['image'] as String,
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 7,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          banner['title'] as String,
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          banner['subtitle'] as String,
-                          style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            color: Colors.white.withOpacity(0.9),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final detailText = banner['detail'] as String;
-                            final textStyle = GoogleFonts.outfit(
-                              fontSize: 10,
-                              color: Colors.white.withOpacity(0.8),
-                              fontWeight: FontWeight.w400,
-                            );
-
-                            // Detect overflow
-                            final tp = TextPainter(
-                              text: TextSpan(
-                                text: detailText,
-                                style: textStyle,
-                              ),
-                              maxLines: 2,
-                              textDirection: TextDirection.ltr,
-                            )..layout(maxWidth: constraints.maxWidth);
-
-                            final hasOverflow = tp.didExceedMaxLines;
-
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  detailText,
-                                  style: textStyle,
-                                  maxLines: isExpanded ? 10 : 2,
-                                  overflow: isExpanded
-                                      ? TextOverflow.visible
-                                      : TextOverflow.ellipsis,
-                                ),
-                                if (hasOverflow)
-                                  GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        if (isExpanded) {
-                                          _expandedBanners.remove(index);
-                                        } else {
-                                          _expandedBanners.add(index);
-                                        }
-                                      });
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 2),
-                                      child: Text(
-                                        isExpanded ? 'Read Less' : 'Read More',
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 10,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          decoration: TextDecoration.underline,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            banner['btnText'] as String,
-                            style: GoogleFonts.outfit(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: (banner['colors'] as List<Color>)[0],
-                            ),
-                          ),
-                        ),
+              // Gradient Overlay for readability
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        (banner['colors'] as List<Color>)[0].withOpacity(0.8),
+                        (banner['colors'] as List<Color>)[1].withOpacity(0.4),
                       ],
                     ),
                   ),
-                  const Spacer(flex: 3),
-                ],
+                ),
               ),
-            ),
-            // Floating Right Bottom Image
-            Positioned(
-              right: -15,
-              bottom: -15,
-              child:
-                  Image.asset(
-                        banner['image'] as String,
-                        height: 140,
-                        width: 140,
-                        fit: BoxFit.contain,
-                      )
-                      .animate()
-                      .fadeIn(duration: 600.ms)
-                      .scale(
-                        begin: const Offset(0.7, 0.7),
-                        curve: Curves.easeOutBack,
-                      )
-                      .move(
-                        begin: const Offset(30, 30),
-                        duration: 800.ms,
-                        curve: Curves.easeOutCubic,
+
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 7,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            banner['title'] as String,
+                            style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            banner['subtitle'] as String,
+                            style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.9),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final detailText = banner['detail'] as String;
+                              final textStyle = GoogleFonts.outfit(
+                                fontSize: 10,
+                                color: Colors.white.withOpacity(0.8),
+                                fontWeight: FontWeight.w400,
+                              );
+
+                              // Detect overflow
+                              final tp = TextPainter(
+                                text: TextSpan(
+                                  text: detailText,
+                                  style: textStyle,
+                                ),
+                                maxLines: 2,
+                                textDirection: TextDirection.ltr,
+                              )..layout(maxWidth: constraints.maxWidth);
+
+                              final hasOverflow = tp.didExceedMaxLines;
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    detailText,
+                                    style: textStyle,
+                                    maxLines: isExpanded ? 10 : 2,
+                                    overflow: isExpanded
+                                        ? TextOverflow.visible
+                                        : TextOverflow.ellipsis,
+                                  ),
+                                  if (hasOverflow)
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          if (isExpanded) {
+                                            _expandedBanners.remove(index);
+                                          } else {
+                                            _expandedBanners.add(index);
+                                          }
+                                        });
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(top: 2),
+                                        child: Text(
+                                          isExpanded
+                                              ? 'Read Less'
+                                              : 'Read More',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 10,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            decoration:
+                                                TextDecoration.underline,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                       ),
-            ),
-          ],
+                    ),
+                    const Spacer(flex: 3),
+                  ],
+                ),
+              ),
+              // Floating Right Bottom Image
+              Positioned(
+                right: -15,
+                bottom: -15,
+                child:
+                    Image.asset(
+                          banner['image'] as String,
+                          height: 140,
+                          width: 140,
+                          fit: BoxFit.contain,
+                        )
+                        .animate()
+                        .scale(
+                          begin: const Offset(0.7, 0.7),
+                          curve: Curves.easeOutBack,
+                        )
+                        .move(
+                          begin: const Offset(30, 30),
+                          duration: 800.ms,
+                          curve: Curves.easeOutCubic,
+                        ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1854,7 +1850,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(width: 10),
             ],
           ),
-        ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.1),
+        ).animate().slideX(begin: -0.1),
       ),
     );
   }
@@ -1926,50 +1922,46 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               );
             },
-            child:
-                Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(25),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: cat['color'] as Color,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              cat['icon'] as IconData,
-                              size: 14,
-                              color: cat['iconColor'] as Color,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            cat['name'] as String,
-                            style: GoogleFonts.outfit(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1E293B),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                    .animate()
-                    .fadeIn(delay: (400 + (100 * index)).ms)
-                    .slideX(begin: 0.1),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: cat['color'] as Color,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      cat['icon'] as IconData,
+                      size: 14,
+                      color: cat['iconColor'] as Color,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    cat['name'] as String,
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
+                ],
+              ),
+            ).animate().slideX(begin: 0.1),
           );
         },
       ),
@@ -2026,7 +2018,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                 ],
               ),
-            ).animate().fadeIn(delay: 300.ms),
+            ).animate(),
             const SizedBox(height: 15),
             if (snapshot.hasError || categories.isEmpty)
               _buildEmptyState(
@@ -2095,7 +2087,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ],
         ),
-      ).animate().fadeIn(delay: 650.ms).slideX(begin: 0.1),
+      ).animate().slideX(begin: 0.1),
     );
   }
 
@@ -2161,7 +2153,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
       ),
-    ).animate().fadeIn(delay: (400 + (50 * index)).ms).slideX(begin: 0.1);
+    ).animate().slideX(begin: 0.1);
   }
 
   // ─── Free Exams Section ─────────────────────────────────────────
@@ -2220,7 +2212,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
                 ],
-              ).animate().fadeIn(delay: 400.ms),
+              ).animate(),
             ),
             const SizedBox(height: 15),
             if (snapshot.hasError || exams.isEmpty)
@@ -2518,7 +2510,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
                 ],
-              ).animate().fadeIn(delay: 450.ms),
+              ).animate(),
             ),
             const SizedBox(height: 15),
             if (snapshot.hasError || materials.isEmpty)
@@ -2691,7 +2683,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
       ),
-    ).animate().fadeIn(delay: (200 + (100 * index)).ms).slideX(begin: 0.1);
+    ).animate().slideX(begin: 0.1);
   }
 
   Widget _buildMaterialSkeleton() {
@@ -2798,10 +2790,12 @@ class _DashboardPageState extends State<DashboardPage> {
         }
 
         final testimonials = snapshot.data!;
+        final storage = GetIt.I<StorageService>();
+        final isLoggedIn = storage.getToken() != null;
 
         return Column(
           children: [
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
             // Centered Header
             Center(
               child: Column(
@@ -2845,13 +2839,51 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                   ),
+                  if (isLoggedIn) ...[
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: _showFeedbackDialog,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(
+                            color: primaryColor.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.edit_note_rounded,
+                              color: primaryColor,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Write a Review',
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: primaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
             // Horizontal Scrollable Cards
             SizedBox(
-              height: 420,
+              height: 240,
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 scrollDirection: Axis.horizontal,
@@ -2872,108 +2904,64 @@ class _DashboardPageState extends State<DashboardPage> {
     final gradientColors = _avatarGradients[index % _avatarGradients.length];
 
     return Container(
-          width: 320,
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(32),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
-              ),
-            ],
+      width: 280,
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
-          child: Stack(
-            clipBehavior: Clip.none,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              // Decorative quotation marks
-              Positioned(
-                top: 140,
-                left: 20,
-                child: Icon(
-                  Icons.format_quote_rounded,
-                  size: 100,
-                  color: const Color(0xFFF1F5F9).withOpacity(0.8),
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: gradientColors,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
                 ),
-              ),
-              Positioned(
-                bottom: 40,
-                right: 20,
-                child: Transform.rotate(
-                  angle: 3.14159,
-                  child: Icon(
-                    Icons.format_quote_rounded,
-                    size: 100,
-                    color: const Color(0xFFF1F5F9).withOpacity(0.8),
+                child: Center(
+                  child: Text(
+                    testimonial.initials,
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-
-              // Main Content
-              Padding(
-                padding: const EdgeInsets.all(30),
+              const SizedBox(width: 12),
+              Expanded(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 10),
-                    // Large Centered Avatar
-                    Center(
-                      child: Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: gradientColors,
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 4),
-                          boxShadow: [
-                            BoxShadow(
-                              color: gradientColors[0].withOpacity(0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Text(
-                            testimonial.initials,
-                            style: GoogleFonts.outfit(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    // Name
                     Text(
                       testimonial.userName,
                       style: GoogleFonts.outfit(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                         color: const Color(0xFF1E293B),
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-                    // Role/Time
-                    Text(
-                      'Student • ${testimonial.timeAgo}',
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF94A3B8),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Star Rating
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
                         5,
                         (i) => Icon(
@@ -2981,69 +2969,44 @@ class _DashboardPageState extends State<DashboardPage> {
                           color: i < testimonial.stars
                               ? const Color(0xFFFFB300)
                               : const Color(0xFFE2E8F0),
-                          size: 22,
+                          size: 14,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    // Centered Testimonial Text
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          testimonial.content,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.outfit(
-                            fontSize: 15,
-                            color: const Color(0xFF475569),
-                            height: 1.6,
-                            fontStyle: FontStyle.italic,
-                          ),
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
                   ],
                 ),
               ),
-
-              // Decorative colorful dots (blobs)
-              Positioned(
-                top: 40,
-                left: 30,
-                child: _buildDecorativeDot(const Color(0xFFF472B6), 8),
-              ),
-              Positioned(
-                top: 100,
-                right: 40,
-                child: _buildDecorativeDot(const Color(0xFF60A5FA), 12),
-              ),
-              Positioned(
-                bottom: 60,
-                left: 50,
-                child: _buildDecorativeDot(const Color(0xFFFB923C), 10),
-              ),
             ],
           ),
-        )
-        .animate()
-        .fadeIn(delay: (200 + (index * 100)).ms)
-        .scale(
-          begin: const Offset(0.95, 0.95),
-          duration: 500.ms,
-          curve: Curves.easeOutBack,
-        );
-  }
-
-  Widget _buildDecorativeDot(Color color, double size) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.4),
-        shape: BoxShape.circle,
+          const SizedBox(height: 16),
+          Expanded(
+            child: Text(
+              testimonial.content,
+              style: GoogleFonts.outfit(
+                fontSize: 13,
+                color: const Color(0xFF64748B),
+                height: 1.5,
+                fontStyle: FontStyle.italic,
+              ),
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            testimonial.timeAgo,
+            style: GoogleFonts.outfit(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF94A3B8),
+            ),
+          ),
+        ],
       ),
+    ).animate().scale(
+      begin: const Offset(0.95, 0.95),
+      duration: 500.ms,
+      curve: Curves.easeOutBack,
     );
   }
 
@@ -3320,7 +3283,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
       ),
-    ).animate().fadeIn(delay: 800.ms).moveY(begin: 30, end: 0);
+    ).animate().moveY(begin: 30, end: 0);
   }
 
   Widget _buildNavItem(int index, String assetPath, String label) {
@@ -3384,91 +3347,117 @@ class _DashboardPageState extends State<DashboardPage> {
         const SizedBox(height: 15),
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),
-          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            gradient: LinearGradient(
+              colors: [Colors.white, const Color(0xFFF0FDF4).withOpacity(0.5)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 20,
+                color: const Color(0xFF22C55E).withOpacity(0.08),
+                blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
             ],
-            border: Border.all(color: const Color(0xFFF1F5F9)),
+            border: Border.all(color: const Color(0xFFDCFCE7)),
           ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF25D366).withOpacity(0.1),
-                      shape: BoxShape.circle,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF22C55E).withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Icon(
+                        Icons.chat_rounded,
+                        color: Color(0xFF16A34A),
+                        size: 32,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.chat_outlined,
-                      color: const Color.fromARGB(255, 24, 154, 72),
-                      size: 24,
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Join Community',
+                            style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF1E293B),
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Connect with 50,000+ Aspirants',
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              color: const Color(0xFF64748B),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF22C55E), Color(0xFF15803D)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF22C55E).withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  child: ElevatedButton(
+                    onPressed: () =>
+                        _showWIPAlert(context, 'WhatsApp Community'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      shadowColor: Colors.transparent,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Join Community',
+                          'Get Started on WhatsApp',
                           style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF1E293B),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.2,
                           ),
                         ),
-                        Text(
-                          'Connect with 50,000+ Aspirants',
-                          style: GoogleFonts.outfit(
-                            fontSize: 13,
-                            color: const Color(0xFF64748B),
-                          ),
-                        ),
+                        const SizedBox(width: 10),
+                        const Icon(Icons.arrow_forward_ios_rounded, size: 16),
                       ],
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => _showWIPAlert(context, 'WhatsApp Community'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 17, 168, 72),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Get Started on WhatsApp',
-                        style: GoogleFonts.outfit(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward_rounded, size: 18),
-                    ],
-                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
@@ -3643,7 +3632,239 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
       ),
-    ).animate().fadeIn().scale(begin: const Offset(0.95, 0.95));
+    ).animate().scale(begin: const Offset(0.95, 0.95));
+  }
+
+  void _showFeedbackDialog() {
+    final storage = GetIt.I<StorageService>();
+    final user = storage.getUserData();
+    final userName = user?['name'] ?? 'Guest';
+    final contentController = TextEditingController();
+    int selectedStars = 5;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+          ),
+          title: Column(
+            children: [
+              Container(
+                width: 50,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Give Feedback',
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 24,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Hi $userName, how was your experience with SkyHigh?',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: const Color(0xFF64748B),
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  final isSelected = index < selectedStars;
+                  return GestureDetector(
+                    onTap: () {
+                      setDialogState(() {
+                        selectedStars = index + 1;
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Icon(
+                        isSelected
+                            ? Icons.star_rounded
+                            : Icons.star_outline_rounded,
+                        color: isSelected
+                            ? const Color(0xFFFFB300)
+                            : const Color(0xFFE2E8F0),
+                        size: 40,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 24),
+              TextField(
+                controller: contentController,
+                maxLines: 4,
+                style: GoogleFonts.outfit(
+                  fontSize: 15,
+                  color: const Color(0xFF1E293B),
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Tell us what you liked or what we can improve...',
+                  hintStyle: GoogleFonts.outfit(
+                    fontSize: 14,
+                    color: const Color(0xFF94A3B8),
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  contentPadding: const EdgeInsets.all(20),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(
+                      color: primaryColor.withOpacity(0.5),
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [primaryColor, primaryColor.withBlue(220)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primaryColor.withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (contentController.text.isEmpty) return;
+
+                        final navigator = Navigator.of(context);
+                        final scaffoldMessenger = ScaffoldMessenger.of(
+                          this.context,
+                        );
+
+                        try {
+                          final res = await ExamService().submitTestimonial(
+                            content: contentController.text,
+                            stars: selectedStars,
+                            userName: userName,
+                          );
+
+                          if (res['success'] == true) {
+                            navigator.pop();
+                            scaffoldMessenger.showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  res['message'] ?? 'Feedback submitted!',
+                                  style: GoogleFonts.outfit(),
+                                ),
+                                backgroundColor: const Color(0xFF10B981),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                            setState(() {
+                              _testimonialsFuture = ExamService()
+                                  .getTestimonials();
+                            });
+                          }
+                        } catch (e) {
+                          scaffoldMessenger.showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Error: $e',
+                                style: GoogleFonts.outfit(),
+                              ),
+                              backgroundColor: const Color(0xFFEF4444),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        'Submit',
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildDotPattern() {

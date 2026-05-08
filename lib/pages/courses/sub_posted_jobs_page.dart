@@ -48,7 +48,11 @@ class SubPostedJobsPage extends StatelessWidget {
       elevation: 0,
       backgroundColor: const Color(0xFF1E293B),
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+        icon: const Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: Colors.white,
+          size: 20,
+        ),
         onPressed: () => Navigator.pop(context),
       ),
       title: Text(
@@ -96,7 +100,11 @@ class SubPostedJobsPage extends StatelessWidget {
                   color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(Icons.business_rounded, color: Color(0xFF94A3B8), size: 30),
+                child: const Icon(
+                  Icons.business_rounded,
+                  color: Color(0xFF94A3B8),
+                  size: 30,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -117,7 +125,10 @@ class SubPostedJobsPage extends StatelessWidget {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(6),
@@ -137,7 +148,11 @@ class SubPostedJobsPage extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.bolt_rounded, color: Color(0xFF6366F1), size: 16),
+                        const Icon(
+                          Icons.bolt_rounded,
+                          color: Color(0xFF6366F1),
+                          size: 16,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${subJobs.length} SPECIALIZED SUB-POSTS AVAILABLE',
@@ -197,7 +212,8 @@ class SubPostedJobsPage extends StatelessWidget {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => StudyLayersPage(company: company, jobId: id),
+              builder: (context) =>
+                  StudyLayersPage(company: company, jobId: id),
             ),
           ),
           child: Padding(
@@ -214,7 +230,11 @@ class SubPostedJobsPage extends StatelessWidget {
                         color: const Color(0xFFEEF2FF),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(Icons.center_focus_strong_rounded, color: Color(0xFF6366F1), size: 24),
+                      child: const Icon(
+                        Icons.center_focus_strong_rounded,
+                        color: Color(0xFF6366F1),
+                        size: 24,
+                      ),
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -253,11 +273,23 @@ class SubPostedJobsPage extends StatelessWidget {
                 const SizedBox(height: 24),
                 Row(
                   children: [
-                    _buildFeatureItem(Icons.play_circle_fill_rounded, 'VIDEO', const Color(0xFFEF4444)),
+                    _buildFeatureItem(
+                      Icons.play_circle_fill_rounded,
+                      'VIDEO',
+                      const Color(0xFFEF4444),
+                    ),
                     const SizedBox(width: 16),
-                    _buildFeatureItem(Icons.auto_stories_rounded, 'MATERIALS', const Color(0xFF3B82F6)),
+                    _buildFeatureItem(
+                      Icons.auto_stories_rounded,
+                      'MATERIALS',
+                      const Color(0xFF3B82F6),
+                    ),
                     const SizedBox(width: 16),
-                    _buildFeatureItem(Icons.emoji_events_rounded, 'MOCK TEST', const Color(0xFFF59E0B)),
+                    _buildFeatureItem(
+                      Icons.emoji_events_rounded,
+                      'MOCK TEST',
+                      const Color(0xFFF59E0B),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -291,7 +323,11 @@ class SubPostedJobsPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: Colors.white,
+                        size: 14,
+                      ),
                     ],
                   ),
                 ),

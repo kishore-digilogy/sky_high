@@ -15,6 +15,9 @@ class StudyLayerModel {
   final String? updatedAt;
   final String? chapterName;
   final String? topicName;
+  final int? subJobId;
+  final int? jobId;
+  final int? isActive;
 
   StudyLayerModel({
     required this.id,
@@ -40,6 +43,9 @@ class StudyLayerModel {
     this.updatedAt,
     this.chapterName,
     this.topicName,
+    this.subJobId,
+    this.jobId,
+    this.isActive,
   });
 
   factory StudyLayerModel.fromJson(Map<String, dynamic> json) {
@@ -67,6 +73,9 @@ class StudyLayerModel {
       updatedAt: json['updated_at'],
       chapterName: json['chapter_name'],
       topicName: json['topic_name'],
+      subJobId: json['sub_job_id'],
+      jobId: json['job_id'],
+      isActive: json['is_active'],
     );
   }
 

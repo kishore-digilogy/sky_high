@@ -18,6 +18,7 @@ class _NotificationPageState extends State<NotificationPage> {
   void initState() {
     super.initState();
     _loadNotifications();
+    
   }
 
   Future<void> _loadNotifications() async {

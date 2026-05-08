@@ -7,19 +7,80 @@ import 'package:sky_high/data/models/mock_question_model.dart';
 import 'package:sky_high/data/models/mcq_set_model.dart';
 
 class ExamService {
-  final Dio _dio = Dio();
+  static final ExamService _instance = ExamService._internal();
+  factory ExamService() => _instance;
+
+  final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
+    ),
+  );
   final String baseUrl = 'https://skyhighapi.digilogy.dev/api';
+
+  ExamService._internal();
 
   Future<List<ExamCategoryModel>> getCategories() async {
     try {
+      print("ExamService: Fetching categories from $baseUrl/exam...");
       final response = await _dio.get('$baseUrl/exam');
-      if (response.statusCode == 200) {
+
+      print("ExamService: Categories fetched. Status: ${response.statusCode}");
+
+      if (response.statusCode == 200 || response.statusCode == 304) {
         final List<dynamic> data = response.data;
-        return data.map((json) => ExamCategoryModel.fromJson(json)).toList();
+        print("ExamService: Parsing ${data.length} categories...");
+        final categories = data
+            .map((json) => ExamCategoryModel.fromJson(json))
+            .toList();
+
+        // Custom sorting based on title keywords
+        final priorityOrder = [
+          'maharatna',
+          'navratna',
+          'navatrna',
+          'miniratna',
+          'minirathna',
+          'other',
+          'min',
+          'railway',
+        ];
+
+        categories.sort((a, b) {
+          final titleA = a.title.toLowerCase();
+          final titleB = b.title.toLowerCase();
+          int getPriority(String title) {
+            for (int i = 0; i < priorityOrder.length; i++) {
+              if (title.contains(priorityOrder[i])) {
+                return i;
+              }
+            }
+            return priorityOrder.length; // Default priority for unmatched items
+          }
+
+          final pA = getPriority(titleA);
+          final pB = getPriority(titleB);
+
+          if (pA != pB) {
+            return pA.compareTo(pB);
+          }
+          return titleA.compareTo(titleB); // Alphabetical fallback
+        });
+
+        return categories;
       } else {
-        throw Exception('Failed to load categories');
+        throw Exception('Failed to load categories: ${response.statusCode}');
       }
+    } on DioException catch (de) {
+      print(
+        "ExamService: Dio error fetching categories: ${de.type} - ${de.message}",
+      );
+      if (de.type == DioExceptionType.connectionTimeout) {
+        throw Exception('Connection timed out while fetching categories.');
+      }
+      throw Exception('Network error: ${de.message}');
     } catch (e) {
+      print("ExamService: Unexpected error: $e");
       throw Exception('Failed to load categories: $e');
     }
   }
@@ -196,7 +257,10 @@ class ExamService {
       if (response.statusCode == 200 || response.statusCode == 304) {
         final List<dynamic> data = response.data;
         return data
-            .map((json) => MockQuestionModel.fromJson(json as Map<String, dynamic>))
+            .map(
+              (json) =>
+                  MockQuestionModel.fromJson(json as Map<String, dynamic>),
+            )
             .toList();
       }
       return [];
@@ -242,6 +306,31 @@ class ExamService {
     } catch (e) {
       print('Error submitting test: $e');
       return false;
+    }
+  }
+
+  Future<Map<String, dynamic>> submitTestimonial({
+    required String content,
+    required int stars,
+    required String userName,
+    int? categoryId,
+  }) async {
+    try {
+      final payload = {
+        "content": content,
+        "stars": stars,
+        "category_id": categoryId,
+        "user_name": userName,
+      };
+      // print("ExamService: Posting testimonial with payload: $payload");
+
+      final response = await _dio.post('$baseUrl/testimonials', data: payload);
+
+      print("ExamService: Testimonial response: ${response.data}");
+      return response.data;
+    } catch (e) {
+      print("ExamService: Error posting testimonial: $e");
+      throw Exception('Failed to submit testimonial: $e');
     }
   }
 }

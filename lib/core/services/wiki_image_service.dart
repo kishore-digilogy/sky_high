@@ -7,7 +7,12 @@ class WikiImageService {
   factory WikiImageService() => _instance;
   WikiImageService._internal();
 
-  final Dio _dio = Dio();
+  final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
+    ),
+  );
   final String _baseUrl = 'https://en.wikipedia.org/w/api.php';
 
   // In-memory cache: searchTerm → imageUrl

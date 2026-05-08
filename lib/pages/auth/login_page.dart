@@ -9,7 +9,8 @@ import 'dart:math' as math;
 import 'dart:async';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final bool returnToPreviousPage;
+  const LoginPage({super.key, this.returnToPreviousPage = false});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -162,9 +163,13 @@ class _LoginPageState extends State<LoginPage> {
         await storage.setUserData(user);
       }
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const DashboardPage()),
-        );
+        if (widget.returnToPreviousPage) {
+          Navigator.of(context).pop(true);
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const DashboardPage()),
+          );
+        }
       }
     }
   }
@@ -190,209 +195,220 @@ class _LoginPageState extends State<LoginPage> {
           const _LightBackground(),
 
           SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Column(
-                children: [
-                  const SizedBox(height: 60),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final screenWidth = MediaQuery.of(context).size.width;
+                final screenHeight = MediaQuery.of(context).size.height;
 
-                  // Premium Logo Icon
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF3B82F6).withOpacity(0.05),
-                          blurRadius: 40,
-                          spreadRadius: 5,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.auto_awesome_rounded,
-                      color: Color(0xFFF9A826),
-                      size: 50,
-                    ),
-                  ).animate().scale(duration: 800.ms, curve: Curves.easeInOut),
-
-                  const SizedBox(height: 32),
-
-                  Text(
-                    'Sky High Elite',
-                    style: GoogleFonts.outfit(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF0F172A),
-                      letterSpacing: -0.5,
-                    ),
-                  ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
-
-                  const SizedBox(height: 8),
-
-                  Text(
-                    'Access your premium learning journey',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: const Color(0xFF64748B),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
-
-                  const SizedBox(height: 48),
-
-                  // Login Method Toggle
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: Row(
-                      children: [
-                        _buildMethodTab('OTP LOGIN', _isOtpLogin, () {
-                          setState(() {
-                            _isOtpLogin = true;
-                            _otpSent = false;
-                          });
-                        }),
-                        _buildMethodTab('PASSWORD', !_isOtpLogin, () {
-                          setState(() {
-                            _isOtpLogin = false;
-                          });
-                        }),
-                      ],
-                    ),
-                  ).animate().fadeIn(delay: 600.ms),
-
-                  const SizedBox(height: 32),
-
-                  // Form Section
-                  Column(
+                return SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.08),
+                  child: Column(
                     children: [
-                      _buildModernInput(
-                        controller: _emailController,
-                        hint: 'Email Address',
-                        icon: Icons.alternate_email_rounded,
-                        keyboardType: TextInputType.emailAddress,
+                      SizedBox(height: screenHeight * 0.08),
+
+                      // Premium Logo Icon
+                      Container(
+                        width: screenWidth * 0.25,
+                        height: screenWidth * 0.25,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF3B82F6).withOpacity(0.05),
+                              blurRadius: 40,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.auto_awesome_rounded,
+                          color: const Color(0xFFF9A826),
+                          size: screenWidth * 0.12,
+                        ),
+                      ).animate().scale(
+                        duration: 800.ms,
+                        curve: Curves.easeInOut,
                       ),
-                      const SizedBox(height: 16),
-                      if (_isOtpLogin && _otpSent) ...[
-                        _buildModernInput(
-                          controller: _otpController,
-                          hint: '6-digit OTP Code',
-                          icon: Icons.security_rounded,
-                          keyboardType: TextInputType.number,
-                        ).animate().fadeIn().slideY(begin: 0.1),
-                        const SizedBox(height: 12),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: GestureDetector(
-                            onTap: _resendSeconds == 0 ? _sendOtp : null,
-                            child: Text(
-                              _resendSeconds > 0
-                                  ? "Resend OTP in ${_resendSeconds}s"
-                                  : "Resend OTP",
-                              style: GoogleFonts.outfit(
-                                color: _resendSeconds > 0
-                                    ? const Color(0xFF94A3B8)
-                                    : const Color(0xFF3B82F6),
-                                fontWeight: FontWeight.w700,
-                                fontSize: 13,
+
+                      SizedBox(height: screenHeight * 0.04),
+
+                      Text(
+                        'Sky High Elite',
+                        style: GoogleFonts.outfit(
+                          fontSize: screenWidth * 0.085,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A),
+                          letterSpacing: -0.5,
+                        ),
+                      ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
+
+                      SizedBox(height: screenHeight * 0.01),
+
+                      Text(
+                        'Access your premium learning journey',
+                        style: GoogleFonts.inter(
+                          fontSize: screenWidth * 0.038,
+                          color: const Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
+
+                      SizedBox(height: screenHeight * 0.06),
+
+                      // Login Method Toggle
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          children: [
+                            _buildMethodTab('OTP LOGIN', _isOtpLogin, () {
+                              setState(() {
+                                _isOtpLogin = true;
+                                _otpSent = false;
+                              });
+                            }),
+                            _buildMethodTab('PASSWORD', !_isOtpLogin, () {
+                              setState(() {
+                                _isOtpLogin = false;
+                              });
+                            }),
+                          ],
+                        ),
+                      ).animate().fadeIn(delay: 600.ms),
+
+                      SizedBox(height: screenHeight * 0.04),
+
+                      // Form Section
+                      Column(
+                        children: [
+                          _buildModernInput(
+                            controller: _emailController,
+                            hint: 'Email Address',
+                            icon: Icons.alternate_email_rounded,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          SizedBox(height: screenHeight * 0.02),
+                          if (_isOtpLogin && _otpSent) ...[
+                            _buildModernInput(
+                              controller: _otpController,
+                              hint: '6-digit OTP Code',
+                              icon: Icons.security_rounded,
+                              keyboardType: TextInputType.number,
+                            ).animate().fadeIn().slideY(begin: 0.1),
+                            SizedBox(height: screenHeight * 0.015),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: GestureDetector(
+                                onTap: _resendSeconds == 0 ? _sendOtp : null,
+                                child: Text(
+                                  _resendSeconds > 0
+                                      ? "Resend OTP in ${_resendSeconds}s"
+                                      : "Resend OTP",
+                                  style: GoogleFonts.outfit(
+                                    color: _resendSeconds > 0
+                                        ? const Color(0xFF94A3B8)
+                                        : const Color(0xFF3B82F6),
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: screenWidth * 0.035,
+                                  ),
+                                ),
                               ),
+                            ).animate().fadeIn(delay: 200.ms),
+                          ] else if (!_isOtpLogin)
+                            _buildModernInput(
+                              controller: _passwordController,
+                              hint: 'Password',
+                              icon: Icons.lock_outline_rounded,
+                              isPassword: true,
+                            ).animate().fadeIn().slideY(begin: 0.1),
+                        ],
+                      ).animate().fadeIn(delay: 800.ms),
+
+                      SizedBox(height: screenHeight * 0.05),
+
+                      // Main Action Button
+                      GestureDetector(
+                        onTap: _isLoading ? null : _handleLogin,
+                        child: Container(
+                          height: screenHeight * 0.078,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF3B82F6).withOpacity(0.3),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          alignment: Alignment.center,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : Text(
+                                  _isOtpLogin
+                                      ? (_otpSent
+                                            ? 'ACTIVATE SESSION'
+                                            : 'GET OTP CODE')
+                                      : 'SIGN IN',
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.white,
+                                    fontSize: screenWidth * 0.042,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                        ),
+                      ).animate().fadeIn(delay: 1.seconds).slideY(begin: 0.2),
+
+                      SizedBox(height: screenHeight * 0.04),
+
+                      // Alternative Action
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            "Don't have an account? ",
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF94A3B8),
+                              fontSize: screenWidth * 0.035,
                             ),
                           ),
-                        ).animate().fadeIn(delay: 200.ms),
-                      ] else if (!_isOtpLogin)
-                        _buildModernInput(
-                          controller: _passwordController,
-                          hint: 'Password',
-                          icon: Icons.lock_outline_rounded,
-                          isPassword: true,
-                        ).animate().fadeIn().slideY(begin: 0.1),
-                    ],
-                  ).animate().fadeIn(delay: 800.ms),
-
-                  const SizedBox(height: 40),
-
-                  // Main Action Button
-                  GestureDetector(
-                    onTap: _isLoading ? null : _handleLogin,
-                    child: Container(
-                      height: 64,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF3B82F6).withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
+                          GestureDetector(
+                            onTap: () {},
+                            child: Text(
+                              "Create Profile",
+                              style: GoogleFonts.outfit(
+                                color: const Color(0xFFF9A826),
+                                fontWeight: FontWeight.w700,
+                                fontSize: screenWidth * 0.038,
+                              ),
+                            ),
                           ),
                         ],
-                      ),
-                      alignment: Alignment.center,
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2.5,
-                              ),
-                            )
-                          : Text(
-                              _isOtpLogin
-                                  ? (_otpSent
-                                        ? 'ACTIVATE SESSION'
-                                        : 'GET OTP CODE')
-                                  : 'SIGN IN',
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1,
-                              ),
-                            ),
-                    ),
-                  ).animate().fadeIn(delay: 1.seconds).slideY(begin: 0.2),
+                      ).animate().fadeIn(delay: 1.2.seconds),
 
-                  const SizedBox(height: 32),
-
-                  // Alternative Action
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account? ",
-                        style: GoogleFonts.inter(
-                          color: const Color(0xFF94A3B8),
-                          fontSize: 13,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {},
-                        child: Text(
-                          "Create Profile",
-                          style: GoogleFonts.outfit(
-                            color: const Color(0xFFF9A826),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
+                      SizedBox(height: screenHeight * 0.06),
                     ],
-                  ).animate().fadeIn(delay: 1.2.seconds),
-
-                  const SizedBox(height: 48),
-                ],
-              ),
+                  ),
+                );
+              },
             ),
           ),
 

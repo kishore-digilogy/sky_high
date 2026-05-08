@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:sky_high/data/models/exam_category_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sky_high/pages/courses/company_details_page.dart';
+import 'package:sky_high/pages/courses/study_layers_page.dart';
 
 class SubcategoryPage extends StatefulWidget {
   final ExamCategoryModel category;
@@ -19,25 +20,42 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
   late List<ExamItemModel> _filteredItems;
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
+  bool _isTitleExpanded = false;
 
   @override
   void initState() {
     super.initState();
-    _filteredSubcategories = widget.category.subcategories;
-    _filteredItems = widget.category.items;
+    _filteredSubcategories = widget.category.subcategories
+        .where((sub) => sub.type?.toLowerCase() != 'material')
+        .toList();
+    _filteredItems = widget.category.items
+        .where((item) => item.type?.toLowerCase() != 'material')
+        .toList();
   }
 
   void _filterResults(String query) {
     setState(() {
       if (query.isEmpty) {
-        _filteredSubcategories = widget.category.subcategories;
-        _filteredItems = widget.category.items;
-      } else {
         _filteredSubcategories = widget.category.subcategories
-            .where((sub) => sub.name.toLowerCase().contains(query.toLowerCase()))
+            .where((sub) => sub.type?.toLowerCase() != 'material')
             .toList();
         _filteredItems = widget.category.items
-            .where((item) => item.name.toLowerCase().contains(query.toLowerCase()))
+            .where((item) => item.type?.toLowerCase() != 'material')
+            .toList();
+      } else {
+        _filteredSubcategories = widget.category.subcategories
+            .where(
+              (sub) =>
+                  sub.type?.toLowerCase() != 'material' &&
+                  sub.name.toLowerCase().contains(query.toLowerCase()),
+            )
+            .toList();
+        _filteredItems = widget.category.items
+            .where(
+              (item) =>
+                  item.type?.toLowerCase() != 'material' &&
+                  item.name.toLowerCase().contains(query.toLowerCase()),
+            )
             .toList();
       }
     });
@@ -56,6 +74,7 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        // toolbarHeight: 80,
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new,
@@ -88,21 +107,29 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                   style: GoogleFonts.outfit(fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Search companies...',
-                    hintStyle:
-                        GoogleFonts.outfit(color: const Color(0xFF94A3B8)),
-                    prefixIcon: const Icon(Icons.search,
-                        color: Color(0xFF94A3B8), size: 20),
+                    hintStyle: GoogleFonts.outfit(
+                      color: const Color(0xFF94A3B8),
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: Color(0xFF94A3B8),
+                      size: 20,
+                    ),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
               )
-            : Text(
-                widget.category.title,
-                style: GoogleFonts.outfit(
-                  color: const Color(0xFF1E293B),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
+            : SizedBox(
+                child: Text(
+                  widget.category.title,
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF1E293B),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.visible,
                 ),
               ),
         actions: [
@@ -128,16 +155,18 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
             Icons.inbox_outlined,
             size: 80,
             color: Colors.blueGrey[200],
-          ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1),
+          ).animate().slideY(begin: 0.1),
           const SizedBox(height: 20),
           Text(
-            'No items available',
+            widget.category.type?.toLowerCase() == 'material'
+                ? 'No Materials available'
+                : 'No Companies available',
             style: GoogleFonts.outfit(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF1E293B),
             ),
-          ).animate().fadeIn(delay: 200.ms),
+          ).animate(),
           const SizedBox(height: 10),
           Text(
             'Check back later for new content in this category.',
@@ -146,7 +175,7 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
               color: const Color(0xFF64748B),
             ),
             textAlign: TextAlign.center,
-          ).animate().fadeIn(delay: 400.ms),
+          ).animate(),
         ],
       ),
     );
@@ -154,8 +183,14 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
 
   Widget _buildItemsList() {
     final totalCount = _filteredSubcategories.length + _filteredItems.length;
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+    return GridView.builder(
+      padding: const EdgeInsets.all(20),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 1.0,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
       itemCount: totalCount,
       itemBuilder: (context, index) {
         final isSubcategory = index < _filteredSubcategories.length;
@@ -182,21 +217,30 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                 ),
               );
             },
-            child: _buildListTile(sub.name, sub.type, sub.fullLogoUrl, index),
+            child: _buildGridTile(sub.name, sub.type, sub.fullLogoUrl, index),
           );
         } else {
           final itemIndex = index - _filteredSubcategories.length;
           final item = _filteredItems[itemIndex];
           return GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CompanyDetailsPage(company: item),
-                ),
-              );
+              if (item.type?.toLowerCase() == 'material') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudyLayersPage(company: item),
+                  ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CompanyDetailsPage(company: item),
+                  ),
+                );
+              }
             },
-            child: _buildListTile(
+            child: _buildGridTile(
               item.name,
               item.type,
               item.fullLogoUrl,
@@ -208,71 +252,60 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
     );
   }
 
-  Widget _buildListTile(String name, String? type, String logoUrl, int index) {
+  Widget _buildGridTile(String name, String? type, String logoUrl, int index) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _buildLogo(name, logoUrl, type),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (type != null && type.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Color(widget.category.displayColorValue).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      type.toUpperCase(),
-                      style: GoogleFonts.outfit(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Color(widget.category.displayColorValue),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+          const SizedBox(height: 12),
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1E293B),
+              height: 1.2,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          const Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 16,
-            color: Color(0xFF94A3B8),
-          ),
+          if (type != null && type.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Color(
+                  widget.category.displayColorValue,
+                ).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                type.toUpperCase(),
+                style: GoogleFonts.outfit(
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                  color: Color(widget.category.displayColorValue),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
-    ).animate().fadeIn(delay: (20 * index).ms).slideX(begin: 0.1);
+    ).animate().scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutBack);
   }
 
   Widget _buildFallbackLogo(String name, String? type) {
@@ -343,17 +376,21 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(15),
-        child: CachedNetworkImage(
-          imageUrl: logoUrl,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => const Center(
-            child: SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: CachedNetworkImage(
+            imageUrl: logoUrl,
+            fit: BoxFit.contain,
+            placeholder: (context, url) => const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
             ),
+            errorWidget: (context, url, error) =>
+                _buildFallbackLogo(name, type),
           ),
-          errorWidget: (context, url, error) => _buildFallbackLogo(name, type),
         ),
       ),
     );

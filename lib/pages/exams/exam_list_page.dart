@@ -153,7 +153,7 @@ class _ExamListPageState extends State<ExamListPage> {
                 ],
               ),
             ),
-          ).animate().fadeIn(delay: (100 * index).ms).slideX(begin: 0.1);
+          ).animate().slideX(begin: 0.1);
         },
       ),
     );

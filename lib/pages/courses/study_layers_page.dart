@@ -42,6 +42,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
 
   List<McqSetModel> _mcqSets = [];
   bool _isMcqLoading = false;
+  bool _isTitleExpanded = false;
   final ExamService _examService = ExamService();
 
   final List<Map<String, dynamic>> _moduleGroups = [
@@ -190,6 +191,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
+          toolbarHeight: 85,
           leading: IconButton(
             icon: const Icon(
               Icons.arrow_back_ios_new_rounded,
@@ -212,6 +214,8 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF1E293B),
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.visible,
               ),
               Text(
                 'LEARNING JOURNEY',
@@ -391,8 +395,6 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                       fontWeight: FontWeight.w600,
                       color: isSelected ? color : const Color(0xFF1E293B),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -406,7 +408,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           ],
         ),
       ),
-    ).animate().fadeIn(delay: (50 * index).ms).slideX(begin: -0.1);
+    ).animate().slideX(begin: -0.1);
   }
 
   IconData _getModuleIcon(int modNum) {
@@ -419,6 +421,12 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
         return Icons.track_changes_rounded;
       case 4:
         return Icons.article_outlined;
+      case 5:
+        return Icons.history_edu_rounded;
+      case 6:
+        return Icons.fact_check_rounded;
+      case 7:
+        return Icons.videocam_rounded;
       case 8:
         return Icons.quiz_outlined;
       default:
@@ -518,7 +526,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           ),
         ],
       ),
-    ).animate().fadeIn().scale(begin: const Offset(0.95, 0.95));
+    ).animate().scale(begin: const Offset(0.95, 0.95));
   }
 
   Widget _buildMaterialsView() {
@@ -1085,14 +1093,23 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             Navigator.pop(context);
-                            Navigator.push(
+                            final success = await Navigator.push<bool>(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const LoginPage(),
+                                builder: (context) =>
+                                    const LoginPage(returnToPreviousPage: true),
                               ),
                             );
+
+                            if (success == true) {
+                              setState(() {
+                                _checkSubscription();
+                                // Re-fetch or refresh necessary data
+                                _fetchApiLayers();
+                              });
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,

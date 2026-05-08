@@ -164,7 +164,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   ],
                 ),
               ],
-            ).animate().fadeIn(delay: 1.seconds).moveY(begin: 30, end: 0),
+            ).animate().moveY(begin: 30, end: 0),
           ),
         ],
       ),
@@ -262,7 +262,6 @@ class _BackgroundDecor extends StatelessWidget {
                 ),
               )
               .animate(onPlay: (c) => c.repeat())
-              .fadeIn(duration: 2.seconds)
               .fadeOut(delay: 2.seconds, duration: 2.seconds);
         }),
       ],
@@ -337,7 +336,7 @@ class OnboardingSlide extends StatelessWidget {
                   letterSpacing: -1,
                 ),
                 textAlign: TextAlign.center,
-              ).animate().fadeIn(duration: 600.ms).moveY(begin: 30, end: 0),
+              ).animate().moveY(begin: 30, end: 0),
               const SizedBox(height: 20),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -357,7 +356,7 @@ class OnboardingSlide extends StatelessWidget {
                     letterSpacing: 2,
                   ),
                 ),
-              ).animate().fadeIn(delay: 300.ms).scale(),
+              ).animate().scale(),
               const SizedBox(height: 24),
               Text(
                 item.description,
