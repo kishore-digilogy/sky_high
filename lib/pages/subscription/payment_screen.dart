@@ -384,7 +384,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 children: [
                   Text(
                     'ELITE ACCESS',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       color: Colors.white.withOpacity(0.8),
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
@@ -394,7 +394,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'One Year Membership',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -422,7 +422,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             children: [
               Text(
                 '₹',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   color: Colors.white,
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
@@ -432,7 +432,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               const SizedBox(width: 4),
               Text(
                 '1,180',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   color: Colors.white,
                   fontSize: 56,
                   fontWeight: FontWeight.w800,
@@ -451,7 +451,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
                 child: Text(
                   'ANNUAL',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     color: const Color(0xFF1E3A8A),
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
@@ -493,7 +493,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         children: [
           Text(
             text,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: const Color(0xFF334155),
@@ -611,7 +611,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   const SizedBox(width: 12),
                   Text(
                     'Complete Payment',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -644,7 +644,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         const SizedBox(width: 6),
         Text(
           text,
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.inter(
             color: const Color(0xFF94A3B8),
             fontSize: 10,
             fontWeight: FontWeight.w800,
@@ -681,7 +681,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               children: [
                 Text(
                   'Login Required',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontWeight: FontWeight.w800,
                     fontSize: 22,
                     color: const Color(0xFF1A1A2E),
@@ -708,7 +708,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   const SizedBox(height: 12),
                   Text(
                     'Please sign in to proceed with your\npayment.',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       color: const Color(0xFF64748B),
                       fontSize: 14,
                       height: 1.4,
@@ -718,13 +718,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   const SizedBox(height: 24),
                   TextField(
                     controller: emailController,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 15,
                       color: const Color(0xFF1E293B),
                     ),
                     decoration: InputDecoration(
                       hintText: 'Email Address',
-                      hintStyle: GoogleFonts.outfit(
+                      hintStyle: GoogleFonts.inter(
                         color: const Color(0xFF64748B),
                         fontSize: 15,
                       ),
@@ -762,13 +762,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     TextField(
                       controller: passwordController,
                       obscureText: true,
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontSize: 15,
                         color: const Color(0xFF1E293B),
                       ),
                       decoration: InputDecoration(
                         hintText: 'Password',
-                        hintStyle: GoogleFonts.outfit(
+                        hintStyle: GoogleFonts.inter(
                           color: const Color(0xFF64748B),
                           fontSize: 15,
                         ),
@@ -807,13 +807,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     TextField(
                       controller: otpController,
                       keyboardType: TextInputType.number,
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontSize: 15,
                         color: const Color(0xFF1E293B),
                       ),
                       decoration: InputDecoration(
                         hintText: 'Enter 6-digit OTP',
-                        hintStyle: GoogleFonts.outfit(
+                        hintStyle: GoogleFonts.inter(
                           color: const Color(0xFF64748B),
                           fontSize: 15,
                         ),
@@ -858,7 +858,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     },
                     child: Text(
                       isOtpLogin ? 'Use Password Login' : 'Login with OTP',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         color: const Color(0xFFF9A826),
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
@@ -1064,7 +1064,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               isOtpLogin
                                   ? (otpSent ? 'Verify & Login' : 'Send OTP')
                                   : 'Sign In',
-                              style: GoogleFonts.outfit(
+                              style: GoogleFonts.inter(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -1144,7 +1144,7 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
                 // Status Text
                 Text(
                   widget.success ? 'Payment Successful!' : 'Payment Failed',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
                     color: const Color(0xFF0F172A),
@@ -1198,7 +1198,7 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
                     ),
                     child: Text(
                       widget.success ? 'Go to Dashboard' : 'Try Again',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1220,7 +1220,7 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
                     },
                     child: Text(
                       'Explore Courses',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         color: const Color(0xFF64748B),
                         fontWeight: FontWeight.w600,
                       ),

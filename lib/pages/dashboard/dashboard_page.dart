@@ -23,6 +23,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sky_high/pages/dashboard/notification_page.dart';
 import 'package:sky_high/core/services/notification_service.dart';
 import 'package:sky_high/pages/study_materials/all_study_materials_page.dart';
+import 'package:sky_high/pages/courses/study_layers_page.dart';
+import 'package:sky_high/core/services/localization_service.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -36,6 +38,8 @@ class _DashboardPageState extends State<DashboardPage> {
   final Color primaryColor = const Color(0xFFF9A826);
   final Color secondaryColor = const Color(0xFF4AC2E3);
   final Color bgColor = const Color(0xFFF9F9FB);
+  final _l10n = LocalizationService();
+  List<Map<String, dynamic>> _recentStudies = [];
 
   Future<List<ExamCategoryModel>>? _categoriesFuture;
   Future<List<TestimonialModel>>? _testimonialsFuture;
@@ -87,6 +91,13 @@ class _DashboardPageState extends State<DashboardPage> {
     _studyMaterialsFuture = ExamService().getStudyMaterials();
     _loadNotificationCount();
     _startBannerTimer();
+    _loadRecentStudy();
+  }
+
+  void _loadRecentStudy() {
+    setState(() {
+      _recentStudies = GetIt.I<StorageService>().getRecentStudies();
+    });
   }
 
   void _startBannerTimer() {
@@ -99,6 +110,17 @@ class _DashboardPageState extends State<DashboardPage> {
           curve: Curves.easeInOutCubic,
         );
       }
+    });
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      _categoriesFuture = ExamService().getCategories();
+      _testimonialsFuture = ExamService().getTestimonials();
+      _freeExamsFuture = ExamService().getFreeExams();
+      _studyMaterialsFuture = ExamService().getStudyMaterials();
+      _loadNotificationCount();
+      _loadRecentStudy();
     });
   }
 
@@ -127,8 +149,14 @@ class _DashboardPageState extends State<DashboardPage> {
         index: _currentIndex,
         children: [
           _buildDashboardTab(),
-          const Center(child: Text('Documents Tab under construction')),
-          const Center(child: Text('Favorites Tab under construction')),
+          Center(
+            child: Text(
+              _l10n.tr('study_materials') + ' Tab under construction',
+            ),
+          ),
+          Center(
+            child: Text(_l10n.tr('free_exams') + ' Tab under construction'),
+          ),
           _buildProfileTab(),
         ],
       ),
@@ -137,38 +165,168 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildDashboardTab() {
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-      },
-      child: SafeArea(
-        bottom: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(vertical: 20),
+  void _showLanguageSelection() {
+    final languages = [
+      {'name': 'English', 'native': 'English', 'icon': '🇺🇸'},
+      {'name': 'Tamil', 'native': 'தமிழ்', 'icon': '🇮🇳'},
+      {'name': 'Telugu', 'native': 'తెలుగు', 'icon': '🇮🇳'},
+      {'name': 'Hindi', 'native': 'हिन्दी', 'icon': '🇮🇳'},
+      {'name': 'Malayalam', 'native': 'മലയാളം', 'icon': '🇮🇳'},
+      {'name': 'Kannada', 'native': 'ಕನ್ನಡ', 'icon': '🇮🇳'},
+    ];
+
+    final currentLang = GetIt.I<StorageService>().getSelectedLanguage();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              _buildHeader(),
-              const SizedBox(height: 25),
-              _buildSearchBar(),
-              const SizedBox(height: 25),
-              _buildBannerCarousel(),
-              const SizedBox(height: 30),
-              _buildCoursesSection(),
-              const SizedBox(height: 30),
-              _buildFreeExamsSection(),
-              const SizedBox(height: 0),
-              _buildStudyMaterialsSection(),
-              const SizedBox(height: 30),
-              // _buildTestimonialsSection(),
-              _buildWhatsAppSection(),
-              const SizedBox(height: 40),
-              // _buildWhatsAppSection(),
-              _buildTestimonialsSection(),
-              const SizedBox(height: 00),
-              _buildAboutUsSection(),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                _l10n.tr('settings'),
+                style: GoogleFonts.inter(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: languages.length,
+                  itemBuilder: (context, index) {
+                    final lang = languages[index];
+                    final isSelected = currentLang == lang['name'];
+
+                    return GestureDetector(
+                      onTap: () async {
+                        await GetIt.I<StorageService>().setSelectedLanguage(
+                          lang['name']!,
+                        );
+                        Navigator.pop(context);
+                        _refreshData(); // Refresh API data with new language
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? primaryColor.withOpacity(0.1)
+                              : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected
+                                ? primaryColor
+                                : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              lang['icon']!,
+                              style: const TextStyle(fontSize: 24),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    lang['native']!,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                  Text(
+                                    lang['name']!,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (isSelected)
+                              Icon(
+                                Icons.check_circle_rounded,
+                                color: primaryColor,
+                                size: 24,
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDashboardTab() {
+    return RefreshIndicator(
+      onRefresh: _refreshData,
+      color: primaryColor,
+      backgroundColor: Colors.white,
+      child: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: SafeArea(
+          bottom: false,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 25),
+                _buildSearchBar(),
+                const SizedBox(height: 25),
+                _buildBannerCarousel(),
+                const SizedBox(height: 25),
+                _buildContinueStudyingSection(),
+                const SizedBox(height: 30),
+                _buildCoursesSection(),
+                const SizedBox(height: 30),
+                _buildFreeExamsSection(),
+                const SizedBox(height: 0),
+                _buildStudyMaterialsSection(),
+                const SizedBox(height: 30),
+                // _buildTestimonialsSection(),
+                _buildWhatsAppSection(),
+                const SizedBox(height: 40),
+                // _buildWhatsAppSection(),
+                _buildTestimonialsSection(),
+                const SizedBox(height: 00),
+                _buildAboutUsSection(),
+              ],
+            ),
           ),
         ),
       ),
@@ -219,7 +377,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 32),
               Text(
                 'Identity Required',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: const Color(0xFF0F172A),
@@ -270,7 +428,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   alignment: Alignment.center,
                   child: Text(
                     'SIGN IN NOW',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
@@ -339,7 +497,7 @@ class _DashboardPageState extends State<DashboardPage> {
               children: [
                 Text(
                   userName,
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF1E293B),
@@ -347,26 +505,26 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 Text(
                   user?['email'] ?? 'student@skyhigh.com',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 14,
                     color: const Color(0xFF94A3B8),
                   ),
                 ),
                 const SizedBox(height: 8),
                 _buildSubscriptionBanner(),
-                const SizedBox(height: 24),
+                // const SizedBox(height: 24),
 
                 // Stats Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildStatItem('Purchased', '1 Plan'),
-                    _buildStatDivider(),
-                    _buildStatItem('Achieved', '12 Courses'),
-                    _buildStatDivider(),
-                    _buildStatItem('Certificates', '5 Earned'),
-                  ],
-                ),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                //   children: [
+                //     _buildStatItem('Purchased', '1 Plan'),
+                //     _buildStatDivider(),
+                //     _buildStatItem('Achieved', '12 Courses'),
+                //     _buildStatDivider(),
+                //     _buildStatItem('Certificates', '5 Earned'),
+                //   ],
+                // ),
               ],
             ),
           ),
@@ -380,8 +538,8 @@ class _DashboardPageState extends State<DashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Settings',
-                  style: GoogleFonts.outfit(
+                  _l10n.tr('settings'),
+                  style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF1E293B),
@@ -390,22 +548,13 @@ class _DashboardPageState extends State<DashboardPage> {
                 const SizedBox(height: 16),
                 _buildSettingsItem(
                   Icons.person_outline_rounded,
-                  'Edit Profile',
+                  _l10n.tr('edit_profile'),
                   () => _showWIPAlert(context, 'Edit Profile'),
                 ),
-                _buildSettingsItem(
-                  Icons.notifications_none_rounded,
-                  'Notifications',
-                  () => _showWIPAlert(context, 'Notifications'),
-                ),
-                _buildSettingsItem(
-                  Icons.lock_open_rounded,
-                  'Privacy',
-                  () => _showWIPAlert(context, 'Privacy'),
-                ),
+
                 _buildSettingsItem(
                   Icons.workspace_premium_outlined,
-                  'Premium Status',
+                  _l10n.tr('premium_status'),
                   () {
                     if (user?['subscription_status'] == 'paid') {
                       _showPlanDetailsSheet(context);
@@ -442,7 +591,7 @@ class _DashboardPageState extends State<DashboardPage> {
       children: [
         Text(
           value.split(' ')[0],
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.inter(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: const Color(0xFF1E293B),
@@ -450,7 +599,7 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         Text(
           label,
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.inter(
             fontSize: 12,
             color: const Color(0xFF94A3B8),
           ),
@@ -470,6 +619,7 @@ class _DashboardPageState extends State<DashboardPage> {
     bool isPremium = false,
     String premiumStatus = 'free',
     bool isDestructive = false,
+    Widget? trailing,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -492,7 +642,7 @@ class _DashboardPageState extends State<DashboardPage> {
             Expanded(
               child: Text(
                 title,
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: isDestructive ? Colors.red : const Color(0xFF1E293B),
@@ -502,12 +652,13 @@ class _DashboardPageState extends State<DashboardPage> {
             if (isPremium)
               Text(
                 premiumStatus == 'paid' ? 'Active' : 'Inactive',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 12,
                   color: premiumStatus == 'paid' ? Colors.green : Colors.orange,
                   fontWeight: FontWeight.bold,
                 ),
               ),
+            if (trailing != null) trailing,
             const SizedBox(width: 8),
             Icon(
               Icons.arrow_forward_ios_rounded,
@@ -546,7 +697,7 @@ class _DashboardPageState extends State<DashboardPage> {
             const SizedBox(height: 24),
             Text(
               'Work in Progress',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF1E293B),
@@ -556,7 +707,7 @@ class _DashboardPageState extends State<DashboardPage> {
             Text(
               'The "$feature" feature is currently under development to give you the best experience.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontSize: 14,
                 color: const Color(0xFF64748B),
                 height: 1.5,
@@ -578,7 +729,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 child: Text(
                   'Back',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -625,7 +776,7 @@ class _DashboardPageState extends State<DashboardPage> {
             const SizedBox(height: 12),
             Text(
               title,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF1E293B),
@@ -694,7 +845,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     const SizedBox(height: 16),
                     Text(
                       'Sky High Elite',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         color: Colors.white,
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -703,7 +854,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     const SizedBox(height: 8),
                     Text(
                       'One Year Unlimited Access',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         color: Colors.white.withOpacity(0.8),
                         fontSize: 14,
                       ),
@@ -714,7 +865,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 32),
               Text(
                 'Current Plan Details',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF1E293B),
@@ -739,7 +890,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 32),
               Text(
                 'Plan Benefits',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF1E293B),
@@ -766,7 +917,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   child: Text(
                     'Close',
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                    style: GoogleFonts.inter(fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -787,7 +938,7 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(width: 12),
           Text(
             label,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               color: const Color(0xFF64748B),
               fontSize: 14,
             ),
@@ -795,7 +946,7 @@ class _DashboardPageState extends State<DashboardPage> {
           const Spacer(),
           Text(
             value,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               color: const Color(0xFF1E293B),
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -816,7 +967,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Expanded(
             child: Text(
               benefit,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 color: const Color(0xFF475569),
                 fontSize: 14,
               ),
@@ -834,11 +985,11 @@ class _DashboardPageState extends State<DashboardPage> {
         return AlertDialog(
           title: Text(
             'Logout',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold),
           ),
           content: Text(
             'Are you sure you want to log out?',
-            style: GoogleFonts.outfit(),
+            style: GoogleFonts.inter(),
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
@@ -848,7 +999,7 @@ class _DashboardPageState extends State<DashboardPage> {
               onPressed: () => Navigator.pop(context),
               child: Text(
                 'Cancel',
-                style: GoogleFonts.outfit(color: Colors.grey),
+                style: GoogleFonts.inter(color: Colors.grey),
               ),
             ),
             ElevatedButton(
@@ -866,7 +1017,7 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               child: Text(
                 'Logout',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
@@ -904,7 +1055,7 @@ class _DashboardPageState extends State<DashboardPage> {
               children: [
                 Text(
                   'Login Required',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontWeight: FontWeight.w800,
                     fontSize: 22,
                     color: const Color(0xFF1A1A2E),
@@ -931,7 +1082,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(height: 12),
                   Text(
                     'Please sign in to proceed with your\npayment.',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       color: const Color(0xFF64748B),
                       fontSize: 14,
                       height: 1.4,
@@ -941,13 +1092,13 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(height: 24),
                   TextField(
                     controller: emailController,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 15,
                       color: const Color(0xFF1E293B),
                     ),
                     decoration: InputDecoration(
                       hintText: 'Email Address',
-                      hintStyle: GoogleFonts.outfit(
+                      hintStyle: GoogleFonts.inter(
                         color: const Color(0xFF64748B),
                         fontSize: 15,
                       ),
@@ -985,13 +1136,13 @@ class _DashboardPageState extends State<DashboardPage> {
                     TextField(
                       controller: passwordController,
                       obscureText: true,
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontSize: 15,
                         color: const Color(0xFF1E293B),
                       ),
                       decoration: InputDecoration(
                         hintText: 'Password',
-                        hintStyle: GoogleFonts.outfit(
+                        hintStyle: GoogleFonts.inter(
                           color: const Color(0xFF64748B),
                           fontSize: 15,
                         ),
@@ -1030,13 +1181,13 @@ class _DashboardPageState extends State<DashboardPage> {
                     TextField(
                       controller: otpController,
                       keyboardType: TextInputType.number,
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontSize: 15,
                         color: const Color(0xFF1E293B),
                       ),
                       decoration: InputDecoration(
                         hintText: 'Enter 6-digit OTP',
-                        hintStyle: GoogleFonts.outfit(
+                        hintStyle: GoogleFonts.inter(
                           color: const Color(0xFF64748B),
                           fontSize: 15,
                         ),
@@ -1081,7 +1232,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     },
                     child: Text(
                       isOtpLogin ? 'Use Password Login' : 'Login with OTP',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         color: const Color(0xFFF9A826),
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
@@ -1285,7 +1436,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               isOtpLogin
                                   ? (otpSent ? 'Verify & Login' : 'Send OTP')
                                   : 'Sign In',
-                              style: GoogleFonts.outfit(
+                              style: GoogleFonts.inter(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -1360,7 +1511,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         const SizedBox(width: 4),
                         Text(
                           'BESTVALUE',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.inter(
                             color: const Color(0xFFF9A826),
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -1373,7 +1524,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(height: 12),
                   Text(
                     'Total All India PSU',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
@@ -1382,7 +1533,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(height: 4),
                   Text(
                     'Single Combo • All India PSU Exams Covered',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       color: Colors.blueGrey[300],
                       fontSize: 12,
                     ),
@@ -1396,7 +1547,7 @@ class _DashboardPageState extends State<DashboardPage> {
               children: [
                 Text(
                   '₹999',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     color: Colors.white,
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -1404,7 +1555,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 Text(
                   'oneYear',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     color: Colors.blueGrey[300],
                     fontSize: 12,
                   ),
@@ -1422,46 +1573,60 @@ class _DashboardPageState extends State<DashboardPage> {
     final userName = user?['name'] ?? 'User';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    'Hi, $userName ',
-                    style: GoogleFonts.outfit(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF1E293B),
+          // Left side: Greeting and Subtext
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        'Hi, $userName ',
+                        style: GoogleFonts.outfit(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A),
+                          letterSpacing: -0.5,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
-                  ),
-                  const Text('👋', style: TextStyle(fontSize: 24)),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Find a source you want to learn!',
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF94A3B8),
+                    const Text('👋', style: TextStyle(fontSize: 24)),
+                  ],
                 ),
-              ),
-            ],
-          ).animate().slideX(begin: -0.1),
+                const SizedBox(height: 4),
+                Text(
+                  'Find a source you want to learn!',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF64748B),
+                    letterSpacing: 0.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 16),
+
+          // Right side: Actions
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               if (GetIt.I<StorageService>().getToken() == null ||
                   GetIt.I<StorageService>().getToken()!.isEmpty)
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
-                  child: TextButton(
-                    onPressed: () {
+                  child: GestureDetector(
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -1469,23 +1634,78 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       );
                     },
-                    style: TextButton.styleFrom(
-                      foregroundColor: primaryColor,
+                    child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      shape: RoundedRectangleBorder(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [primaryColor, primaryColor.withOpacity(0.8)],
+                        ),
                         borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: primaryColor.withOpacity(0.5)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryColor.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    ),
-                    child: Text(
-                      'Login',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                      child: Text(
+                        _l10n.tr('login'),
+                        style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                   ),
                 ),
+
+              GestureDetector(
+                onTap: _showLanguageSelection,
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.translate_rounded,
+                        color: Color(0xFF334155),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        GetIt.I<StorageService>()
+                            .getSelectedLanguage()
+                            .substring(0, 2)
+                            .toUpperCase(),
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
               GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -1502,9 +1722,9 @@ class _DashboardPageState extends State<DashboardPage> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
@@ -1512,8 +1732,8 @@ class _DashboardPageState extends State<DashboardPage> {
                     clipBehavior: Clip.none,
                     children: [
                       const Icon(
-                        Icons.notifications_outlined,
-                        color: Color(0xFF1E293B),
+                        Icons.notifications_none_rounded,
+                        color: Color(0xFF334155),
                         size: 24,
                       ),
                       if (_notificationCount > 0)
@@ -1523,19 +1743,22 @@ class _DashboardPageState extends State<DashboardPage> {
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: secondaryColor,
+                              color: const Color(0xFFEF4444), // Modern red
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 1.5,
-                              ),
+                              border: Border.all(color: Colors.white, width: 2),
                             ),
-                            child: Text(
-                              '$_notificationCount',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 8,
-                                fontWeight: FontWeight.bold,
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '$_notificationCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
@@ -1560,11 +1783,11 @@ class _DashboardPageState extends State<DashboardPage> {
                     ],
                   ),
                 ),
-              ).animate().scale(),
+              ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
             ],
           ),
         ],
-      ),
+      ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.02),
     );
   }
 
@@ -1619,7 +1842,9 @@ class _DashboardPageState extends State<DashboardPage> {
     final isExpanded = _expandedBanners.contains(index);
 
     return GestureDetector(
-      onTap: () => _showWIPAlert(context, banner['title'] as String),
+      onTap: () {
+        _showWIPAlert(context, banner['title'] as String);
+      },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 24),
         decoration: BoxDecoration(
@@ -1682,7 +1907,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         children: [
                           Text(
                             banner['title'] as String,
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
@@ -1691,7 +1916,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           const SizedBox(height: 4),
                           Text(
                             banner['subtitle'] as String,
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontSize: 12,
                               color: Colors.white.withOpacity(0.9),
                               fontWeight: FontWeight.w600,
@@ -1701,7 +1926,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           LayoutBuilder(
                             builder: (context, constraints) {
                               final detailText = banner['detail'] as String;
-                              final textStyle = GoogleFonts.outfit(
+                              final textStyle = GoogleFonts.inter(
                                 fontSize: 10,
                                 color: Colors.white.withOpacity(0.8),
                                 fontWeight: FontWeight.w400,
@@ -1747,7 +1972,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                           isExpanded
                                               ? 'Read Less'
                                               : 'Read More',
-                                          style: GoogleFonts.outfit(
+                                          style: GoogleFonts.inter(
                                             fontSize: 10,
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
@@ -1840,8 +2065,8 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(width: 15),
               Expanded(
                 child: Text(
-                  'Search courses...',
-                  style: GoogleFonts.outfit(
+                  _l10n.tr('search_hint'),
+                  style: GoogleFonts.inter(
                     color: const Color(0xFF94A3B8),
                     fontSize: 15,
                   ),
@@ -1863,7 +2088,7 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           Text(
             title,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF1E293B),
@@ -1871,7 +2096,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           Text(
             action,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: const Color(0xFF94A3B8),
@@ -1953,7 +2178,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(width: 10),
                   Text(
                     cat['name'] as String,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF1E293B),
@@ -1965,6 +2190,251 @@ class _DashboardPageState extends State<DashboardPage> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildContinueStudyingSection() {
+    if (_recentStudies.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _l10n.tr('continue_studying'),
+                style: GoogleFonts.inter(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    GetIt.I<StorageService>().clearRecentStudies();
+                    _recentStudies = [];
+                  });
+                },
+                child: Text(
+                  'Dismiss All',
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFF64748B),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 220,
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            scrollDirection: Axis.horizontal,
+            itemCount: _recentStudies.length,
+            itemBuilder: (context, index) {
+              final study = _recentStudies[index];
+              try {
+                final company = ExamItemModel.fromJson(study['company']);
+                final modIndex = study['modIndex'] as int;
+                final modTitle = study['modTitle'] as String;
+
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StudyLayersPage(
+                          company: company,
+                          initialModuleIndex: modIndex,
+                        ),
+                      ),
+                    ).then((_) => _loadRecentStudy());
+                  },
+                  child: Container(
+                    width: 280,
+                    margin: const EdgeInsets.only(right: 16, bottom: 8, top: 4),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(32),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                      border: Border.all(color: const Color(0xFFF1F5F9)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: company.fullLogoUrl.isNotEmpty
+                                  ? CachedNetworkImage(
+                                      imageUrl: company.fullLogoUrl,
+                                      width: 24,
+                                      height: 24,
+                                      fit: BoxFit.contain,
+                                      placeholder: (context, url) => const Text(
+                                        '🧠',
+                                        style: TextStyle(fontSize: 24),
+                                      ),
+                                      errorWidget: (context, url, error) =>
+                                          const Text(
+                                            '🧠',
+                                            style: TextStyle(fontSize: 24),
+                                          ),
+                                    )
+                                  : const Text(
+                                      '🧠',
+                                      style: TextStyle(fontSize: 24),
+                                    ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          modTitle,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color(0xFF1E293B),
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: () async {
+                                          await GetIt.I<StorageService>()
+                                              .removeRecentStudy(company.id);
+                                          _loadRecentStudy();
+                                        },
+                                        child: const Icon(
+                                          Icons.close_rounded,
+                                          size: 16,
+                                          color: Color(0xFFCBD5E1),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    company.name,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: const Color(0xFF94A3B8),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Progress',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: const Color(0xFF94A3B8),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              '${((modIndex + 1) / 8 * 100).toInt()}%',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: const Color(0xFF1E293B),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: LinearProgressIndicator(
+                            value: (modIndex + 1) / 8,
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              const Color(0xFF6366F1).withOpacity(0.8),
+                            ),
+                            minHeight: 8,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF6366F1),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF6366F1).withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Continue lesson',
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.play_arrow_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1);
+              } catch (e) {
+                return const SizedBox.shrink();
+              }
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -1985,41 +2455,90 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            _l10n.tr('categories'),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF1E293B),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6366F1).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.auto_awesome_rounded,
+                              size: 14,
+                              color: Color(0xFF6366F1),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (categories.isNotEmpty)
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    AllCategoriesPage(categories: categories),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                Text(
+                                  _l10n.tr('view_all'),
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF6366F1),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 14,
+                                  color: Color(0xFF6366F1),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
                   Text(
-                    'Courses',
-                    style: GoogleFonts.outfit(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF1E293B),
+                    'Explore top government exam categories',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: const Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  if (categories.isNotEmpty)
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                AllCategoriesPage(categories: categories),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'See All',
-                        style: GoogleFonts.outfit(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: primaryColor,
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ).animate(),
-            const SizedBox(height: 15),
+            const SizedBox(height: 25),
             if (snapshot.hasError || categories.isEmpty)
               _buildEmptyState(
                 'No courses available right now',
@@ -2027,17 +2546,84 @@ class _DashboardPageState extends State<DashboardPage> {
               )
             else
               SizedBox(
-                height: 200,
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                height: 440, // Taller for the premium cards
+                child: GridView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
                   scrollDirection: Axis.horizontal,
-                  itemCount: categories.length > 5 ? 6 : categories.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 210 / 175,
+                  ),
+                  itemCount: categories.length,
                   itemBuilder: (context, index) {
-                    if (index == 5) {
-                      return _buildSeeMoreCard(categories);
-                    }
                     return _buildCategoryCard(categories[index], index);
                   },
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Footer Banner
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6366F1).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.explore_outlined,
+                          color: Color(0xFF6366F1),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Discover the best learning paths',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF1E293B),
+                              ),
+                            ),
+                            Text(
+                              'Smart preparation for your bright future',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                color: const Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.trending_flat_rounded,
+                        color: Color(0xFFCBD5E1),
+                      ),
+                    ],
+                  ),
                 ),
               ),
           ],
@@ -2079,7 +2665,7 @@ class _DashboardPageState extends State<DashboardPage> {
             const SizedBox(height: 12),
             Text(
               'See More',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF1E293B),
@@ -2092,8 +2678,8 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildCategoryCard(ExamCategoryModel category, int index) {
-    final colorValue = category.displayColorValue;
-    final color = Color(colorValue);
+    final color = Color(category.displayColorValue);
+    final isTrending = index == 1; // Simulate trending for the second card
 
     return GestureDetector(
       onTap: () {
@@ -2105,56 +2691,164 @@ class _DashboardPageState extends State<DashboardPage> {
         );
       },
       child: Container(
-        width: 160,
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: isTrending ? const Color(0xFF6366F1).withOpacity(0.3) : const Color(0xFFF1F5F9),
+            width: isTrending ? 2 : 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
+              color: color.withOpacity(0.06),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            CategoryIcon(
-              categoryName: category.title,
-              fallbackEmoji: category.displayIcon,
-              backgroundColor: color.withOpacity(0.1),
-            ),
-            const Spacer(),
-            Text(
-              category.title,
-              style: GoogleFonts.outfit(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF1E293B),
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 8),
-            if (category.subtitle != null && category.subtitle!.isNotEmpty)
-              Text(
-                category.subtitle!,
-                style: GoogleFonts.outfit(
-                  fontSize: 12,
-                  color: const Color(0xFF94A3B8),
-                  fontWeight: FontWeight.w500,
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Halo Icon
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: color.withOpacity(0.1), width: 1),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.05),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withOpacity(0.1),
+                            blurRadius: 15,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        category.displayIcon.isEmpty ? '🎓' : category.displayIcon,
+                        style: const TextStyle(fontSize: 28),
+                      ),
+                    ),
+                  ),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                const SizedBox(height: 14),
+                // Title
+                Text(
+                  category.title.toUpperCase(),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF1E293B),
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.business_center_rounded, size: 10, color: color),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Government Body',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                // Bottom Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(Icons.menu_book_rounded, size: 12, color: Color(0xFF64748B)),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '12 Courses',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.arrow_forward_rounded, size: 12, color: Color(0xFF64748B)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            if (isTrending)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6366F1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.local_fire_department_rounded, size: 10, color: Colors.white),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Trending',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
           ],
         ),
       ),
-    ).animate().slideX(begin: 0.1);
+    ).animate().fadeIn(duration: 400.ms, delay: Duration(milliseconds: index * 50)).scale(begin: const Offset(0.95, 0.95));
   }
+
 
   // ─── Free Exams Section ─────────────────────────────────────────
 
@@ -2185,8 +2879,8 @@ class _DashboardPageState extends State<DashboardPage> {
                 children: [
                   const SizedBox(width: 0),
                   Text(
-                    'Free Mock Tests',
-                    style: GoogleFonts.outfit(
+                    _l10n.tr('free_exams'),
+                    style: GoogleFonts.inter(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF1E293B),
@@ -2204,7 +2898,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                     child: Text(
                       'FREE',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                         color: const Color(0xFF10B981),
@@ -2336,7 +3030,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             child: Text(
                               exam.setName,
 
-                              style: GoogleFonts.outfit(
+                              style: GoogleFonts.inter(
                                 fontSize: 14,
                                 textStyle: TextStyle(
                                   overflow: TextOverflow.ellipsis,
@@ -2379,7 +3073,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                             child: Text(
                               exam.displayCategory,
-                              style: GoogleFonts.outfit(
+                              style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
                                 color: tagFg,
@@ -2400,7 +3094,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               const SizedBox(width: 5),
                               Text(
                                 '${exam.formattedCount} Qs',
-                                style: GoogleFonts.outfit(
+                                style: GoogleFonts.inter(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                   color: const Color(0xFF64748B),
@@ -2418,7 +3112,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               const SizedBox(width: 6),
                               Text(
                                 'Free',
-                                style: GoogleFonts.outfit(
+                                style: GoogleFonts.inter(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                   color: const Color(0xFF059669),
@@ -2483,8 +3177,8 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Row(
                 children: [
                   Text(
-                    'Study Materials',
-                    style: GoogleFonts.outfit(
+                    _l10n.tr('study_materials'),
+                    style: GoogleFonts.inter(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF1E293B),
@@ -2501,8 +3195,8 @@ class _DashboardPageState extends State<DashboardPage> {
                       );
                     },
                     child: Text(
-                      'See All',
-                      style: GoogleFonts.outfit(
+                      _l10n.tr('view_all'),
+                      style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: primaryColor,
@@ -2626,7 +3320,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 children: [
                   Text(
                     material.displayCategory.toUpperCase(),
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       color: color,
@@ -2636,7 +3330,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(height: 4),
                   Text(
                     material.title,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFF1E293B),
@@ -2657,7 +3351,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       const SizedBox(width: 4),
                       Text(
                         material.isVideo ? 'Video' : 'PDF Document',
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.inter(
                           fontSize: 11,
                           color: const Color(0xFF94A3B8),
                         ),
@@ -2817,7 +3511,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       Text(
                         'What Our Students Say',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.inter(
                           fontSize: 26,
                           fontWeight: FontWeight.w900,
                           color: const Color(0xFF1E293B),
@@ -2832,7 +3526,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     child: Text(
                       'Our Students send us bunch of smilies with our services and we love them',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontSize: 14,
                         color: const Color(0xFF64748B),
                         height: 1.5,
@@ -2866,8 +3560,8 @@ class _DashboardPageState extends State<DashboardPage> {
                             const SizedBox(width: 8),
                             Text(
                               'Write a Review',
-                              style: GoogleFonts.outfit(
-                                fontSize: 14,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 color: primaryColor,
                               ),
@@ -2938,7 +3632,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: Center(
                   child: Text(
                     testimonial.initials,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -2953,7 +3647,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   children: [
                     Text(
                       testimonial.userName,
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF1E293B),
@@ -2982,7 +3676,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Expanded(
             child: Text(
               testimonial.content,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontSize: 13,
                 color: const Color(0xFF64748B),
                 height: 1.5,
@@ -2995,7 +3689,7 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 8),
           Text(
             testimonial.timeAgo,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w500,
               color: const Color(0xFF94A3B8),
@@ -3292,7 +3986,10 @@ class _DashboardPageState extends State<DashboardPage> {
     final inactiveColor = const Color(0xFF94A3B8);
 
     return InkWell(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () {
+        setState(() => _currentIndex = index);
+        if (index == 0) _loadRecentStudy();
+      },
       borderRadius: BorderRadius.circular(30),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
@@ -3316,7 +4013,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(width: 8),
               Text(
                 label,
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: activeColor,
@@ -3337,7 +4034,7 @@ class _DashboardPageState extends State<DashboardPage> {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Text(
             'Connect & Learn',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF1E293B),
@@ -3387,8 +4084,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Join Community',
-                            style: GoogleFonts.outfit(
+                            _l10n.tr('whatsapp_title'),
+                            style: GoogleFonts.inter(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
                               color: const Color(0xFF1E293B),
@@ -3398,7 +4095,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           const SizedBox(height: 4),
                           Text(
                             'Connect with 50,000+ Aspirants',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontSize: 14,
                               color: const Color(0xFF64748B),
                               fontWeight: FontWeight.w500,
@@ -3444,7 +4141,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       children: [
                         Text(
                           'Get Started on WhatsApp',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.2,
@@ -3484,7 +4181,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(width: 10),
               Text(
                 'SKY HIGH',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
                   color: const Color(0xFF1E293B),
@@ -3495,9 +4192,9 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           const SizedBox(height: 20),
           Text(
-            "India's leading learning platform for government exams.",
+            _l10n.tr('about_desc'),
             textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 13,
               color: const Color(0xFF94A3B8),
             ),
@@ -3515,7 +4212,7 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 40),
           Text(
             '© 2026 SkyHigh Learning',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 12,
               color: const Color(0xFFCBD5E1),
               fontWeight: FontWeight.w500,
@@ -3611,7 +4308,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(height: 16),
                   Text(
                     message,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 15,
                       color: const Color(0xFF475569),
                       fontWeight: FontWeight.w600,
@@ -3621,7 +4318,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(height: 4),
                   Text(
                     'Check back later for new updates',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 12,
                       color: const Color(0xFF94A3B8),
                     ),
@@ -3665,7 +4362,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 24),
               Text(
                 'Give Feedback',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontWeight: FontWeight.w900,
                   fontSize: 24,
                   color: const Color(0xFF1E293B),
@@ -3679,7 +4376,7 @@ class _DashboardPageState extends State<DashboardPage> {
               Text(
                 'Hi $userName, how was your experience with SkyHigh?',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 14,
                   color: const Color(0xFF64748B),
                   height: 1.5,
@@ -3716,13 +4413,13 @@ class _DashboardPageState extends State<DashboardPage> {
               TextField(
                 controller: contentController,
                 maxLines: 4,
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 15,
                   color: const Color(0xFF1E293B),
                 ),
                 decoration: InputDecoration(
                   hintText: 'Tell us what you liked or what we can improve...',
-                  hintStyle: GoogleFonts.outfit(
+                  hintStyle: GoogleFonts.inter(
                     fontSize: 14,
                     color: const Color(0xFF94A3B8),
                   ),
@@ -3763,7 +4460,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                     child: Text(
                       'Cancel',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF64748B),
                       ),
@@ -3810,7 +4507,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               SnackBar(
                                 content: Text(
                                   res['message'] ?? 'Feedback submitted!',
-                                  style: GoogleFonts.outfit(),
+                                  style: GoogleFonts.inter(),
                                 ),
                                 backgroundColor: const Color(0xFF10B981),
                                 behavior: SnackBarBehavior.floating,
@@ -3829,7 +4526,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             SnackBar(
                               content: Text(
                                 'Error: $e',
-                                style: GoogleFonts.outfit(),
+                                style: GoogleFonts.inter(),
                               ),
                               backgroundColor: const Color(0xFFEF4444),
                               behavior: SnackBarBehavior.floating,
@@ -3851,7 +4548,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                       child: Text(
                         'Submit',
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.inter(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -4044,7 +4741,7 @@ class _ShimmerButtonState extends State<_ShimmerButton>
                     const SizedBox(width: 5),
                     Text(
                       'Start Now',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,

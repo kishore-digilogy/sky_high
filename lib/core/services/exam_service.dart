@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:get_it/get_it.dart';
+import 'package:sky_high/core/services/storage_service.dart';
 import 'package:sky_high/data/models/exam_category_model.dart';
 import 'package:sky_high/data/models/testimonial_model.dart';
 import 'package:sky_high/data/models/free_exam_model.dart';
@@ -18,18 +20,30 @@ class ExamService {
   );
   final String baseUrl = 'https://skyhighapi.digilogy.dev/api';
 
-  ExamService._internal();
+  ExamService._internal() {
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          try {
+            final token = GetIt.I<StorageService>().getToken();
+            if (token != null && token.isNotEmpty) {
+              options.headers['Authorization'] = 'Bearer $token';
+            }
+          } catch (e) {
+            print("ExamService: Error getting token for interceptor: $e");
+          }
+          return handler.next(options);
+        },
+      ),
+    );
+  }
 
   Future<List<ExamCategoryModel>> getCategories() async {
     try {
-      print("ExamService: Fetching categories from $baseUrl/exam...");
       final response = await _dio.get('$baseUrl/exam');
-
-      print("ExamService: Categories fetched. Status: ${response.statusCode}");
-
       if (response.statusCode == 200 || response.statusCode == 304) {
         final List<dynamic> data = response.data;
-        print("ExamService: Parsing ${data.length} categories...");
+        // print("ExamService: Parsing ${data.length} categories...");
         final categories = data
             .map((json) => ExamCategoryModel.fromJson(json))
             .toList();
@@ -47,24 +61,25 @@ class ExamService {
         ];
 
         categories.sort((a, b) {
-          final titleA = a.title.toLowerCase();
-          final titleB = b.title.toLowerCase();
+          final sortTitleA = a.originalTitle.toLowerCase();
+          final sortTitleB = b.originalTitle.toLowerCase();
+
           int getPriority(String title) {
             for (int i = 0; i < priorityOrder.length; i++) {
               if (title.contains(priorityOrder[i])) {
                 return i;
               }
             }
-            return priorityOrder.length; // Default priority for unmatched items
+            return priorityOrder.length;
           }
 
-          final pA = getPriority(titleA);
-          final pB = getPriority(titleB);
+          final pA = getPriority(sortTitleA);
+          final pB = getPriority(sortTitleB);
 
           if (pA != pB) {
             return pA.compareTo(pB);
           }
-          return titleA.compareTo(titleB); // Alphabetical fallback
+          return a.title.toLowerCase().compareTo(b.title.toLowerCase());
         });
 
         return categories;
@@ -87,6 +102,7 @@ class ExamService {
 
   Future<List<TestimonialModel>> getTestimonials() async {
     try {
+      print("ExamService: Fetching testimonials from $baseUrl/testimonials");
       final response = await _dio.get('$baseUrl/testimonials');
       if (response.statusCode == 200 || response.statusCode == 304) {
         final Map<String, dynamic> body = response.data;
@@ -322,7 +338,9 @@ class ExamService {
         "category_id": categoryId,
         "user_name": userName,
       };
-      // print("ExamService: Posting testimonial with payload: $payload");
+      print(
+        "ExamService: Posting testimonial to $baseUrl/testimonials with payload: $payload",
+      );
 
       final response = await _dio.post('$baseUrl/testimonials', data: payload);
 

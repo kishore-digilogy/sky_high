@@ -51,6 +51,8 @@ dependencies:
   confetti: ^0.8.0
   video_player: ^2.10.1
   chewie: ^1.13.1
+  firebase_core: ^4.7.0
+  onesignal_flutter: ^5.5.4
   
 dependency_overrides:
   device_info_plus: 10.1.2

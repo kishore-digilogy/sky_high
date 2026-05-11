@@ -143,7 +143,7 @@ class _MockTestPageState extends State<MockTestPage> {
               ),
               title: Text(
                 'Submit Test?',
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                style: GoogleFonts.inter(fontWeight: FontWeight.bold),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -151,7 +151,7 @@ class _MockTestPageState extends State<MockTestPage> {
                 children: [
                   Text(
                     'Are you sure you want to submit your test?',
-                    style: GoogleFonts.outfit(),
+                    style: GoogleFonts.inter(),
                   ),
                   if (unansweredCount > 0) ...[
                     const SizedBox(height: 12),
@@ -172,7 +172,7 @@ class _MockTestPageState extends State<MockTestPage> {
                           Expanded(
                             child: Text(
                               'You have $unansweredCount unanswered questions.',
-                              style: GoogleFonts.outfit(
+                              style: GoogleFonts.inter(
                                 color: Colors.amber[900],
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -190,7 +190,7 @@ class _MockTestPageState extends State<MockTestPage> {
                   onPressed: () => Navigator.pop(context, false),
                   child: Text(
                     'Review More',
-                    style: GoogleFonts.outfit(color: const Color(0xFF64748B)),
+                    style: GoogleFonts.inter(color: const Color(0xFF64748B)),
                   ),
                 ),
                 ElevatedButton(
@@ -205,7 +205,7 @@ class _MockTestPageState extends State<MockTestPage> {
                   ),
                   child: Text(
                     'Submit Now',
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                    style: GoogleFonts.inter(fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -308,7 +308,7 @@ class _MockTestPageState extends State<MockTestPage> {
                 const SizedBox(width: 12),
                 Text(
                   'Quit Test?',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
                   ),
@@ -317,7 +317,7 @@ class _MockTestPageState extends State<MockTestPage> {
             ),
             content: Text(
               'Are you sure you want to exit? Your current test progress will be lost and cannot be recovered.',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 color: const Color(0xFF64748B),
                 height: 1.5,
               ),
@@ -327,7 +327,7 @@ class _MockTestPageState extends State<MockTestPage> {
                 onPressed: () => Navigator.pop(context, false),
                 child: Text(
                   'Stay',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     color: const Color(0xFF64748B),
                     fontWeight: FontWeight.w600,
                   ),
@@ -350,7 +350,7 @@ class _MockTestPageState extends State<MockTestPage> {
                 ),
                 child: Text(
                   'Exit',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                  style: GoogleFonts.inter(fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -394,7 +394,7 @@ class _MockTestPageState extends State<MockTestPage> {
           ),
           title: Text(
             'Back to Learning',
-            style: GoogleFonts.outfit(color: Colors.white, fontSize: 16),
+            style: GoogleFonts.inter(color: Colors.white, fontSize: 16),
           ),
         ),
         body: Center(
@@ -416,7 +416,7 @@ class _MockTestPageState extends State<MockTestPage> {
               const SizedBox(height: 24),
               Text(
                 'No Questions Found',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF1E293B),
@@ -428,7 +428,7 @@ class _MockTestPageState extends State<MockTestPage> {
                 child: Text(
                   'We couldn\'t find any questions for this test set at the moment. Please check back later.',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 15,
                     color: const Color(0xFF64748B),
                     height: 1.5,
@@ -471,7 +471,7 @@ class _MockTestPageState extends State<MockTestPage> {
           ),
           title: Text(
             'Test Instructions',
-            style: GoogleFonts.outfit(color: Colors.white, fontSize: 18),
+            style: GoogleFonts.inter(color: Colors.white, fontSize: 18),
           ),
         ),
         body: _buildInstructions(isMobile),
@@ -614,7 +614,7 @@ class _MockTestPageState extends State<MockTestPage> {
                 Text(
                   widget.setName ?? "Untitled",
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -660,7 +660,7 @@ class _MockTestPageState extends State<MockTestPage> {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'IMPORTANT RULES',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w900,
                             color: const Color(0xFF94A3B8),
@@ -709,7 +709,7 @@ class _MockTestPageState extends State<MockTestPage> {
                           ),
                           child: Text(
                             'START TEST NOW',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 1,
@@ -748,7 +748,7 @@ class _MockTestPageState extends State<MockTestPage> {
             const SizedBox(height: 12),
             Text(
               value,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF0F172A),
@@ -756,7 +756,7 @@ class _MockTestPageState extends State<MockTestPage> {
             ),
             Text(
               label,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontSize: 12,
                 color: const Color(0xFF64748B),
                 fontWeight: FontWeight.w600,
@@ -779,7 +779,7 @@ class _MockTestPageState extends State<MockTestPage> {
           Expanded(
             child: Text(
               text,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontSize: 14,
                 color: const Color(0xFF334155),
                 height: 1.4,
@@ -797,7 +797,7 @@ class _MockTestPageState extends State<MockTestPage> {
       children: [
         Text(
           currentQuestion.questionText,
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.inter(
             fontSize: 18,
             fontWeight: FontWeight.w600,
             color: const Color(0xFF1E293B),
@@ -865,7 +865,7 @@ class _MockTestPageState extends State<MockTestPage> {
         children: [
           Text(
             widget.setName ?? "Untitled",
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: isMobile ? 14 : 16,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -875,7 +875,7 @@ class _MockTestPageState extends State<MockTestPage> {
           ),
           Text(
             'FREE',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 10,
               fontWeight: FontWeight.w600,
               color: const Color(0xFF38BDF8),
@@ -997,7 +997,7 @@ class _MockTestPageState extends State<MockTestPage> {
             ),
             child: Text(
               'QUESTION ${_currentIndex + 1}',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 color: const Color(0xFF3B82F6),
                 fontWeight: FontWeight.w900,
                 fontSize: 10,
@@ -1019,7 +1019,7 @@ class _MockTestPageState extends State<MockTestPage> {
                   const SizedBox(width: 4),
                   Text(
                     'MARKED',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 8,
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -1040,7 +1040,7 @@ class _MockTestPageState extends State<MockTestPage> {
               children: [
                 Text(
                   'English',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -1111,7 +1111,7 @@ class _MockTestPageState extends State<MockTestPage> {
               child: Center(
                 child: Text(
                   key.toUpperCase(),
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     color: isSelected ? Colors.white : const Color(0xFF64748B),
                     fontWeight: FontWeight.bold,
                   ),
@@ -1126,7 +1126,7 @@ class _MockTestPageState extends State<MockTestPage> {
                   if (text != null && text.isNotEmpty)
                     Text(
                       text,
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontSize: 16,
                         color: isSelected
                             ? const Color(0xFF1E293B)
@@ -1168,75 +1168,31 @@ class _MockTestPageState extends State<MockTestPage> {
   }
 
   Widget _buildBottomActions(bool isMobile) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 12 : 20),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
-      ),
-      child: Row(
-        children: [
-          if (!isMobile) ...[
-            _buildSecondaryButton(
-              _markedForReview.contains(_currentIndex)
-                  ? 'Unmark'
-                  : 'Mark for Review',
-              () {
-                setState(() {
-                  if (_markedForReview.contains(_currentIndex)) {
-                    _markedForReview.remove(_currentIndex);
-                  } else {
-                    _markedForReview.add(_currentIndex);
-                    _nextQuestion(); // Automatically move to next after marking
-                  }
-                });
-              },
-              isMobile,
-              color: _markedForReview.contains(_currentIndex)
-                  ? const Color(0xFFF59E0B)
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            _buildSecondaryButton('Clear', () {
-              setState(() {
-                _userAnswers.remove(_currentIndex);
-              });
-            }, isMobile),
-            const Spacer(),
-            if (_currentIndex > 0) ...[
-              _buildPrimaryButton(
-                'Previous',
-                _previousQuestion,
-                const Color(0xFF64748B),
-                isMobile,
-              ),
-              const SizedBox(width: 12),
-            ],
-            _buildPrimaryButton(
-              'Next',
-              _nextQuestion,
-              const Color(0xFF1E293B),
-              isMobile,
-            ),
-            const SizedBox(width: 12),
-            _buildPrimaryButton(
-              'Submit',
-              _submitTest,
-              const Color(0xFF22C55E),
-              isMobile,
-            ),
-          ] else ...[
-            // Mobile compact actions
-            Expanded(
-              child: _buildSecondaryButton(
-                _markedForReview.contains(_currentIndex) ? 'Unmark' : 'Mark',
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 8 : 20,
+          vertical: isMobile ? 10 : 20,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+        ),
+        child: Row(
+          children: [
+            if (!isMobile) ...[
+              _buildSecondaryButton(
+                _markedForReview.contains(_currentIndex)
+                    ? 'Unmark'
+                    : 'Mark for Review',
                 () {
                   setState(() {
                     if (_markedForReview.contains(_currentIndex)) {
                       _markedForReview.remove(_currentIndex);
                     } else {
                       _markedForReview.add(_currentIndex);
-                      _nextQuestion();
+                      _nextQuestion(); // Automatically move to next after marking
                     }
                   });
                 },
@@ -1245,46 +1201,96 @@ class _MockTestPageState extends State<MockTestPage> {
                     ? const Color(0xFFF59E0B)
                     : null,
               ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: _buildSecondaryButton('Clear', () {
+              const SizedBox(width: 12),
+              _buildSecondaryButton('Clear', () {
                 setState(() {
                   _userAnswers.remove(_currentIndex);
                 });
               }, isMobile),
-            ),
-            const SizedBox(width: 6),
-            if (_currentIndex > 0) ...[
-              Expanded(
-                child: _buildPrimaryButton(
-                  'Prev',
+              const Spacer(),
+              if (_currentIndex > 0) ...[
+                _buildPrimaryButton(
+                  'Previous',
                   _previousQuestion,
                   const Color(0xFF64748B),
                   isMobile,
                 ),
-              ),
-              const SizedBox(width: 6),
-            ],
-            Expanded(
-              child: _buildPrimaryButton(
+                const SizedBox(width: 12),
+              ],
+              _buildPrimaryButton(
                 'Next',
                 _nextQuestion,
                 const Color(0xFF1E293B),
                 isMobile,
               ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: _buildPrimaryButton(
+              const SizedBox(width: 12),
+              _buildPrimaryButton(
                 'Submit',
                 _submitTest,
                 const Color(0xFF22C55E),
                 isMobile,
               ),
-            ),
+            ] else ...[
+              // Mobile compact actions
+              Expanded(
+                child: _buildSecondaryButton(
+                  _markedForReview.contains(_currentIndex) ? 'Unmark' : 'Mark',
+                  () {
+                    setState(() {
+                      if (_markedForReview.contains(_currentIndex)) {
+                        _markedForReview.remove(_currentIndex);
+                      } else {
+                        _markedForReview.add(_currentIndex);
+                        _nextQuestion();
+                      }
+                    });
+                  },
+                  isMobile,
+                  color: _markedForReview.contains(_currentIndex)
+                      ? const Color(0xFFF59E0B)
+                      : null,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: _buildSecondaryButton('Clear', () {
+                  setState(() {
+                    _userAnswers.remove(_currentIndex);
+                  });
+                }, isMobile),
+              ),
+              const SizedBox(width: 4),
+              if (_currentIndex > 0) ...[
+                Expanded(
+                  child: _buildPrimaryButton(
+                    'Prev',
+                    _previousQuestion,
+                    const Color(0xFF64748B),
+                    isMobile,
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
+              Expanded(
+                child: _buildPrimaryButton(
+                  'Next',
+                  _nextQuestion,
+                  const Color(0xFF1E293B),
+                  isMobile,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: _buildPrimaryButton(
+                  'Submit',
+                  _submitTest,
+                  const Color(0xFF22C55E),
+                  isMobile,
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -1308,10 +1314,12 @@ class _MockTestPageState extends State<MockTestPage> {
       ),
       child: Text(
         label,
-        style: GoogleFonts.outfit(
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: GoogleFonts.inter(
           color: color ?? const Color(0xFF64748B),
           fontWeight: FontWeight.w600,
-          fontSize: isMobile ? 11 : 14,
+          fontSize: isMobile ? 10 : 14,
         ),
       ),
     );
@@ -1337,9 +1345,11 @@ class _MockTestPageState extends State<MockTestPage> {
       ),
       child: Text(
         label,
-        style: GoogleFonts.outfit(
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: GoogleFonts.inter(
           fontWeight: FontWeight.bold,
-          fontSize: isMobile ? 12 : 14,
+          fontSize: isMobile ? 11 : 14,
         ),
       ),
     );
@@ -1368,7 +1378,7 @@ class _MockTestPageState extends State<MockTestPage> {
                 children: [
                   Text(
                     'Test Progress',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1396,7 +1406,7 @@ class _MockTestPageState extends State<MockTestPage> {
                     children: [
                       Text(
                         'QUESTION PALETTE',
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
                           color: const Color(0xFF94A3B8),
@@ -1404,7 +1414,7 @@ class _MockTestPageState extends State<MockTestPage> {
                       ),
                       Text(
                         '${_questions.length} total',
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: const Color(0xFF3B82F6),
@@ -1466,14 +1476,14 @@ class _MockTestPageState extends State<MockTestPage> {
             children: [
               Text(
                 'kishorekumar',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
               ),
               Text(
                 'ID: 14',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   color: Colors.blue,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
@@ -1547,7 +1557,7 @@ class _MockTestPageState extends State<MockTestPage> {
               ),
               child: Text(
                 '$count',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   color: textColor,
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
@@ -1558,7 +1568,7 @@ class _MockTestPageState extends State<MockTestPage> {
             Expanded(
               child: Text(
                 label,
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 10,
                   color: const Color(0xFF64748B),
                   fontWeight: FontWeight.w600,
@@ -1615,7 +1625,7 @@ class _MockTestPageState extends State<MockTestPage> {
         child: Center(
           child: Text(
             '${index + 1}',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.bold,
               color: textColor,
@@ -1643,7 +1653,7 @@ class _MockTestPageState extends State<MockTestPage> {
         ),
         child: Text(
           isMobile ? 'Close Progress' : 'Close Palette',
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.inter(
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
@@ -1737,245 +1747,251 @@ class MockTestResultPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 500),
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 30,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  questions.first.setName.toUpperCase(),
-                  style: GoogleFonts.outfit(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF3B82F6),
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Test Completed!',
-                  style: GoogleFonts.outfit(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF0F172A),
-                  ),
-                ),
-                if (isSubmitted) ...[
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.check_circle,
-                        color: Color(0xFF22C55E),
-                        size: 16,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Results Submitted Successfully',
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          color: const Color(0xFF22C55E),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ] else ...[
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        color: Color(0xFFEF4444),
-                        size: 16,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Results Not Submitted',
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          color: const Color(0xFFEF4444),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 500),
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 30,
+                    offset: const Offset(0, 10),
                   ),
                 ],
-                const SizedBox(height: 30),
-                _buildResultImage(percentage),
-                const SizedBox(height: 20),
-                Text(
-                  _getResultMessage(percentage),
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: _getResultColor(percentage),
-                  ),
-                ),
-                const SizedBox(height: 30),
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 140,
-                      height: 140,
-                      child: CircularProgressIndicator(
-                        value: percentage / 100,
-                        strokeWidth: 10,
-                        backgroundColor: const Color(0xFFF1F5F9),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          _getResultColor(percentage),
-                        ),
-                      ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    questions.first.setName.toUpperCase(),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF3B82F6),
+                      letterSpacing: 1.2,
                     ),
-                    Column(
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Test Completed!',
+                    style: GoogleFonts.inter(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                  if (isSubmitted) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        const Icon(
+                          Icons.check_circle,
+                          color: Color(0xFF22C55E),
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
                         Text(
-                          '$correctCount',
-                          style: GoogleFonts.outfit(
-                            fontSize: 42,
-                            fontWeight: FontWeight.bold,
-                            color: _getResultColor(percentage),
+                          'Results Submitted Successfully',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: const Color(0xFF22C55E),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
+                      ],
+                    ),
+                  ] else ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: Color(0xFFEF4444),
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
                         Text(
-                          'OUT OF ${questions.length}',
-                          style: GoogleFonts.outfit(
+                          'Results Not Submitted',
+                          style: GoogleFonts.inter(
                             fontSize: 12,
+                            color: const Color(0xFFEF4444),
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF94A3B8),
                           ),
                         ),
                       ],
                     ),
                   ],
-                ),
-                const SizedBox(height: 40),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3B82F6).withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'Percentage: ${percentage.toStringAsFixed(1)}%',
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF2563EB),
+                  const SizedBox(height: 30),
+                  _buildResultImage(percentage),
+                  const SizedBox(height: 20),
+                  Text(
+                    _getResultMessage(percentage),
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: _getResultColor(percentage),
                     ),
                   ),
-                ),
-                const SizedBox(height: 40),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MockTestReviewPage(
-                                questions: questions,
-                                userAnswers: userAnswers,
-                              ),
+                  const SizedBox(height: 30),
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 140,
+                        height: 140,
+                        child: CircularProgressIndicator(
+                          value: percentage / 100,
+                          strokeWidth: 10,
+                          backgroundColor: const Color(0xFFF1F5F9),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            _getResultColor(percentage),
+                          ),
+                        ),
+                      ),
+                      Column(
+                        children: [
+                          Text(
+                            '$correctCount',
+                            style: GoogleFonts.inter(
+                              fontSize: 42,
+                              fontWeight: FontWeight.bold,
+                              color: _getResultColor(percentage),
                             ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F172A),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
                           ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          'Review Answers',
-                          style: GoogleFonts.outfit(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MockTestPage(
-                                setName: questions.first.setName,
-                              ),
+                          Text(
+                            'OUT OF ${questions.length}',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF94A3B8),
                             ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3B82F6),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
                           ),
-                          elevation: 8,
-                          shadowColor: const Color(0xFF3B82F6).withOpacity(0.4),
-                        ),
-                        child: Text(
-                          'Retake Test',
-                          style: GoogleFonts.outfit(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        ],
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.of(context).popUntil((route) => route.isFirst);
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      side: const BorderSide(color: Color(0xFFE2E8F0)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3B82F6).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      'Go to Home',
-                      style: GoogleFonts.outfit(
+                      'Percentage: ${percentage.toStringAsFixed(1)}%',
+                      style: GoogleFonts.inter(
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF64748B),
+                        color: const Color(0xFF2563EB),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 40),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MockTestReviewPage(
+                                  questions: questions,
+                                  userAnswers: userAnswers,
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F172A),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Review Answers',
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MockTestPage(
+                                  setName: questions.first.setName,
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3B82F6),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 8,
+                            shadowColor: const Color(
+                              0xFF3B82F6,
+                            ).withOpacity(0.4),
+                          ),
+                          child: Text(
+                            'Retake Test',
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.of(
+                          context,
+                        ).popUntil((route) => route.isFirst);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        side: const BorderSide(color: Color(0xFFE2E8F0)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Go to Home',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -2095,9 +2111,9 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
                 decoration: InputDecoration(
                   hintText: 'Search Question # or text...',
                   border: InputBorder.none,
-                  hintStyle: GoogleFonts.outfit(color: Colors.black26),
+                  hintStyle: GoogleFonts.inter(color: Colors.black26),
                 ),
-                style: GoogleFonts.outfit(color: Colors.black87),
+                style: GoogleFonts.inter(color: Colors.black87),
                 onChanged: (val) {
                   setState(() {
                     _searchQuery = val;
@@ -2106,7 +2122,7 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
               )
             : Text(
                 'Answer Review',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: isMobile ? 18 : 22,
                   fontWeight: FontWeight.w800,
                   color: const Color(0xFF0F172A),
@@ -2190,7 +2206,7 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
                   const SizedBox(height: 16),
                   Text(
                     'No matching questions found',
-                    style: GoogleFonts.outfit(color: const Color(0xFF94A3B8)),
+                    style: GoogleFonts.inter(color: const Color(0xFF94A3B8)),
                   ),
                 ],
               ),
@@ -2251,7 +2267,7 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
                                 const SizedBox(width: 6),
                                 Text(
                                   'QUESTION ${originalIndex + 1}',
-                                  style: GoogleFonts.outfit(
+                                  style: GoogleFonts.inter(
                                     fontWeight: FontWeight.w900,
                                     fontSize: 10,
                                     letterSpacing: 1,
@@ -2267,7 +2283,7 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
                           if (!isCorrect)
                             Text(
                               'INCORRECT',
-                              style: GoogleFonts.outfit(
+                              style: GoogleFonts.inter(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 10,
                                 color: const Color(0xFFEF4444),
@@ -2276,7 +2292,7 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
                           else
                             Text(
                               'CORRECT',
-                              style: GoogleFonts.outfit(
+                              style: GoogleFonts.inter(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 10,
                                 color: const Color(0xFF22C55E),
@@ -2303,7 +2319,7 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
                         ),
                       Text(
                         question.questionText,
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.inter(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
                           color: const Color(0xFF1E293B),
@@ -2357,7 +2373,7 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
                                   const SizedBox(width: 8),
                                   Text(
                                     'EXPLANATION',
-                                    style: GoogleFonts.outfit(
+                                    style: GoogleFonts.inter(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w900,
                                       color: const Color(0xFF3B82F6),
@@ -2369,7 +2385,7 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
                               const SizedBox(height: 8),
                               Text(
                                 question.explanation!,
-                                style: GoogleFonts.outfit(
+                                style: GoogleFonts.inter(
                                   fontSize: 14,
                                   color: const Color(0xFF334155),
                                   height: 1.5,
@@ -2401,7 +2417,7 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
         children: [
           Text(
             label,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 10,
               fontWeight: FontWeight.w900,
               color: color,
@@ -2411,7 +2427,7 @@ class _MockTestReviewPageState extends State<MockTestReviewPage> {
           const SizedBox(height: 4),
           Text(
             value,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 15,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF0F172A),

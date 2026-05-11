@@ -4,12 +4,26 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sky_high/core/services/storage_service.dart';
 import 'package:sky_high/pages/splash/splash_page.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Disable runtime fetching for Google Fonts to use bundled fonts
-  GoogleFonts.config.allowRuntimeFetching = false;
+  // Initialize Firebase
+  await Firebase.initializeApp();
+
+  // Initialize OneSignal
+  // Remove this method to stop OneSignal Debug logs
+  OneSignal.Debug.setLogLevel(OSLogLevel.debug);
+
+  OneSignal.initialize("8a517530-af11-446d-ae13-4ec77e3f99c9");
+
+  // The prompt for push notification permissions
+  OneSignal.Notifications.requestPermission(true);
+
+  // Re-enable runtime fetching for Google Fonts to support Poppins
+  GoogleFonts.config.allowRuntimeFetching = true;
 
   final prefs = await SharedPreferences.getInstance();
   GetIt.I.registerSingleton<StorageService>(StorageService(prefs));
@@ -27,19 +41,21 @@ class MyApp extends StatelessWidget {
       title: 'SkyHigh',
       theme: ThemeData(
         useMaterial3: true,
-        fontFamily: 'Outfit',
-        textTheme: GoogleFonts.outfitTextTheme(),
+        fontFamily: GoogleFonts.inter().fontFamily,
+        textTheme: GoogleFonts.interTextTheme(),
         dialogTheme: DialogThemeData(
-          titleTextStyle: GoogleFonts.outfit(
+          titleTextStyle: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: const Color(0xFF1E293B),
           ),
-          contentTextStyle: GoogleFonts.outfit(
+          contentTextStyle: GoogleFonts.inter(
             fontSize: 16,
             color: const Color(0xFF475569),
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
         ),
         colorSchemeSeed: const Color(0xFF6C63FF),
       ),

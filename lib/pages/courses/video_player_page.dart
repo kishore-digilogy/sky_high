@@ -166,7 +166,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage>
         ),
         title: Text(
           widget.title,
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.inter(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.bold,

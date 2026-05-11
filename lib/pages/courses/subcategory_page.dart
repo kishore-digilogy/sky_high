@@ -104,10 +104,10 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                   controller: _searchController,
                   onChanged: _filterResults,
                   autofocus: true,
-                  style: GoogleFonts.outfit(fontSize: 14),
+                  style: GoogleFonts.inter(fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Search companies...',
-                    hintStyle: GoogleFonts.outfit(
+                    hintStyle: GoogleFonts.inter(
                       color: const Color(0xFF94A3B8),
                     ),
                     prefixIcon: const Icon(
@@ -120,16 +120,18 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                   ),
                 ),
               )
-            : SizedBox(
+            : GestureDetector(
+                onTap: () =>
+                    setState(() => _isTitleExpanded = !_isTitleExpanded),
                 child: Text(
                   widget.category.title,
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     color: const Color(0xFF1E293B),
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.visible,
+                  maxLines: _isTitleExpanded ? 3 : 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
         actions: [
@@ -140,9 +142,12 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
             ),
         ],
       ),
-      body: (_filteredSubcategories.isEmpty && _filteredItems.isEmpty)
-          ? _buildEmptyState()
-          : _buildItemsList(),
+      body: SafeArea(
+        top: false,
+        child: (_filteredSubcategories.isEmpty && _filteredItems.isEmpty)
+            ? _buildEmptyState()
+            : _buildItemsList(),
+      ),
     );
   }
 
@@ -161,7 +166,7 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
             widget.category.type?.toLowerCase() == 'material'
                 ? 'No Materials available'
                 : 'No Companies available',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF1E293B),
@@ -170,7 +175,7 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
           const SizedBox(height: 10),
           Text(
             'Check back later for new content in this category.',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 14,
               color: const Color(0xFF64748B),
             ),
@@ -202,12 +207,13 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
               final mappedCategory = ExamCategoryModel(
                 id: sub.id,
                 title: sub.name,
+                originalTitle: sub.originalName,
                 type: sub.type,
                 section: sub.section,
                 color: sub.color,
                 icon: sub.thumbnailImage,
                 items: sub.items,
-                subcategories: [], // Assuming no further nesting
+                subcategories: [],
               );
               Navigator.push(
                 context,
@@ -274,7 +280,7 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
           Text(
             name,
             textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: const Color(0xFF1E293B),
@@ -295,7 +301,7 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
               ),
               child: Text(
                 type.toUpperCase(),
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 8,
                   fontWeight: FontWeight.bold,
                   color: Color(widget.category.displayColorValue),

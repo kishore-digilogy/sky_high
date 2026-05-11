@@ -57,7 +57,7 @@ class SubPostedJobsPage extends StatelessWidget {
       ),
       title: Text(
         company.name.toUpperCase(),
-        style: GoogleFonts.outfit(
+        style: GoogleFonts.inter(
           fontSize: 16,
           fontWeight: FontWeight.bold,
           color: Colors.white,
@@ -116,7 +116,7 @@ class SubPostedJobsPage extends StatelessWidget {
                         Expanded(
                           child: Text(
                             parentJob.title.toUpperCase(),
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontSize: 22,
                               fontWeight: FontWeight.w900,
                               color: const Color(0xFF0F172A),
@@ -135,7 +135,7 @@ class SubPostedJobsPage extends StatelessWidget {
                           ),
                           child: Text(
                             'DEPARTMENT',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontSize: 10,
                               fontWeight: FontWeight.w900,
                               color: const Color(0xFF475569),
@@ -156,7 +156,7 @@ class SubPostedJobsPage extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           '${subJobs.length} SPECIALIZED SUB-POSTS AVAILABLE',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
                             color: const Color(0xFF6366F1),
@@ -241,7 +241,7 @@ class SubPostedJobsPage extends StatelessWidget {
                       children: [
                         Text(
                           'ACTIVE POST',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.inter(
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
                             color: const Color(0xFF475569),
@@ -250,7 +250,7 @@ class SubPostedJobsPage extends StatelessWidget {
                         ),
                         Text(
                           'ID: #$id',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF94A3B8),
@@ -263,7 +263,7 @@ class SubPostedJobsPage extends StatelessWidget {
                 const SizedBox(height: 20),
                 Text(
                   title.toUpperCase(),
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF0F172A),
@@ -315,7 +315,7 @@ class SubPostedJobsPage extends StatelessWidget {
                     children: [
                       Text(
                         'Start Training',
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.inter(
                           color: Colors.white,
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
@@ -346,7 +346,7 @@ class SubPostedJobsPage extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.inter(
             fontSize: 11,
             fontWeight: FontWeight.w800,
             color: const Color(0xFF64748B),

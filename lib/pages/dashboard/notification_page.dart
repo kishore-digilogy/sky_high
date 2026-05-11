@@ -38,7 +38,7 @@ class _NotificationPageState extends State<NotificationPage> {
       appBar: AppBar(
         title: Text(
           'Notifications',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -65,7 +65,7 @@ class _NotificationPageState extends State<NotificationPage> {
                           children: [
                             Text(
                               'Notification ${index + 1}',
-                              style: GoogleFonts.outfit(
+                              style: GoogleFonts.inter(
                                 fontWeight: FontWeight.bold,
                                 color: const Color(0xFF1E293B),
                               ),
@@ -73,7 +73,7 @@ class _NotificationPageState extends State<NotificationPage> {
                             const SizedBox(height: 8),
                             Text(
                               notif.toString(),
-                              style: GoogleFonts.outfit(
+                              style: GoogleFonts.inter(
                                 color: const Color(0xFF64748B),
                                 fontSize: 14,
                               ),
@@ -100,7 +100,7 @@ class _NotificationPageState extends State<NotificationPage> {
           const SizedBox(height: 16),
           Text(
             'No Active Notifications',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF64748B),

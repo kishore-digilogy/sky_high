@@ -1,3 +1,5 @@
+import 'package:sky_high/core/utils/localization_helper.dart';
+
 class FreeExamModel {
   final String setName;
   final String? category;
@@ -17,13 +19,13 @@ class FreeExamModel {
 
   factory FreeExamModel.fromJson(Map<String, dynamic> json) {
     return FreeExamModel(
-      setName: json['set_name'] ?? '',
-      category: json['category'],
+      setName: LocalizationHelper.getLocalized(json, 'set_name'),
+      category: LocalizationHelper.getLocalized(json, 'category'),
       categoryId: json['category_id'],
       questionCount: json['question_count'] ?? 0,
       latestDate:
           DateTime.tryParse(json['latest_date'] ?? '') ?? DateTime.now(),
-      companyName: json['company_name'],
+      companyName: LocalizationHelper.getLocalized(json, 'company_name'),
     );
   }
 

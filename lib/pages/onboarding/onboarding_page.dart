@@ -104,7 +104,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           onPressed: () => _finishOnboarding(),
                           child: Text(
                             'Skip',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               color: Colors.grey[400],
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -151,7 +151,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             _currentPage == _items.length - 1
                                 ? 'Get Started'
                                 : 'Next Step',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
@@ -328,7 +328,7 @@ class OnboardingSlide extends StatelessWidget {
             children: [
               Text(
                 item.title,
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 34,
                   fontWeight: FontWeight.w800,
                   color: const Color(0xFF1A1A2E),
@@ -349,7 +349,7 @@ class OnboardingSlide extends StatelessWidget {
                 ),
                 child: Text(
                   item.highlight.toUpperCase(),
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: item.accent,
@@ -360,7 +360,7 @@ class OnboardingSlide extends StatelessWidget {
               const SizedBox(height: 24),
               Text(
                 item.description,
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 16,
                   color: Colors.blueGrey[400],
                   height: 1.6,

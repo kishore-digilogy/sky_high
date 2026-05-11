@@ -177,7 +177,7 @@ class _LoginPageState extends State<LoginPage> {
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: GoogleFonts.outfit(color: Colors.white)),
+        content: Text(message, style: GoogleFonts.inter(color: Colors.white)),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         backgroundColor: const Color(0xFF0F172A),
@@ -236,7 +236,7 @@ class _LoginPageState extends State<LoginPage> {
 
                       Text(
                         'Sky High Elite',
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.inter(
                           fontSize: screenWidth * 0.085,
                           fontWeight: FontWeight.w800,
                           color: const Color(0xFF0F172A),
@@ -310,7 +310,7 @@ class _LoginPageState extends State<LoginPage> {
                                   _resendSeconds > 0
                                       ? "Resend OTP in ${_resendSeconds}s"
                                       : "Resend OTP",
-                                  style: GoogleFonts.outfit(
+                                  style: GoogleFonts.inter(
                                     color: _resendSeconds > 0
                                         ? const Color(0xFF94A3B8)
                                         : const Color(0xFF3B82F6),
@@ -366,7 +366,7 @@ class _LoginPageState extends State<LoginPage> {
                                             ? 'ACTIVATE SESSION'
                                             : 'GET OTP CODE')
                                       : 'SIGN IN',
-                                  style: GoogleFonts.outfit(
+                                  style: GoogleFonts.inter(
                                     color: Colors.white,
                                     fontSize: screenWidth * 0.042,
                                     fontWeight: FontWeight.w800,
@@ -394,7 +394,7 @@ class _LoginPageState extends State<LoginPage> {
                             onTap: () {},
                             child: Text(
                               "Create Profile",
-                              style: GoogleFonts.outfit(
+                              style: GoogleFonts.inter(
                                 color: const Color(0xFFF9A826),
                                 fontWeight: FontWeight.w700,
                                 fontSize: screenWidth * 0.038,
@@ -460,7 +460,7 @@ class _LoginPageState extends State<LoginPage> {
           alignment: Alignment.center,
           child: Text(
             title,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               color: isSelected ? Colors.white : const Color(0xFF94A3B8),
               fontWeight: FontWeight.w800,
               fontSize: 12,

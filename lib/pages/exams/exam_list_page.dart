@@ -56,7 +56,7 @@ class _ExamListPageState extends State<ExamListPage> {
         ),
         title: Text(
           widget.categoryName,
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.inter(
             color: const Color(0xFF0F172A),
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -64,97 +64,100 @@ class _ExamListPageState extends State<ExamListPage> {
         ),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        itemCount: _exams.length,
-        itemBuilder: (context, index) {
-          final exam = _exams[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ExamDetailPage(exam: exam),
-                ),
-              );
-            },
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                border: Border.all(color: const Color(0xFFF1F5F9)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.02),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+      body: SafeArea(
+        top: false,
+        child: ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          itemCount: _exams.length,
+          itemBuilder: (context, index) {
+            final exam = _exams[index];
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ExamDetailPage(exam: exam),
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: (exam['color'] as Color).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(color: const Color(0xFFF1F5F9)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
-                    child: Icon(exam['icon'] as IconData, color: exam['color'] as Color),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          exam['title'] as String,
-                          style: GoogleFonts.outfit(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF0F172A),
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Row(
-                          children: [
-                            Icon(Icons.calendar_today, size: 12, color: Colors.grey[400]),
-                            const SizedBox(width: 5),
-                            Text(
-                              exam['date'] as String,
-                              style: GoogleFonts.outfit(
-                                fontSize: 12,
-                                color: Colors.grey[500],
-                              ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                        color: (exam['color'] as Color).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Icon(exam['icon'] as IconData, color: exam['color'] as Color),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            exam['title'] as String,
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF0F172A),
                             ),
-                            const SizedBox(width: 15),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: (exam['color'] as Color).withOpacity(0.05),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              child: Text(
-                                exam['difficulty'] as String,
-                                style: GoogleFonts.outfit(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: exam['color'] as Color,
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            children: [
+                              Icon(Icons.calendar_today, size: 12, color: Colors.grey[400]),
+                              const SizedBox(width: 5),
+                              Text(
+                                exam['date'] as String,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: Colors.grey[500],
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                              const SizedBox(width: 15),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: (exam['color'] as Color).withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Text(
+                                  exam['difficulty'] as String,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: exam['color'] as Color,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFFE2E8F0)),
-                ],
+                    const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFFE2E8F0)),
+                  ],
+                ),
               ),
-            ),
-          ).animate().slideX(begin: 0.1);
-        },
+            ).animate().slideX(begin: 0.1);
+          },
+        ),
       ),
     );
   }

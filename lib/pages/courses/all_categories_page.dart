@@ -89,10 +89,10 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
                   controller: _searchController,
                   onChanged: _filterCategories,
                   autofocus: true,
-                  style: GoogleFonts.outfit(fontSize: 14),
+                  style: GoogleFonts.inter(fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Search categories...',
-                    hintStyle: GoogleFonts.outfit(
+                    hintStyle: GoogleFonts.inter(
                       color: const Color(0xFF94A3B8),
                     ),
                     prefixIcon: const Icon(
@@ -107,7 +107,7 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
               )
             : Text(
                 'All Categories',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   color: const Color(0xFF1E293B),
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
@@ -171,7 +171,7 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
                         const Spacer(),
                         Text(
                           category.title,
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF1E293B),
@@ -184,7 +184,7 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
                             category.subtitle!.isNotEmpty)
                           Text(
                             category.subtitle!,
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontSize: 12,
                               color: const Color(0xFF94A3B8),
                               fontWeight: FontWeight.w500,
@@ -195,7 +195,7 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
                         const SizedBox(height: 8),
                         Text(
                           '${category.totalCount} Companies',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: color,
@@ -219,7 +219,7 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
           const SizedBox(height: 16),
           Text(
             'No categories found',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF1E293B),
@@ -228,7 +228,7 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
           const SizedBox(height: 8),
           Text(
             'Try searching for something else',
-            style: GoogleFonts.outfit(color: const Color(0xFF64748B)),
+            style: GoogleFonts.inter(color: const Color(0xFF64748B)),
           ),
         ],
       ),

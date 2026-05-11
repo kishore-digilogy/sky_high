@@ -1,6 +1,9 @@
+import 'package:sky_high/core/utils/localization_helper.dart';
+
 class ExamCategoryModel {
   final int id;
   final String title;
+  final String originalTitle;
   final String? subtitle;
   final String? color;
   final String? icon;
@@ -12,6 +15,7 @@ class ExamCategoryModel {
   ExamCategoryModel({
     required this.id,
     required this.title,
+    required this.originalTitle,
     this.subtitle,
     this.color,
     this.icon,
@@ -24,8 +28,9 @@ class ExamCategoryModel {
   factory ExamCategoryModel.fromJson(Map<String, dynamic> json) {
     return ExamCategoryModel(
       id: json['id'] ?? 0,
-      title: json['title'] ?? '',
-      subtitle: json['subtitle'],
+      title: LocalizationHelper.getLocalized(json, 'title'),
+      originalTitle: json['title'] ?? '',
+      subtitle: LocalizationHelper.getLocalized(json, 'subtitle'),
       color: json['color'],
       icon: json['icon'],
       type: json['type'],
@@ -51,8 +56,6 @@ class ExamCategoryModel {
   // Helper getters for UI
   String get displayIcon => (icon != null && icon!.isNotEmpty) ? icon! : '📚';
 
-  /// Returns the full logo URL of the first item that has a valid logo,
-  /// or an empty string if none found. Used as the category thumbnail.
   String get firstItemLogoUrl {
     for (final item in items) {
       final url = item.fullLogoUrl;
@@ -113,14 +116,27 @@ class ExamItemModel {
   factory ExamItemModel.fromJson(Map<String, dynamic> json) {
     return ExamItemModel(
       id: json['id'] ?? 0,
-      name: json['name'] ?? '',
+      name: LocalizationHelper.getLocalized(json, 'name'),
       type: json['type'],
       logo: json['logo'],
       section: json['section'],
       color: json['color'],
       url: json['url']?.toString(),
-      description: json['description'],
+      description: LocalizationHelper.getLocalized(json, 'description'),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'type': type,
+      'logo': logo,
+      'section': section,
+      'color': color,
+      'url': url,
+      'description': description,
+    };
   }
 
   String get fullLogoUrl {
@@ -134,6 +150,7 @@ class ExamItemModel {
 class ExamSubcategoryModel {
   final int id;
   final String name;
+  final String originalName;
   final String? thumbnailImage;
   final String? type;
   final String? section;
@@ -143,6 +160,7 @@ class ExamSubcategoryModel {
   ExamSubcategoryModel({
     required this.id,
     required this.name,
+    required this.originalName,
     this.thumbnailImage,
     this.type,
     this.section,
@@ -153,7 +171,8 @@ class ExamSubcategoryModel {
   factory ExamSubcategoryModel.fromJson(Map<String, dynamic> json) {
     return ExamSubcategoryModel(
       id: json['id'] ?? 0,
-      name: json['name'] ?? '',
+      name: LocalizationHelper.getLocalized(json, 'name'),
+      originalName: json['name'] ?? '',
       thumbnailImage: json['thumbnail_image'],
       type: json['type'],
       section: json['section'],

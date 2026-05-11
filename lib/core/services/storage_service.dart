@@ -5,6 +5,9 @@ class StorageService {
   static const String _isFirstTimeKey = 'is_first_time';
   static const String _tokenKey = 'auth_token';
   static const String _userDataKey = 'user_data';
+  static const String _recentStudyKey = 'recent_study';
+  static const String _studyGuideShownKey = 'study_guide_shown';
+  static const String _languageKey = 'selected_language';
 
   final SharedPreferences _prefs;
 
@@ -44,6 +47,64 @@ class StorageService {
     } else {
       await _prefs.setString(_userDataKey, json.encode(data));
     }
+  }
+
+  List<Map<String, dynamic>> getRecentStudies() {
+    final dataStr = _prefs.getString(_recentStudyKey);
+    if (dataStr != null) {
+      try {
+        final decoded = json.decode(dataStr);
+        if (decoded is List) {
+          return decoded.map((e) => e as Map<String, dynamic>).toList();
+        } else if (decoded is Map<String, dynamic>) {
+          return [decoded];
+        }
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  }
+
+  Future<void> addRecentStudy(Map<String, dynamic> data) async {
+    final List<Map<String, dynamic>> studies = getRecentStudies();
+    
+    // Remove existing entry for the same company to move it to front
+    studies.removeWhere((s) => s['company']['id'] == data['company']['id']);
+    
+    // Add new study to the beginning
+    studies.insert(0, data);
+    
+    // Keep only top 5
+    if (studies.length > 5) {
+      studies.removeRange(5, studies.length);
+    }
+    
+    await _prefs.setString(_recentStudyKey, json.encode(studies));
+  }
+
+  Future<void> clearRecentStudies() async {
+    await _prefs.remove(_recentStudyKey);
+  }
+
+  Future<void> removeRecentStudy(int companyId) async {
+    final List<Map<String, dynamic>> studies = getRecentStudies();
+    studies.removeWhere((s) => s['company']['id'] == companyId);
+    await _prefs.setString(_recentStudyKey, json.encode(studies));
+  }
+
+  bool get isStudyGuideShown => _prefs.getBool(_studyGuideShownKey) ?? false;
+
+  Future<void> setStudyGuideShown(bool value) async {
+    await _prefs.setBool(_studyGuideShownKey, value);
+  }
+
+  String getSelectedLanguage() {
+    return _prefs.getString(_languageKey) ?? 'English';
+  }
+
+  Future<void> setSelectedLanguage(String language) async {
+    await _prefs.setString(_languageKey, language);
   }
 
   Future<void> clearAll() async {

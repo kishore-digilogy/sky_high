@@ -18,8 +18,14 @@ import 'package:sky_high/pages/courses/video_player_page.dart';
 class StudyLayersPage extends StatefulWidget {
   final ExamItemModel company;
   final int? jobId;
+  final int? initialModuleIndex;
 
-  const StudyLayersPage({super.key, required this.company, this.jobId});
+  const StudyLayersPage({
+    super.key,
+    required this.company,
+    this.jobId,
+    this.initialModuleIndex,
+  });
 
   @override
   State<StudyLayersPage> createState() => _StudyLayersPageState();
@@ -87,8 +93,18 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
   @override
   void initState() {
     super.initState();
+    _selectedModuleIndex = widget.initialModuleIndex ?? 0;
     _checkSubscription();
     _fetchApiLayers();
+
+    // Trigger initial data fetch based on selected module
+    if (_selectedModuleIndex == 4) {
+      _fetchMcqSets('pyq');
+    } else if (_selectedModuleIndex == 5) {
+      _fetchMcqSets('mcq');
+    } else if (_selectedModuleIndex == 7) {
+      _fetchMockTests();
+    }
   }
 
   void _checkSubscription() {
@@ -125,9 +141,11 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           _isLoading = false;
         });
 
-        // Open drawer by default after loading
+        // Open guide or drawer based on flag
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _scaffoldKey.currentState?.openDrawer();
+          if (!_storage.isStudyGuideShown) {
+            _showInstructionGuide();
+          }
         });
       }
     } catch (e) {
@@ -204,29 +222,34 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               }
             },
           ),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.company.name,
-                style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1E293B),
+          title: GestureDetector(
+            onTap: () => setState(() => _isTitleExpanded = !_isTitleExpanded),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.company.name,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E293B),
+                    height: 1.2,
+                  ),
+                  maxLines: _isTitleExpanded ? 3 : 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.visible,
-              ),
-              Text(
-                'LEARNING JOURNEY',
-                style: GoogleFonts.outfit(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                  letterSpacing: 1.2,
+                Text(
+                  'LEARNING JOURNEY',
+                  style: GoogleFonts.inter(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.blue,
+                    letterSpacing: 1.2,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             IconButton(
@@ -252,9 +275,12 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           backgroundColor: Colors.white,
           child: SafeArea(child: _buildSidebar()),
         ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _buildMainContent(),
+        body: SafeArea(
+          top: false,
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _buildMainContent(),
+        ),
       ),
     );
   }
@@ -270,7 +296,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             children: [
               Text(
                 'MODULES',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF94A3B8),
@@ -341,6 +367,14 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
         }
 
         setState(() => _selectedModuleIndex = index);
+
+        // Save study progress for Dashboard suggestions
+        _storage.addRecentStudy({
+          'company': widget.company.toJson(),
+          'modIndex': index,
+          'modTitle': group['title'],
+          'timestamp': DateTime.now().toIso8601String(),
+        });
         if (index == 4) {
           _fetchMcqSets('pyq');
         } else if (index == 5) {
@@ -382,7 +416,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 children: [
                   Text(
                     'MOD ${index + 1}',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: isSelected ? color : const Color(0xFF94A3B8),
@@ -390,7 +424,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   ),
                   Text(
                     group['title'],
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: isSelected ? color : const Color(0xFF1E293B),
@@ -501,7 +535,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 const SizedBox(width: 6),
                 Text(
                   'MODULE ${index + 1}',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     color: Colors.white,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
@@ -513,7 +547,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           const SizedBox(height: 16),
           Text(
             title,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 32,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -522,7 +556,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           const SizedBox(height: 8),
           Text(
             'Explore the detailed resources for this module.',
-            style: GoogleFonts.outfit(fontSize: 16, color: Colors.white70),
+            style: GoogleFonts.inter(fontSize: 16, color: Colors.white70),
           ),
         ],
       ),
@@ -575,7 +609,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             children: [
               Text(
                 'Available Materials',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF1E293B),
@@ -583,7 +617,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               ),
               Text(
                 '${filteredItems.length} items',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 12,
                   color: const Color(0xFF64748B),
                 ),
@@ -645,7 +679,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               Expanded(
                 child: Text(
                   title,
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
                     color: const Color(0xFF1E293B),
@@ -654,7 +688,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               ),
               Text(
                 date,
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 11,
                   color: const Color(0xFF94A3B8),
                   fontWeight: FontWeight.w500,
@@ -666,7 +700,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             const SizedBox(height: 16),
             Text(
               content,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontSize: 14,
                 color: const Color(0xFF64748B),
                 height: 1.6,
@@ -714,7 +748,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               Expanded(
                 child: Text(
                   title,
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                     color: const Color(0xFF1E293B),
@@ -723,7 +757,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               ),
               Text(
                 date,
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 11,
                   color: const Color(0xFF94A3B8),
                   fontWeight: FontWeight.w500,
@@ -760,7 +794,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             Expanded(
               child: Text(
                 'This content is locked. Upgrade to unlock.',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: Colors.orange[800],
@@ -795,7 +829,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           const SizedBox(width: 12),
           Text(
             'Not available in this language',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 13,
               color: const Color(0xFF64748B),
             ),
@@ -853,7 +887,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           const SizedBox(width: 10),
           Text(
             isPdf ? 'View PDF' : 'Watch Video',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -897,7 +931,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           const SizedBox(height: 24),
           Text(
             'Coming Soon!',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF1E293B),
@@ -908,7 +942,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             message ??
                 'Premium materials are being prepared for this module.\nCheck back soon!',
             textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               color: const Color(0xFF64748B),
               height: 1.5,
             ),
@@ -932,7 +966,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             children: [
               Text(
                 'Overall Progress',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF64748B),
@@ -940,7 +974,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               ),
               Text(
                 '${(_selectedModuleIndex + 1) * 12}%',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: Colors.blue,
@@ -981,20 +1015,20 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             const SizedBox(width: 10),
             Text(
               'Premium Content',
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+              style: GoogleFonts.inter(fontWeight: FontWeight.bold),
             ),
           ],
         ),
         content: Text(
           'This module is part of our Elite Learning Path. Upgrade your subscription to unlock all modules and advanced test series.',
-          style: GoogleFonts.outfit(),
+          style: GoogleFonts.inter(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Maybe Later',
-              style: GoogleFonts.outfit(color: Colors.grey),
+              style: GoogleFonts.inter(color: Colors.grey),
             ),
           ),
           ElevatedButton(
@@ -1013,7 +1047,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             ),
             child: Text(
               'Upgrade Now',
-              style: GoogleFonts.outfit(color: Colors.white),
+              style: GoogleFonts.inter(color: Colors.white),
             ),
           ),
         ],
@@ -1059,7 +1093,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 children: [
                   Text(
                     'Login Required',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFF1E293B),
@@ -1069,7 +1103,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   Text(
                     'Please login to access premium modules and track your progress.',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 14,
                       color: const Color(0xFF64748B),
                       height: 1.5,
@@ -1083,7 +1117,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                           onPressed: () => Navigator.pop(context),
                           child: Text(
                             'Maybe Later',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontWeight: FontWeight.w600,
                               color: const Color(0xFF94A3B8),
                             ),
@@ -1122,7 +1156,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                           ),
                           child: Text(
                             'Login Now',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -1176,7 +1210,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   Text(
                     'Exit Learning Journey?',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF1E293B),
@@ -1186,7 +1220,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   Text(
                     'Your progress for this session will be saved. Are you sure you want to exit?',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 14,
                       color: const Color(0xFF64748B),
                       height: 1.5,
@@ -1206,7 +1240,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                           ),
                           child: Text(
                             'Keep Learning',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontWeight: FontWeight.w600,
                               color: const Color(0xFF94A3B8),
                             ),
@@ -1228,7 +1262,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                           ),
                           child: Text(
                             'Yes, Exit',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontWeight: FontWeight.w700,
                               fontSize: 16,
                             ),
@@ -1291,7 +1325,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 children: [
                   Text(
                     'CHAPTER',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: Colors.orange,
@@ -1300,7 +1334,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   ),
                   Text(
                     test.chapterName ?? 'General',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFF1E293B),
@@ -1324,7 +1358,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               const SizedBox(width: 8),
               Text(
                 'TOPIC: ${test.topicName?.toUpperCase() ?? 'N/A'}',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: Colors.orange,
@@ -1386,7 +1420,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                             ),
                             child: Text(
                               'MOCK TEST',
-                              style: GoogleFonts.outfit(
+                              style: GoogleFonts.inter(
                                 fontSize: 7,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -1401,7 +1435,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   Expanded(
                     child: Text(
                       test.setName ?? 'Untitled',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF1E293B),
@@ -1481,7 +1515,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                       children: [
                         Text(
                           'CHAPTER',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.inter(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFFEF4444),
@@ -1490,7 +1524,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                         ),
                         Text(
                           set.chapterName ?? 'General',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFF1E293B),
@@ -1511,7 +1545,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   ),
                   child: Text(
                     '1 item',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFFEF4444),
@@ -1540,7 +1574,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                     const SizedBox(width: 8),
                     Text(
                       'TOPIC: ${set.topicName?.toUpperCase() ?? 'N/A'}',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFFEF4444),
@@ -1608,7 +1642,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                                   ),
                                   child: Text(
                                     'QUIZ',
-                                    style: GoogleFonts.outfit(
+                                    style: GoogleFonts.inter(
                                       fontSize: 7,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
@@ -1632,7 +1666,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                                     ),
                                     child: Text(
                                       '${set.questionCount ?? 0} Qs',
-                                      style: GoogleFonts.outfit(
+                                      style: GoogleFonts.inter(
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.red,
@@ -1648,7 +1682,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                         Expanded(
                           child: Text(
                             set.setName ?? 'Untitled',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: const Color(0xFF1E293B),
@@ -1669,6 +1703,138 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showInstructionGuide() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _InstructionGuideDialog(
+        onGetStarted: () {
+          Navigator.pop(context);
+          _storage.setStudyGuideShown(true);
+        },
+      ),
+    );
+  }
+}
+
+class _InstructionGuideDialog extends StatelessWidget {
+  final VoidCallback onGetStarted;
+
+  const _InstructionGuideDialog({required this.onGetStarted});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      child: Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 30,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: const Color(0xFF3B82F6).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.menu_open_rounded,
+                  color: Color(0xFF3B82F6),
+                  size: 40,
+                ),
+              ),
+            ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
+            const SizedBox(height: 24),
+            Text(
+              'Your Learning Hub',
+              style: GoogleFonts.inter(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Access all your study modules, mock tests, and video lessons from the side menu.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: const Color(0xFF64748B),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            _buildStep(
+              Icons.touch_app_rounded,
+              'Tap the menu icon to switch modules',
+            ),
+            const SizedBox(height: 16),
+            _buildStep(
+              Icons.auto_awesome_rounded,
+              'Track your progress in each section',
+            ),
+            const SizedBox(height: 40),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: onGetStarted,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3B82F6),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Got it, Let\'s Go!',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9));
+  }
+
+  Widget _buildStep(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, color: const Color(0xFF3B82F6), size: 20),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF334155),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

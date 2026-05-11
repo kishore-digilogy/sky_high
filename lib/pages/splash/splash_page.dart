@@ -81,7 +81,7 @@ class _SplashPageState extends State<SplashPage> {
             // App Name
             Text(
                   'SKY HIGH',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 28,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 4,
@@ -97,7 +97,7 @@ class _SplashPageState extends State<SplashPage> {
             // Tagline
             Text(
               'Reach for the stars',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: const Color(0xFF64748B),

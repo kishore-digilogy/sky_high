@@ -31,8 +31,9 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
     _materialsFuture.then((materials) {
       if (mounted) {
         setState(() {
-          _allMaterials =
-              materials.where((m) => m.visibility.toLowerCase() == 'free').toList();
+          _allMaterials = materials
+              .where((m) => m.visibility.toLowerCase() == 'free')
+              .toList();
           _filteredMaterials = _allMaterials;
         });
       }
@@ -42,9 +43,11 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
   void _filterMaterials(String query) {
     setState(() {
       _filteredMaterials = _allMaterials
-          .where((m) =>
-              m.title.toLowerCase().contains(query.toLowerCase()) ||
-              m.displayCategory.toLowerCase().contains(query.toLowerCase()))
+          .where(
+            (m) =>
+                m.title.toLowerCase().contains(query.toLowerCase()) ||
+                m.displayCategory.toLowerCase().contains(query.toLowerCase()),
+          )
           .toList();
     });
   }
@@ -56,7 +59,7 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
       appBar: AppBar(
         title: Text(
           'Study Materials',
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.inter(
             fontWeight: FontWeight.bold,
             color: const Color(0xFF1E293B),
             fontSize: 18,
@@ -93,18 +96,23 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
               child: TextField(
                 controller: _searchController,
                 onChanged: _filterMaterials,
-                style: GoogleFonts.outfit(fontSize: 15),
+                style: GoogleFonts.inter(fontSize: 15),
                 decoration: InputDecoration(
                   hintText: 'Search for books, notes...',
-                  hintStyle: GoogleFonts.outfit(
+                  hintStyle: GoogleFonts.inter(
                     color: const Color(0xFF94A3B8),
                     fontSize: 14,
                   ),
-                  prefixIcon: const Icon(Icons.search_rounded,
-                      color: Color(0xFF94A3B8), size: 22),
+                  prefixIcon: const Icon(
+                    Icons.search_rounded,
+                    color: Color(0xFF94A3B8),
+                    size: 22,
+                  ),
                   border: InputBorder.none,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 15,
+                  ),
                 ),
               ),
             ),
@@ -130,7 +138,9 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
                         const SizedBox(height: 16),
                         Text(
                           'Failed to load materials',
-                          style: GoogleFonts.outfit(color: const Color(0xFF64748B)),
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF64748B),
+                          ),
                         ),
                       ],
                     ),
@@ -141,22 +151,28 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
                   return Center(
                     child: Text(
                       'No materials available',
-                      style: GoogleFonts.outfit(color: const Color(0xFF64748B)),
+                      style: GoogleFonts.inter(color: const Color(0xFF64748B)),
                     ),
                   );
                 }
 
-                if (_filteredMaterials.isEmpty && _searchController.text.isNotEmpty) {
+                if (_filteredMaterials.isEmpty &&
+                    _searchController.text.isNotEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.search_off_rounded,
-                            size: 64, color: Colors.grey[300]),
+                        Icon(
+                          Icons.search_off_rounded,
+                          size: 64,
+                          color: Colors.grey[300],
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'No matching materials found',
-                          style: GoogleFonts.outfit(color: const Color(0xFF64748B)),
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF64748B),
+                          ),
                         ),
                       ],
                     ),
@@ -271,7 +287,7 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
                           ),
                           child: Text(
                             material.displayCategory.toUpperCase(),
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
                               color: color,
@@ -284,7 +300,7 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
                         const SizedBox(height: 8),
                         Text(
                           material.title,
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFF1E293B),
@@ -306,7 +322,7 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
                             const SizedBox(width: 4),
                             Text(
                               material.isVideo ? 'Video' : 'PDF',
-                              style: GoogleFonts.outfit(
+                              style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
                                 color: const Color(0xFF94A3B8),

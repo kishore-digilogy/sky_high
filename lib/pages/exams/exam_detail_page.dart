@@ -79,7 +79,7 @@ class ExamDetailPage extends StatelessWidget {
                 children: [
                   Text(
                     exam['title'] as String,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       color: Colors.white,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -88,7 +88,7 @@ class ExamDetailPage extends StatelessWidget {
                   const SizedBox(height: 5),
                   Text(
                     'Target Year: 2026',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       color: Colors.white70,
                       fontSize: 16,
                     ),
@@ -120,7 +120,7 @@ class ExamDetailPage extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           val,
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.inter(
             fontWeight: FontWeight.bold,
             fontSize: 14,
             color: const Color(0xFF0F172A),
@@ -128,7 +128,7 @@ class ExamDetailPage extends StatelessWidget {
         ),
         Text(
           label,
-          style: GoogleFonts.outfit(fontSize: 11, color: Colors.grey),
+          style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
         ),
       ],
     );
@@ -137,7 +137,7 @@ class ExamDetailPage extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: GoogleFonts.outfit(
+      style: GoogleFonts.inter(
         fontSize: 20,
         fontWeight: FontWeight.bold,
         color: const Color(0xFF0F172A),
@@ -148,7 +148,7 @@ class ExamDetailPage extends StatelessWidget {
   Widget _buildDescription() {
     return Text(
       'This exam is conducted for recruitment to various civil services of the Government of India, including the IAS, IFS, and IPS. It is widely considered one of the most prestigious and difficult competitive examinations in the country.',
-      style: GoogleFonts.outfit(
+      style: GoogleFonts.inter(
         fontSize: 15,
         color: const Color(0xFF64748B),
         height: 1.6,
@@ -172,7 +172,7 @@ class ExamDetailPage extends StatelessWidget {
             const SizedBox(width: 15),
             Text(
               topic,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF475569),
               ),
@@ -200,7 +200,7 @@ class ExamDetailPage extends StatelessWidget {
         ),
         child: Text(
           'Start Preparation',
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.inter(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Colors.white,

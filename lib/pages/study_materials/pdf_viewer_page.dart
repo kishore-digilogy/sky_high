@@ -115,7 +115,7 @@ class _PdfViewerPageState extends State<PdfViewerPage>
       appBar: AppBar(
         title: Text(
           widget.title,
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.inter(
             fontWeight: FontWeight.w700,
             fontSize: 20,
             color: const Color(0xFF0F172A),
@@ -239,7 +239,7 @@ class _PdfViewerPageState extends State<PdfViewerPage>
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
                     color: const Color(0xFF1E293B),
@@ -249,7 +249,7 @@ class _PdfViewerPageState extends State<PdfViewerPage>
                 Text(
                   message,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 14,
                     color: const Color(0xFF64748B),
                     height: 1.5,
@@ -271,7 +271,7 @@ class _PdfViewerPageState extends State<PdfViewerPage>
                     ),
                     child: Text(
                       buttonText,
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
                       ),

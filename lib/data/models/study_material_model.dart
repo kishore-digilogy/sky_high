@@ -1,3 +1,5 @@
+import 'package:sky_high/core/utils/localization_helper.dart';
+
 class StudyMaterialModel {
   final int id;
   final String title;
@@ -34,8 +36,8 @@ class StudyMaterialModel {
   factory StudyMaterialModel.fromJson(Map<String, dynamic> json) {
     return StudyMaterialModel(
       id: json['id'] ?? 0,
-      title: json['title'] ?? '',
-      category: json['category'],
+      title: LocalizationHelper.getLocalized(json, 'title'),
+      category: LocalizationHelper.getLocalized(json, 'category'),
       fileType: json['fileType'] ?? json['file_type'] ?? 'pdf',
       filePath: json['filePath'] ?? json['file_path'] ?? '',
       fileName: json['fileName'] ?? json['file_name'] ?? '',
@@ -49,8 +51,8 @@ class StudyMaterialModel {
           DateTime.now(),
       categoryId: json['category_id'],
       language: json['language'] ?? 'English',
-      description: json['description'],
-      categoryTitle: json['category_title'],
+      description: LocalizationHelper.getLocalized(json, 'description'),
+      categoryTitle: LocalizationHelper.getLocalized(json, 'category_title'),
     );
   }
 

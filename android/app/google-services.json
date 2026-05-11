@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "199387392756",
+    "project_id": "sky-high-5de8b",
+    "storage_bucket": "sky-high-5de8b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:199387392756:android:6e268976821d529a8b0ca1",
+        "android_client_info": {
+          "package_name": "com.example.sky_high"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuSkU3z_hiPfVSUJ7bvAKRWxUk1I5Md_0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
