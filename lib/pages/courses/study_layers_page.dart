@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
@@ -38,6 +39,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
 
   List<StudyLayerModel> _apiLayers = [];
   int _selectedModuleIndex = 0;
+  final Set<int> _completedModuleIndices = {};
   bool _isLoading = true;
   bool _isPaidUser = false;
   bool _isLoggedIn = false;
@@ -289,47 +291,165 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Header
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+          padding: const EdgeInsets.fromLTRB(24, 20, 12, 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'MODULES',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF94A3B8),
-                  letterSpacing: 1.1,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF1E293B),
+                  letterSpacing: 0.5,
                 ),
               ),
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(
-                  Icons.close_rounded,
-                  color: Color(0xFF94A3B8),
-                  size: 20,
+                icon: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    color: Color(0xFF64748B),
+                    size: 18,
+                  ),
                 ),
-                visualDensity: VisualDensity.compact,
               ),
             ],
           ),
         ),
+
+        // Progress Card
+        _buildProgressCard(),
+
+        // Modules List
         Expanded(
           child: ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 10),
             itemCount: _moduleGroups.length,
             itemBuilder: (context, index) {
               final group = _moduleGroups[index];
               final isSelected = _selectedModuleIndex == index;
-              // All modules can be clicked, but paid content in MOD 4+ will show lock dialog
               final isLocked = index >= 3 && !_isPaidUser;
-
               return _buildModuleTile(group, index, isSelected, isLocked);
             },
           ),
         ),
-        _buildOverallProgress(),
       ],
+    );
+  }
+
+  Widget _buildProgressCard() {
+    final double progress =
+        _completedModuleIndices.length / _moduleGroups.length;
+    final int percentage = (progress * 100).toInt();
+
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6366F1).withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // Circular Progress with Rocket
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 70,
+                    height: 70,
+                    child: CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 6,
+                      backgroundColor: const Color(0xFFF1F5F9),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Color(0xFF6366F1),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.rocket_launch_rounded,
+                      color: Color(0xFF6366F1),
+                      size: 24,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 20),
+              // Progress Text
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Your Progress',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Keep learning, you\'re doing great! 🚀',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        color: const Color(0xFF64748B),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '$percentage%',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF6366F1),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: const Color(0xFFF1F5F9),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF6366F1),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -339,110 +459,164 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     bool isSelected,
     bool isLocked,
   ) {
-    final colors = [
-      const Color(0xFF6366F1),
-      const Color(0xFFEC4899),
-      const Color(0xFF06B6D4),
-      const Color(0xFF10B981),
-      const Color(0xFF94A3B8), // Skip 1
-      const Color(0xFF94A3B8), // Skip 2
-      const Color(0xFF8B5CF6), // Video
-      const Color(0xFF94A3B8), // Skip 3
+    final List<Color> modColors = [
+      const Color(0xFF6366F1), // Indigo
+      const Color(0xFFF43F5E), // Rose
+      const Color(0xFF06B6D4), // Cyan
+      const Color(0xFF10B981), // Emerald
+      const Color(0xFFF59E0B), // Amber
+      const Color(0xFF3B82F6), // Blue
+      const Color(0xFF8B5CF6), // Violet
+      const Color(0xFF0EA5E9), // Sky
     ];
-    final color = colors[index % colors.length];
+    final color = modColors[index % modColors.length];
 
-    return InkWell(
-      onTap: () {
-        // First 3 modules are free (index 0, 1, 2)
-        // From Mod 4 to 8 (index 3-7), check for login and subscription
-        if (index >= 3) {
-          if (!_isLoggedIn) {
-            _showLoginRequiredDialog();
-            return;
-          }
-          if (!_isPaidUser) {
-            _showLockedDialog();
-            return;
-          }
-        }
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: isSelected
+                ? color.withOpacity(0.12)
+                : Colors.black.withOpacity(0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            if (index >= 3) {
+              if (!_isLoggedIn) {
+                _showLoginRequiredDialog();
+                return;
+              }
+              if (!_isPaidUser) {
+                _showLockedDialog();
+                return;
+              }
+            }
 
-        setState(() => _selectedModuleIndex = index);
-
-        // Save study progress for Dashboard suggestions
-        _storage.addRecentStudy({
-          'company': widget.company.toJson(),
-          'modIndex': index,
-          'modTitle': group['title'],
-          'timestamp': DateTime.now().toIso8601String(),
-        });
-        if (index == 4) {
-          _fetchMcqSets('pyq');
-        } else if (index == 5) {
-          _fetchMcqSets('mcq');
-        } else if (index == 7 && _mockTests.isEmpty) {
-          _fetchMockTests();
-        }
-        Navigator.pop(context); // Close drawer
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          border: isSelected ? Border.all(color: color.withOpacity(0.2)) : null,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isSelected ? color : color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                isSelected
-                    ? group['icon']
-                    : (isLocked ? Icons.lock_outline_rounded : group['icon']),
-                color: isSelected ? Colors.white : color,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'MOD ${index + 1}',
-                    style: GoogleFonts.inter(
+            setState(() => _selectedModuleIndex = index);
+            _storage.addRecentStudy({
+              'company': widget.company.toJson(),
+              'modIndex': index,
+              'modTitle': group['title'],
+              'timestamp': DateTime.now().toIso8601String(),
+            });
+            if (index == 4) {
+              _fetchMcqSets('pyq');
+            } else if (index == 5) {
+              _fetchMcqSets('mcq');
+            } else if (index == 7 && _mockTests.isEmpty) {
+              _fetchMockTests();
+            }
+            Navigator.pop(context);
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                // Left Color Bar
+                Container(
+                  width: 4,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      bottomLeft: Radius.circular(16),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Number Circle
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    (index + 1).toString().padLeft(2, '0'),
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? color : const Color(0xFF94A3B8),
+                      color: Colors.white,
                     ),
                   ),
-                  Text(
-                    group['title'],
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? color : const Color(0xFF1E293B),
-                    ),
+                ),
+                const SizedBox(width: 12),
+                // Icon Badge
+                Container(
+                  width: 44,
+                  height: 44,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
-              ),
+                  child: Icon(
+                    isLocked ? Icons.lock_outline_rounded : group['icon'],
+                    color: color,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Title Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'MOD ${index + 1}',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: color,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        group['title'],
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1E293B),
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Arrow
+                Container(
+                  margin: const EdgeInsets.only(right: 12),
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                  ),
+                  child: Icon(
+                    Icons.chevron_right_rounded,
+                    color: color,
+                    size: 18,
+                  ),
+                ),
+              ],
             ),
-            if (isLocked)
-              const Icon(
-                Icons.lock_rounded,
-                size: 14,
-                color: Color(0xFF94A3B8),
-              ),
-          ],
+          ),
         ),
       ),
-    ).animate().slideX(begin: -0.1);
+    );
   }
 
   IconData _getModuleIcon(int modNum) {
@@ -470,9 +644,30 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
 
   Widget _buildMainContent() {
     final group = _moduleGroups[_selectedModuleIndex];
+    final String layerName = group['type'];
+
+    // Check if the current view should show empty content to adjust card color
+    bool shouldShowEmpty = false;
+    if (layerName == 'skip') {
+      shouldShowEmpty = true;
+    } else if (layerName == 'mock' && !_isMockLoading && _mockTests.isEmpty) {
+      shouldShowEmpty = true;
+    } else if ((layerName == 'mcq' || layerName == 'pyq') &&
+        !_isMcqLoading &&
+        _mcqSets.isEmpty) {
+      shouldShowEmpty = true;
+    } else if (layerName != 'mock' &&
+        layerName != 'mcq' &&
+        layerName != 'pyq' &&
+        !_isLoading) {
+      final filteredItems = _apiLayers
+          .where((item) => item.layer.toLowerCase() == layerName.toLowerCase())
+          .toList();
+      if (filteredItems.isEmpty) shouldShowEmpty = true;
+    }
 
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -482,85 +677,205 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: shouldShowEmpty ? const Color(0xFFFAEFE1) : Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
+                  // BoxShadow(
+                  //   color: Colors.black.withOpacity(0.03),
+                  //   blurRadius: 20,
+                  //   offset: const Offset(0, 10),
+                  // ),
                 ],
               ),
-              child: _buildMaterialsView(),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: _buildMaterialsView(),
+              ),
             ),
           ),
+          _buildCompleteAndNextButton(),
         ],
       ),
     );
   }
 
+  Widget _buildCompleteAndNextButton() {
+    final bool isLastModule = _selectedModuleIndex == _moduleGroups.length - 1;
+    final Color color = const Color(0xFF6366F1);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.2),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: ElevatedButton(
+          onPressed: () {
+            setState(() {
+              _completedModuleIndices.add(_selectedModuleIndex);
+
+              if (!isLastModule) {
+                final int nextIndex = _selectedModuleIndex + 1;
+
+                // Safety check for locked modules (consistent with drawer logic)
+                if (nextIndex >= 3) {
+                  if (!_isLoggedIn) {
+                    _showLoginRequiredDialog();
+                    return;
+                  }
+                  if (!_isPaidUser) {
+                    _showLockedDialog();
+                    return;
+                  }
+                }
+
+                _selectedModuleIndex = nextIndex;
+
+                // Fetch data for the newly selected module
+                if (_selectedModuleIndex == 4) {
+                  _fetchMcqSets('pyq');
+                } else if (_selectedModuleIndex == 5) {
+                  _fetchMcqSets('mcq');
+                } else if (_selectedModuleIndex == 7 && _mockTests.isEmpty) {
+                  _fetchMockTests();
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Congratulations! You have completed all modules! 🎉',
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            });
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: color,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(double.infinity, 64),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            elevation: 0,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                isLastModule ? 'Finish Journey' : 'Complete & Next Module',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Icon(
+                isLastModule
+                    ? Icons.celebration_rounded
+                    : Icons.arrow_forward_rounded,
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildContentHeader(String title, {required int index}) {
+    final Color color = const Color(0xFF6366F1);
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF6366F1), Color(0xFF4338CA)],
-        ),
-        borderRadius: BorderRadius.circular(24),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6366F1).withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
+          // Module Badge Pill
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(30),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.stars_rounded, color: Colors.white, size: 14),
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.stars_rounded,
+                    color: Colors.white,
+                    size: 12,
+                  ),
+                ),
                 const SizedBox(width: 6),
                 Text(
-                  'MODULE ${index + 1}',
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                  'MOD ${index + 1}',
+                  style: GoogleFonts.plusJakartaSans(
+                    color: color,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: GoogleFonts.inter(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          const SizedBox(width: 20),
+          // Title
+          Expanded(
+            child: Text(
+              title,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF1E293B),
+                height: 1.2,
+              ),
+              maxLines: 2,
+              softWrap: true,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Explore the detailed resources for this module.',
-            style: GoogleFonts.inter(fontSize: 16, color: Colors.white70),
+          // Illustration
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.asset('assets/Icons/books.jpg', fit: BoxFit.contain),
+            ),
           ),
         ],
       ),
-    ).animate().scale(begin: const Offset(0.95, 0.95));
+    ).animate().fadeIn().slideX(begin: 0.1);
   }
 
   Widget _buildMaterialsView() {
@@ -600,58 +915,322 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
       return _buildEmptyContent();
     }
 
+    final bool useGrid = layerName.toLowerCase() != 'basic_info';
+
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'Available Materials',
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
                   color: const Color(0xFF1E293B),
                 ),
               ),
-              Text(
-                '${filteredItems.length} items',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: const Color(0xFF64748B),
-                ),
+              Row(
+                children: [
+                  Text(
+                    '${filteredItems.length} items',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.filter_list_rounded,
+                    size: 18,
+                    color: Color(0xFF64748B),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-        const Divider(height: 1),
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(20),
-            itemCount: filteredItems.length,
-            itemBuilder: (context, index) {
-              final item = filteredItems[index];
-              return _buildLayerContentCard(item);
-            },
-          ),
+          child: useGrid
+              ? GridView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.78,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  itemCount: filteredItems.length + 1, // +1 for the banner
+                  itemBuilder: (context, index) {
+                    if (index == filteredItems.length) {
+                      return const SizedBox.shrink(); // Handled by Sliver logic if needed, but for now just empty
+                    }
+                    return _buildLayerContentCard(
+                      filteredItems[index],
+                      isGrid: true,
+                    );
+                  },
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: filteredItems.length,
+                  itemBuilder: (context, index) {
+                    return _buildLayerContentCard(
+                      filteredItems[index],
+                      isGrid: false,
+                    );
+                  },
+                ),
         ),
+        if (useGrid) _buildFooterBanner(),
       ],
     );
   }
 
-  Widget _buildLayerContentCard(StudyLayerModel item) {
+  Widget _buildFooterBanner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFDBEAFE)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.article_rounded,
+              color: Color(0xFF3B82F6),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'New materials will be added regularly.',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E40AF),
+                  ),
+                ),
+                Text(
+                  'Keep learning, keep growing! 🚀',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    color: const Color(0xFF60A5FA),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(
+            Icons.auto_awesome_rounded,
+            color: Color(0xFF93C5FD),
+            size: 16,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLayerContentCard(StudyLayerModel item, {required bool isGrid}) {
     final title = item.getLocalizedTitle(_currentLangCode);
     final date = item.getFormattedDate();
     final isLocked = !item.isFree && !_isPaidUser;
+    final url = item.getLocalizedUrl(_currentLangCode);
 
-    if (item.layer.toLowerCase() == 'basic_info') {
+    if (isGrid) {
+      return _buildGridResourceCard(item, title, url, date, isLocked);
+    }
+
+    // If it has a URL, treat it as a resource so it can be opened
+    if (url != null) {
+      return _buildResourceCard(item, title, url, date, isLocked);
+    }
+
+    if (item.layer.toLowerCase() == 'basic_info' ||
+        item.layer.toLowerCase() == 'syllabus' ||
+        item.layer.toLowerCase() == 'preparation_plan') {
       final content = item.getLocalizedContent(_currentLangCode);
       return _buildBasicInfoCard(title, content, date);
     } else {
-      final url = item.getLocalizedUrl(_currentLangCode);
       return _buildResourceCard(item, title, url, date, isLocked);
     }
+  }
+
+  Widget _buildGridResourceCard(
+    StudyLayerModel item,
+    String title,
+    String? url,
+    String date,
+    bool isLocked,
+  ) {
+    final bool isPdf = url?.toLowerCase().endsWith('.pdf') ?? false;
+    final Color color = const Color(0xFF6366F1);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            if (isLocked) {
+              _showLockedDialog();
+            } else if (url != null) {
+              if (isPdf) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PdfViewerPage(pdfUrl: url, title: title),
+                  ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        VideoPlayerPage(videoUrl: url, title: title),
+                  ),
+                );
+              }
+            }
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Icon
+                _buildResourceIcon(isPdf),
+                const Spacer(),
+                // Title
+                Text(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E293B),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                // Date
+                Text(
+                  date,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10,
+                    color: const Color(0xFF94A3B8),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // View Button
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        isPdf ? 'View PDF' : 'Watch Video',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: color,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 8,
+                        color: color,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResourceIcon(bool isPdf) {
+    return Container(
+      width: 50,
+      height: 65,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFE4E6), // Soft pink
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Icon(
+            isPdf
+                ? Icons.description_rounded
+                : Icons.play_circle_filled_rounded,
+            color: const Color(0xFFFB7185),
+            size: 32,
+          ),
+          Positioned(
+            bottom: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFB7185),
+                borderRadius: BorderRadius.circular(3),
+              ),
+              child: Text(
+                isPdf ? 'PDF' : 'VIDEO',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 7,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getFileSize(int id) {
+    final sizes = ['1.2 MB', '2.4 MB', '3.1 MB', '1.8 MB', '2.7 MB', '0.9 MB'];
+    return sizes[id % sizes.length];
   }
 
   Widget _buildBasicInfoCard(String title, String? content, String date) {
@@ -912,87 +1491,30 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
 
   Widget _buildEmptyContent({String? message}) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(30),
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              'assets/Icons/coming_soon.svg',
+              width: MediaQuery.of(context).size.width * 0.7,
             ),
-            child: Icon(
-              Icons.assignment_outlined,
-              size: 48,
-              color: Colors.blue.withOpacity(0.3),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Coming Soon!',
-            style: GoogleFonts.inter(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1E293B),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            message ??
-                'Premium materials are being prepared for this module.\nCheck back soon!',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              color: const Color(0xFF64748B),
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOverallProgress() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.1))),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Overall Progress',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF64748B),
-                ),
+            const SizedBox(height: 32),
+            Text(
+              message ??
+                  'This module is currently being integrated.\nPlease check back soon.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 15,
+                color: const Color(0xFF64748B),
+                height: 1.5,
+                fontWeight: FontWeight.w600,
               ),
-              Text(
-                '${(_selectedModuleIndex + 1) * 12}%',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: (_selectedModuleIndex + 1) * 0.12,
-              backgroundColor: Colors.blue.withOpacity(0.1),
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-              minHeight: 6,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

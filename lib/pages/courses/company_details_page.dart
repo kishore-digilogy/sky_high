@@ -238,28 +238,28 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
               ),
             )
           : const SizedBox.shrink(),
-      actions: [
-        if (!_isSearching) ...[
-          _topActionBtn(
-            Icons.bookmark_border_rounded,
-            onTap: () => setState(() => _isSearching = true),
-          ),
-          const SizedBox(width: 8),
-          _topActionBtn(Icons.share_outlined),
-          const SizedBox(width: 12),
-        ] else ...[
-          IconButton(
-            icon: const Icon(Icons.close, color: _kDark),
-            onPressed: () {
-              setState(() {
-                _isSearching = false;
-                _searchController.clear();
-                _filterJobs('');
-              });
-            },
-          ),
-        ],
-      ],
+      // actions: [
+      //   if (!_isSearching) ...[
+      //     _topActionBtn(
+      //       Icons.bookmark_border_rounded,
+      //       onTap: () => setState(() => _isSearching = true),
+      //     ),
+      //     const SizedBox(width: 8),
+      //     _topActionBtn(Icons.share_outlined),
+      //     const SizedBox(width: 12),
+      //   ] else ...[
+      //     IconButton(
+      //       icon: const Icon(Icons.close, color: _kDark),
+      //       onPressed: () {
+      //         setState(() {
+      //           _isSearching = false;
+      //           _searchController.clear();
+      //           _filterJobs('');
+      //         });
+      //       },
+      //     ),
+      //   ],
+      // ],
     );
   }
 
@@ -346,7 +346,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                         child: widget.company.fullLogoUrl.isNotEmpty
                             ? CachedNetworkImage(
                                 imageUrl: widget.company.fullLogoUrl,
-                                fit: BoxFit.cover,
+                                fit: BoxFit.fill,
                                 placeholder: (c, u) =>
                                     Container(color: _kSurface),
                                 errorWidget: (c, u, e) => _buildFallbackIcon(),

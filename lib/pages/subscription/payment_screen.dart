@@ -186,8 +186,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
         final userData = GetIt.I<StorageService>().getUserData();
 
         final options = {
-          'key': 'rzp_test_SDCzPYcvdghetb',
+          'key': 'rzp_test_RiITeBJ6ekfwpW',
           'amount': razorpayAmount,
+          'order_id': _currentOrderId,
+          'currency': 'INR',
           'name': 'Sky High Elite',
           'description': 'One Year Access — Annual Payment',
           'prefill': {

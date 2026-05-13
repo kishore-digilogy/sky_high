@@ -5,6 +5,8 @@ import 'package:sky_high/data/models/exam_category_model.dart';
 import 'package:sky_high/pages/courses/subcategory_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sky_high/widgets/category_icon.dart';
+import 'package:sky_high/widgets/category_card.dart';
+
 
 class AllCategoriesPage extends StatefulWidget {
   final List<ExamCategoryModel> categories;
@@ -127,85 +129,20 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
               padding: const EdgeInsets.all(24),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.85,
+                childAspectRatio: 170 / 210, // Matching the premium card aspect ratio
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),
+
               itemCount: _filteredCategories.length,
               itemBuilder: (context, index) {
-                final category = _filteredCategories[index];
-                final colorValue = category.displayColorValue;
-                final color = Color(colorValue);
-
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            SubcategoryPage(category: category),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CategoryIcon(
-                          categoryName: category.title,
-                          fallbackEmoji: category.displayIcon,
-                          backgroundColor: color.withOpacity(0.1),
-                        ),
-                        const Spacer(),
-                        Text(
-                          category.title,
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF1E293B),
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 8),
-                        if (category.subtitle != null &&
-                            category.subtitle!.isNotEmpty)
-                          Text(
-                            category.subtitle!,
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: const Color(0xFF94A3B8),
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${category.totalCount} Companies',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: color,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ).animate().fadeIn(delay: (50 * index).ms).scale(),
+                return CategoryCard(
+                  category: _filteredCategories[index],
+                  index: index,
+                  isTrending: false, // No trending items on all categories page usually
                 );
               },
+
             ),
     );
   }
