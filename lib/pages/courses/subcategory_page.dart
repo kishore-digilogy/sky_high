@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:sky_high/data/models/exam_category_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sky_high/pages/courses/company_details_page.dart';
 import 'package:sky_high/pages/courses/study_layers_page.dart';
+import 'package:sky_high/core/services/localization_service.dart';
 
 class SubcategoryPage extends StatefulWidget {
   final ExamCategoryModel category;
@@ -20,7 +22,7 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
   late List<ExamItemModel> _filteredItems;
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
-  bool _isTitleExpanded = false;
+  final LocalizationService _l10n = LocalizationService();
 
   @override
   void initState() {
@@ -119,14 +121,16 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                         color: const Color(0xFF1E293B),
                         letterSpacing: -0.5,
                       ),
+                      maxLines: 2,
                     ),
                     Text(
-                      'Explore government exam categories',
+                      _l10n.tr('explore_exam_categories'),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: const Color(0xFF64748B),
                       ),
+                      maxLines: 2,
                     ),
                   ],
                 ),
@@ -136,8 +140,8 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                 onTap: () => setState(() => _isSearching = !_isSearching),
                 child: Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F3FF),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF5F3FF),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -162,7 +166,7 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                 autofocus: true,
                 style: GoogleFonts.plusJakartaSans(fontSize: 14),
                 decoration: InputDecoration(
-                  hintText: 'Search categories...',
+                  hintText: _l10n.tr('search_categories'),
                   filled: true,
                   fillColor: Colors.white,
                   prefixIcon: const Icon(Icons.search_rounded),
@@ -196,22 +200,25 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
           const SizedBox(height: 20),
           Text(
             widget.category.type?.toLowerCase() == 'material'
-                ? 'No Materials available'
-                : 'No Companies available',
+                ? _l10n.tr('no_materials_available')
+                : _l10n.tr('no_companies_available'),
             style: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF1E293B),
             ),
+            maxLines: 2,
+            textAlign: TextAlign.center,
           ).animate(),
           const SizedBox(height: 10),
           Text(
-            'Check back later for new content in this category.',
+            _l10n.tr('check_back_later'),
             style: GoogleFonts.inter(
               fontSize: 14,
               color: const Color(0xFF64748B),
             ),
             textAlign: TextAlign.center,
+            maxLines: 3,
           ).animate(),
         ],
       ),
@@ -219,7 +226,6 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
   }
 
   Widget _buildItemsList() {
-    final totalCount = _filteredSubcategories.length + _filteredItems.length;
     return ListView(
       padding: const EdgeInsets.all(20),
       physics: const BouncingScrollPhysics(),
@@ -230,11 +236,7 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
           height: 120,
           margin: const EdgeInsets.only(bottom: 24),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFEDE9FE), Color(0xFFF5F3FF)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(28),
           ),
           child: Stack(
@@ -267,106 +269,104 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                 right: 120,
                 child: Center(
                   child: Text(
-                    'Find the right category for your exam preparation',
+                    _l10n.tr('find_category_prep'),
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF1E293B),
                     ),
+                    maxLines: 3,
                   ),
                 ),
               ),
-              // Floating Illustration Placeholder (Simulated with simple drawing)
+              // Floating Illustration Placeholder
               Positioned(
                 right: 10,
                 bottom: 10,
                 top: 10,
-                child: Container(
-                  width: 100,
-                  decoration: const BoxDecoration(
-                    // Replace with real 3D image later if available
-                    image: DecorationImage(
-                      image: AssetImage('assets/Icons/study_3d.png'),
-                      fit: BoxFit.contain,
-                      opacity: 0.8,
-                    ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(60, 10, 0, 20),
+                  child: SvgPicture.asset(
+                    "assets/Icons/company_categories.svg",
                   ),
                 ),
               ),
             ],
           ),
         ),
-        // Grid
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.85,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
-          itemCount: totalCount,
-          itemBuilder: (context, index) {
-            final isSubcategory = index < _filteredSubcategories.length;
-            if (isSubcategory) {
-              final sub = _filteredSubcategories[index];
-              return _buildPremiumCard(
-                name: sub.name,
-                subtitle: sub.type ?? 'Organization',
-                logoUrl: sub.fullLogoUrl,
-                count: sub.items.length,
-                onTap: () {
-                  final mappedCategory = ExamCategoryModel(
-                    id: sub.id,
-                    title: sub.name,
-                    originalTitle: sub.originalName,
-                    type: sub.type,
-                    section: sub.section,
-                    color: sub.color,
-                    icon: sub.thumbnailImage,
-                    items: sub.items,
-                    subcategories: [],
-                  );
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          SubcategoryPage(category: mappedCategory),
+        // Grid replacement with Wrap for flexibility
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final itemWidth = (constraints.maxWidth - 16) / 2;
+            return Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: [
+                ...List.generate(_filteredSubcategories.length, (index) {
+                  final sub = _filteredSubcategories[index];
+                  return SizedBox(
+                    width: itemWidth,
+                    child: _buildPremiumCard(
+                      name: sub.name,
+                      subtitle: sub.type ?? _l10n.tr('organization'),
+                      logoUrl: sub.fullLogoUrl,
+                      count: sub.items.length,
+                      onTap: () {
+                        final mappedCategory = ExamCategoryModel(
+                          id: sub.id,
+                          title: sub.name,
+                          originalTitle: sub.originalName,
+                          type: sub.type,
+                          section: sub.section,
+                          color: sub.color,
+                          icon: sub.thumbnailImage,
+                          items: sub.items,
+                          subcategories: [],
+                        );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                SubcategoryPage(category: mappedCategory),
+                          ),
+                        );
+                      },
+                      index: index,
                     ),
                   );
-                },
-                index: index,
-              );
-            } else {
-              final itemIndex = index - _filteredSubcategories.length;
-              final item = _filteredItems[itemIndex];
-              return _buildPremiumCard(
-                name: item.name,
-                subtitle: item.type ?? 'Organization',
-                logoUrl: item.fullLogoUrl,
-                count:
-                    0, // Departments/Items usually don't show nested count here
-                onTap: () {
-                  if (item.type?.toLowerCase() == 'material') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => StudyLayersPage(company: item),
-                      ),
-                    );
-                  } else {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CompanyDetailsPage(company: item),
-                      ),
-                    );
-                  }
-                },
-                index: index,
-              );
-            }
+                }),
+                ...List.generate(_filteredItems.length, (index) {
+                  final item = _filteredItems[index];
+                  return SizedBox(
+                    width: itemWidth,
+                    child: _buildPremiumCard(
+                      name: item.name,
+                      subtitle: item.type ?? _l10n.tr('organization'),
+                      logoUrl: item.fullLogoUrl,
+                      count: 0,
+                      onTap: () {
+                        if (item.type?.toLowerCase() == 'material') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => StudyLayersPage(company: item),
+                            ),
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CompanyDetailsPage(company: item),
+                            ),
+                          );
+                        }
+                      },
+                      index: _filteredSubcategories.length + index,
+                    ),
+                  );
+                }),
+              ],
+            );
           },
         ),
         const SizedBox(height: 32),
@@ -398,19 +398,21 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Can\'t find what you\'re looking for?',
+                      _l10n.tr('cant_find_looking'),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
                         color: const Color(0xFF1E293B),
                       ),
+                      maxLines: 2,
                     ),
                     Text(
-                      'Let us help you find the right category.',
+                      _l10n.tr('help_find_category'),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         color: const Color(0xFF64748B),
                       ),
+                      maxLines: 2,
                     ),
                   ],
                 ),
@@ -418,7 +420,7 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
               ElevatedButton.icon(
                 onPressed: () {},
                 icon: const Icon(Icons.headset_mic_rounded, size: 14),
-                label: const Text('Contact Us'),
+                label: Text(_l10n.tr('contact_us')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6366F1),
                   foregroundColor: Colors.white,
@@ -537,14 +539,14 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                   const SizedBox(height: 16),
                   Text(
                     name.toUpperCase(),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF1E293B),
                       height: 1.2,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -555,7 +557,7 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                       color: const Color(0xFF94A3B8),
                     ),
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 12),
                   // Count Badge
                   if (count > 0)
                     Container(
@@ -568,12 +570,13 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        '$count ${count == 1 ? 'Item' : 'Companies'}',
+                        '$count ${count == 1 ? _l10n.tr('item') : _l10n.tr('companies')}',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           color: theme['text'],
                         ),
+                        maxLines: 2,
                       ),
                     ),
                 ],

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sky_high/core/services/localization_service.dart';
 
 class ExamDetailPage extends StatelessWidget {
   final Map<String, dynamic> exam;
-  const ExamDetailPage({super.key, required this.exam});
+  final LocalizationService _l10n = LocalizationService();
+  ExamDetailPage({super.key, required this.exam});
 
   @override
   Widget build(BuildContext context) {
@@ -21,11 +23,11 @@ class ExamDetailPage extends StatelessWidget {
                 children: [
                   _buildExamMeta(),
                   const SizedBox(height: 30),
-                  _buildSectionTitle('About the Exam'),
+                  _buildSectionTitle(_l10n.tr('about_exam')),
                   const SizedBox(height: 10),
                   _buildDescription(),
                   const SizedBox(height: 30),
-                  _buildSectionTitle('Syllabus Overview'),
+                  _buildSectionTitle(_l10n.tr('syllabus_overview')),
                   const SizedBox(height: 15),
                   _buildSyllabusList(),
                   const SizedBox(height: 40),
@@ -46,7 +48,11 @@ class ExamDetailPage extends StatelessWidget {
       pinned: true,
       backgroundColor: exam['color'] as Color,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+        icon: const Icon(
+          Icons.arrow_back_ios_new,
+          color: Colors.white,
+          size: 20,
+        ),
         onPressed: () => Navigator.pop(context),
       ),
       flexibleSpace: FlexibleSpaceBar(
@@ -87,11 +93,8 @@ class ExamDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    'Target Year: 2026',
-                    style: GoogleFonts.inter(
-                      color: Colors.white70,
-                      fontSize: 16,
-                    ),
+                    '${_l10n.tr('target_year')}: 2026',
+                    style: GoogleFonts.inter(color: Colors.white70, fontSize: 16),
                   ),
                 ],
               ),
@@ -106,9 +109,13 @@ class ExamDetailPage extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildMetaItem(Icons.timer_outlined, '180 mins', 'Duration'),
-        _buildMetaItem(Icons.help_outline_rounded, '100 Qs', 'Questions'),
-        _buildMetaItem(Icons.star_outline_rounded, '4.8/5', 'Rating'),
+        _buildMetaItem(
+          Icons.timer_outlined,
+          '180 ${_l10n.tr('minutes').toLowerCase()}',
+          _l10n.tr('duration'),
+        ),
+        _buildMetaItem(Icons.help_outline_rounded, '100 Qs', _l10n.tr('questions')),
+        _buildMetaItem(Icons.star_outline_rounded, '4.8/5', _l10n.tr('rating')),
       ],
     );
   }
@@ -157,29 +164,43 @@ class ExamDetailPage extends StatelessWidget {
   }
 
   Widget _buildSyllabusList() {
-    final topics = ['General Studies', 'CSAT', 'History & Culture', 'Geography', 'Economy'];
+    final topics = [
+      'General Studies',
+      'CSAT',
+      'History & Culture',
+      'Geography',
+      'Economy',
+    ];
     return Column(
-      children: topics.map((topic) => Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Color(0xFF10B981), size: 18),
-            const SizedBox(width: 15),
-            Text(
-              topic,
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF475569),
+      children: topics
+          .map(
+            (topic) => Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle,
+                    color: Color(0xFF10B981),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 15),
+                  Text(
+                    topic,
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF475569),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      )).toList(),
+          )
+          .toList(),
     );
   }
 
@@ -195,11 +216,13 @@ class ExamDetailPage extends StatelessWidget {
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF0F172A),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
           elevation: 0,
         ),
         child: Text(
-          'Start Preparation',
+          _l10n.tr('start_preparation'),
           style: GoogleFonts.inter(
             fontSize: 18,
             fontWeight: FontWeight.bold,

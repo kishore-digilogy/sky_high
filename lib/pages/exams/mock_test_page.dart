@@ -9,6 +9,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:sky_high/core/services/localization_service.dart';
 
 class MockTestPage extends StatefulWidget {
   final String? setName;
@@ -34,6 +35,7 @@ class MockTestPage extends StatefulWidget {
 
 class _MockTestPageState extends State<MockTestPage> {
   final ExamService _examService = ExamService();
+  final LocalizationService _l10n = LocalizationService();
   List<MockQuestionModel> _questions = [];
   bool _isLoading = true;
   int _currentIndex = 0;
@@ -142,7 +144,7 @@ class _MockTestPageState extends State<MockTestPage> {
                 borderRadius: BorderRadius.circular(20),
               ),
               title: Text(
-                'Submit Test?',
+                _l10n.tr('submit_test_title'),
                 style: GoogleFonts.inter(fontWeight: FontWeight.bold),
               ),
               content: Column(
@@ -150,7 +152,7 @@ class _MockTestPageState extends State<MockTestPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Are you sure you want to submit your test?',
+                    _l10n.tr('submit_test_desc'),
                     style: GoogleFonts.inter(),
                   ),
                   if (unansweredCount > 0) ...[
@@ -171,7 +173,7 @@ class _MockTestPageState extends State<MockTestPage> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'You have $unansweredCount unanswered questions.',
+                              _l10n.tr('unanswered_questions_warning').replaceAll('{count}', unansweredCount.toString()),
                               style: GoogleFonts.inter(
                                 color: Colors.amber[900],
                                 fontSize: 13,
@@ -189,7 +191,7 @@ class _MockTestPageState extends State<MockTestPage> {
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
                   child: Text(
-                    'Review More',
+                    _l10n.tr('review_more'),
                     style: GoogleFonts.inter(color: const Color(0xFF64748B)),
                   ),
                 ),
@@ -204,7 +206,7 @@ class _MockTestPageState extends State<MockTestPage> {
                     elevation: 0,
                   ),
                   child: Text(
-                    'Submit Now',
+                    _l10n.tr('submit_now'),
                     style: GoogleFonts.inter(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -307,7 +309,7 @@ class _MockTestPageState extends State<MockTestPage> {
                 const Icon(Icons.warning_amber_rounded, color: Colors.red),
                 const SizedBox(width: 12),
                 Text(
-                  'Quit Test?',
+                  _l10n.tr('quit_test_title'),
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
@@ -316,7 +318,7 @@ class _MockTestPageState extends State<MockTestPage> {
               ],
             ),
             content: Text(
-              'Are you sure you want to exit? Your current test progress will be lost and cannot be recovered.',
+              _l10n.tr('quit_test_desc'),
               style: GoogleFonts.inter(
                 color: const Color(0xFF64748B),
                 height: 1.5,
@@ -326,7 +328,7 @@ class _MockTestPageState extends State<MockTestPage> {
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
                 child: Text(
-                  'Stay',
+                  _l10n.tr('stay'),
                   style: GoogleFonts.inter(
                     color: const Color(0xFF64748B),
                     fontWeight: FontWeight.w600,
@@ -349,7 +351,7 @@ class _MockTestPageState extends State<MockTestPage> {
                   ),
                 ),
                 child: Text(
-                  'Exit',
+                  _l10n.tr('exit'),
                   style: GoogleFonts.inter(fontWeight: FontWeight.bold),
                 ),
               ),
@@ -393,7 +395,7 @@ class _MockTestPageState extends State<MockTestPage> {
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
-            'Back to Learning',
+            _l10n.tr('back_to_learning'),
             style: GoogleFonts.inter(color: Colors.white, fontSize: 16),
           ),
         ),
@@ -415,7 +417,7 @@ class _MockTestPageState extends State<MockTestPage> {
               ),
               const SizedBox(height: 24),
               Text(
-                'No Questions Found',
+                _l10n.tr('no_questions_found'),
                 style: GoogleFonts.inter(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -426,7 +428,7 @@ class _MockTestPageState extends State<MockTestPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40),
                 child: Text(
-                  'We couldn\'t find any questions for this test set at the moment. Please check back later.',
+                  _l10n.tr('no_questions_desc'),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
                     fontSize: 15,
@@ -439,7 +441,7 @@ class _MockTestPageState extends State<MockTestPage> {
               ElevatedButton.icon(
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                label: const Text('GO BACK'),
+                label: Text(_l10n.tr('go_back')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0F172A),
                   foregroundColor: Colors.white,
@@ -470,7 +472,7 @@ class _MockTestPageState extends State<MockTestPage> {
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
-            'Test Instructions',
+            _l10n.tr('test_instructions'),
             style: GoogleFonts.inter(color: Colors.white, fontSize: 18),
           ),
         ),
@@ -554,16 +556,16 @@ class _MockTestPageState extends State<MockTestPage> {
             if (_isSubmitting)
               Container(
                 color: Colors.black45,
-                child: const Center(
+                child: Center(
                   child: Card(
                     child: Padding(
-                      padding: EdgeInsets.all(24.0),
+                      padding: const EdgeInsets.all(24.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 16),
-                          Text('Submitting your test...'),
+                          const CircularProgressIndicator(),
+                          const SizedBox(height: 16),
+                          Text(_l10n.tr('submitting_test')),
                         ],
                       ),
                     ),
@@ -641,14 +643,14 @@ class _MockTestPageState extends State<MockTestPage> {
                         children: [
                           _buildStatCard(
                             Icons.help_outline,
-                            'Questions',
+                            _l10n.tr('questions'),
                             '$totalQuestions',
                             const Color(0xFF3B82F6),
                           ),
                           const SizedBox(width: 12),
                           _buildStatCard(
                             Icons.timer_outlined,
-                            'Minutes',
+                            _l10n.tr('minutes'),
                             '$totalMinutes',
                             const Color(0xFF22C55E),
                           ),
@@ -659,7 +661,7 @@ class _MockTestPageState extends State<MockTestPage> {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'IMPORTANT RULES',
+                          _l10n.tr('important_rules'),
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w900,
@@ -671,19 +673,19 @@ class _MockTestPageState extends State<MockTestPage> {
                       const SizedBox(height: 16),
                       _buildRuleItem(
                         Icons.check_circle_outline,
-                        'Each question carries 1 mark.',
+                        _l10n.tr('rule_1'),
                       ),
                       _buildRuleItem(
                         Icons.info_outline,
-                        'Total duration is $totalMinutes minutes.',
+                        _l10n.tr('rule_2').replaceAll('{min}', totalMinutes.toString()),
                       ),
                       _buildRuleItem(
                         Icons.lock_clock_outlined,
-                        'The test will auto-submit when time is up.',
+                        _l10n.tr('rule_3'),
                       ),
                       _buildRuleItem(
                         Icons.language,
-                        'Questions are available in English.',
+                        _l10n.tr('rule_4'),
                       ),
                       const SizedBox(height: 40),
                       SizedBox(
@@ -708,7 +710,7 @@ class _MockTestPageState extends State<MockTestPage> {
                             ).withOpacity(0.4),
                           ),
                           child: Text(
-                            'START TEST NOW',
+                            _l10n.tr('start_test_now'),
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,

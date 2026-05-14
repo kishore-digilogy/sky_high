@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sky_high/core/services/notification_service.dart';
+import 'package:sky_high/core/services/localization_service.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -11,6 +12,7 @@ class NotificationPage extends StatefulWidget {
 
 class _NotificationPageState extends State<NotificationPage> {
   final NotificationService _notificationService = NotificationService();
+  final LocalizationService _l10n = LocalizationService();
   bool _isLoading = true;
   List<dynamic> _notifications = [];
 
@@ -18,7 +20,6 @@ class _NotificationPageState extends State<NotificationPage> {
   void initState() {
     super.initState();
     _loadNotifications();
-    
   }
 
   Future<void> _loadNotifications() async {
@@ -37,7 +38,7 @@ class _NotificationPageState extends State<NotificationPage> {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: Text(
-          'Notifications',
+          _l10n.tr('notifications'),
           style: GoogleFonts.inter(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
@@ -64,7 +65,7 @@ class _NotificationPageState extends State<NotificationPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Notification ${index + 1}',
+                              '${_l10n.tr('notification')} ${index + 1}',
                               style: GoogleFonts.inter(
                                 fontWeight: FontWeight.bold,
                                 color: const Color(0xFF1E293B),
@@ -99,7 +100,7 @@ class _NotificationPageState extends State<NotificationPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No Active Notifications',
+            _l10n.tr('no_active_notifications'),
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.bold,

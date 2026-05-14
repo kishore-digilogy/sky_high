@@ -7,6 +7,7 @@ import 'package:sky_high/core/services/storage_service.dart';
 import 'package:sky_high/pages/dashboard/dashboard_page.dart';
 import 'dart:math' as math;
 import 'dart:async';
+import 'package:sky_high/core/services/localization_service.dart';
 
 class LoginPage extends StatefulWidget {
   final bool returnToPreviousPage;
@@ -24,6 +25,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _isOtpLogin = true;
   bool _otpSent = false;
   bool _obscurePassword = true;
+  final LocalizationService _l10n = LocalizationService();
   Timer? _resendTimer;
   int _resendSeconds = 0;
 
@@ -50,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _handleLogin() async {
     if (_emailController.text.isEmpty) {
-      _showSnackBar('Please enter your email');
+      _showSnackBar(_l10n.tr('enter_email'));
       return;
     }
 
@@ -62,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     } else {
       if (_passwordController.text.isEmpty) {
-        _showSnackBar('Please enter your password');
+        _showSnackBar(_l10n.tr('enter_password'));
         return;
       }
       await _loginWithPassword();
@@ -82,16 +84,16 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = false;
       });
       _startResendTimer();
-      _showSnackBar('OTP sent to your email');
+      _showSnackBar(_l10n.tr('otp_sent_success'));
     } catch (e) {
       setState(() => _isLoading = false);
-      _showSnackBar('Failed to send OTP. Please check your email.');
+      _showSnackBar(_l10n.tr('otp_send_failed'));
     }
   }
 
   Future<void> _verifyOtpAndLogin() async {
     if (_otpController.text.isEmpty) {
-      _showSnackBar('Please enter the OTP');
+      _showSnackBar(_l10n.tr('enter_otp'));
       return;
     }
     setState(() => _isLoading = true);
@@ -130,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      _showSnackBar('Invalid OTP or login failed');
+      _showSnackBar(_l10n.tr('invalid_otp_failed'));
     }
   }
 
@@ -151,7 +153,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      _showSnackBar('Invalid email or password');
+      _showSnackBar(_l10n.tr('invalid_credentials'));
     }
   }
 
@@ -247,7 +249,7 @@ class _LoginPageState extends State<LoginPage> {
                       SizedBox(height: screenHeight * 0.01),
 
                       Text(
-                        'Access your premium learning journey',
+                        _l10n.tr('access_premium_journey'),
                         style: GoogleFonts.inter(
                           fontSize: screenWidth * 0.038,
                           color: const Color(0xFF64748B),
@@ -267,13 +269,13 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         child: Row(
                           children: [
-                            _buildMethodTab('OTP LOGIN', _isOtpLogin, () {
+                            _buildMethodTab(_l10n.tr('otp_login'), _isOtpLogin, () {
                               setState(() {
                                 _isOtpLogin = true;
                                 _otpSent = false;
                               });
                             }),
-                            _buildMethodTab('PASSWORD', !_isOtpLogin, () {
+                            _buildMethodTab(_l10n.tr('password_tab'), !_isOtpLogin, () {
                               setState(() {
                                 _isOtpLogin = false;
                               });
@@ -289,7 +291,7 @@ class _LoginPageState extends State<LoginPage> {
                         children: [
                           _buildModernInput(
                             controller: _emailController,
-                            hint: 'Email Address',
+                            hint: _l10n.tr('email_address'),
                             icon: Icons.alternate_email_rounded,
                             keyboardType: TextInputType.emailAddress,
                           ),
@@ -297,7 +299,7 @@ class _LoginPageState extends State<LoginPage> {
                           if (_isOtpLogin && _otpSent) ...[
                             _buildModernInput(
                               controller: _otpController,
-                              hint: '6-digit OTP Code',
+                              hint: _l10n.tr('otp_hint'),
                               icon: Icons.security_rounded,
                               keyboardType: TextInputType.number,
                             ).animate().fadeIn().slideY(begin: 0.1),
@@ -308,8 +310,8 @@ class _LoginPageState extends State<LoginPage> {
                                 onTap: _resendSeconds == 0 ? _sendOtp : null,
                                 child: Text(
                                   _resendSeconds > 0
-                                      ? "Resend OTP in ${_resendSeconds}s"
-                                      : "Resend OTP",
+                                      ? "${_l10n.tr('resend_otp_in')} ${_resendSeconds}s"
+                                      : _l10n.tr('resend_otp'),
                                   style: GoogleFonts.inter(
                                     color: _resendSeconds > 0
                                         ? const Color(0xFF94A3B8)
@@ -323,7 +325,7 @@ class _LoginPageState extends State<LoginPage> {
                           ] else if (!_isOtpLogin)
                             _buildModernInput(
                               controller: _passwordController,
-                              hint: 'Password',
+                              hint: _l10n.tr('password_hint'),
                               icon: Icons.lock_outline_rounded,
                               isPassword: true,
                             ).animate().fadeIn().slideY(begin: 0.1),
@@ -363,9 +365,9 @@ class _LoginPageState extends State<LoginPage> {
                               : Text(
                                   _isOtpLogin
                                       ? (_otpSent
-                                            ? 'ACTIVATE SESSION'
-                                            : 'GET OTP CODE')
-                                      : 'SIGN IN',
+                                            ? _l10n.tr('activate_session')
+                                            : _l10n.tr('get_otp_code'))
+                                      : _l10n.tr('sign_in'),
                                   style: GoogleFonts.inter(
                                     color: Colors.white,
                                     fontSize: screenWidth * 0.042,
@@ -384,7 +386,7 @@ class _LoginPageState extends State<LoginPage> {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(
-                            "Don't have an account? ",
+                            _l10n.tr('dont_have_account'),
                             style: GoogleFonts.inter(
                               color: const Color(0xFF94A3B8),
                               fontSize: screenWidth * 0.035,
@@ -393,7 +395,7 @@ class _LoginPageState extends State<LoginPage> {
                           GestureDetector(
                             onTap: () {},
                             child: Text(
-                              "Create Profile",
+                              _l10n.tr('create_profile'),
                               style: GoogleFonts.inter(
                                 color: const Color(0xFFF9A826),
                                 fontWeight: FontWeight.w700,

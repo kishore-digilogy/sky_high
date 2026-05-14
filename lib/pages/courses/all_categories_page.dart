@@ -4,9 +4,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:sky_high/data/models/exam_category_model.dart';
 import 'package:sky_high/pages/courses/subcategory_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:sky_high/core/services/localization_service.dart';
 import 'package:sky_high/widgets/category_icon.dart';
 import 'package:sky_high/widgets/category_card.dart';
-
 
 class AllCategoriesPage extends StatefulWidget {
   final List<ExamCategoryModel> categories;
@@ -23,6 +23,7 @@ class AllCategoriesPage extends StatefulWidget {
 }
 
 class _AllCategoriesPageState extends State<AllCategoriesPage> {
+  final LocalizationService _l10n = LocalizationService();
   late List<ExamCategoryModel> _filteredCategories;
   final TextEditingController _searchController = TextEditingController();
   late bool _isSearching;
@@ -93,7 +94,7 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
                   autofocus: true,
                   style: GoogleFonts.inter(fontSize: 14),
                   decoration: InputDecoration(
-                    hintText: 'Search categories...',
+                    hintText: _l10n.tr('search_categories'),
                     hintStyle: GoogleFonts.inter(
                       color: const Color(0xFF94A3B8),
                     ),
@@ -103,17 +104,18 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
                       size: 20,
                     ),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
                   ),
                 ),
               )
             : Text(
-                'All Categories',
+                _l10n.tr('all_categories'),
                 style: GoogleFonts.inter(
                   color: const Color(0xFF1E293B),
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
                 ),
+                maxLines: 2,
               ),
         actions: [
           if (!_isSearching)
@@ -125,24 +127,26 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
       ),
       body: _filteredCategories.isEmpty
           ? _buildEmptyState()
-          : GridView.builder(
+          : SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 170 / 210, // Matching the premium card aspect ratio
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final itemWidth = (constraints.maxWidth - 16) / 2;
+                  return Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    children: List.generate(_filteredCategories.length, (index) {
+                      return SizedBox(
+                        width: itemWidth,
+                        child: CategoryCard(
+                          category: _filteredCategories[index],
+                          index: index,
+                        ),
+                      );
+                    }),
+                  );
+                },
               ),
-
-              itemCount: _filteredCategories.length,
-              itemBuilder: (context, index) {
-                return CategoryCard(
-                  category: _filteredCategories[index],
-                  index: index,
-                  isTrending: false, // No trending items on all categories page usually
-                );
-              },
-
             ),
     );
   }
@@ -155,17 +159,19 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
           Icon(Icons.search_off_rounded, size: 80, color: Colors.blueGrey[100]),
           const SizedBox(height: 16),
           Text(
-            'No categories found',
+            _l10n.tr('no_categories_found'),
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF1E293B),
             ),
+            maxLines: 2,
           ),
           const SizedBox(height: 8),
           Text(
-            'Try searching for something else',
+            _l10n.tr('try_searching_else'),
             style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+            maxLines: 2,
           ),
         ],
       ),

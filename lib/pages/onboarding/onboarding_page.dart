@@ -6,6 +6,7 @@ import 'package:sky_high/core/services/storage_service.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sky_high/pages/dashboard/dashboard_page.dart';
 import 'dart:math' as math;
+import 'package:sky_high/core/services/localization_service.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -17,36 +18,40 @@ class OnboardingPage extends StatefulWidget {
 class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  final LocalizationService _l10n = LocalizationService();
 
-  final List<OnboardingItem> _items = [
-    OnboardingItem(
-      image: 'assets/Images/spalsh1.svg',
-      title: 'Success is\nEasy to Achieve',
-      description:
-          'Unlock your potential with our personalized learning ecosystem designed for excellence.',
-      highlight: 'Learn smarter, not harder',
-      color: const Color(0xFF6C63FF),
-      accent: const Color(0xFFFFB347),
-    ),
-    OnboardingItem(
-      image: 'assets/Images/spalsh2.svg',
-      title: 'Master Your\nUpcoming Exams',
-      description:
-          'Dive into a vast library of mock tests and real-time performance analytics.',
-      highlight: 'Excellence in every test',
-      color: const Color(0xFF4CAF50),
-      accent: const Color(0xFF00BCD4),
-    ),
-    OnboardingItem(
-      image: 'assets/Images/spalsh3.svg',
-      title: 'Structured\nLearning Paths',
-      description:
-          'Explore category-based study modules tailored to your specific academic needs.',
-      highlight: 'Category based study',
-      color: const Color(0xFFE91E63),
-      accent: const Color(0xFFFFC107),
-    ),
-  ];
+  late final List<OnboardingItem> _items;
+
+  @override
+  void initState() {
+    super.initState();
+    _items = [
+      OnboardingItem(
+        image: 'assets/Images/spalsh1.svg',
+        title: _l10n.tr('onboarding_title_1'),
+        description: _l10n.tr('onboarding_desc_1'),
+        highlight: _l10n.tr('onboarding_highlight_1'),
+        color: const Color(0xFF6C63FF),
+        accent: const Color(0xFFFFB347),
+      ),
+      OnboardingItem(
+        image: 'assets/Images/spalsh2.svg',
+        title: _l10n.tr('onboarding_title_2'),
+        description: _l10n.tr('onboarding_desc_2'),
+        highlight: _l10n.tr('onboarding_highlight_2'),
+        color: const Color(0xFF4CAF50),
+        accent: const Color(0xFF00BCD4),
+      ),
+      OnboardingItem(
+        image: 'assets/Images/spalsh3.svg',
+        title: _l10n.tr('onboarding_title_3'),
+        description: _l10n.tr('onboarding_desc_3'),
+        highlight: _l10n.tr('onboarding_highlight_3'),
+        color: const Color(0xFFE91E63),
+        accent: const Color(0xFFFFC107),
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +108,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         child: TextButton(
                           onPressed: () => _finishOnboarding(),
                           child: Text(
-                            'Skip',
+                            _l10n.tr('skip'),
                             style: GoogleFonts.inter(
                               color: Colors.grey[400],
                               fontSize: 16,
@@ -149,8 +154,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           alignment: Alignment.center,
                           child: Text(
                             _currentPage == _items.length - 1
-                                ? 'Get Started'
-                                : 'Next Step',
+                                ? _l10n.tr('get_started')
+                                : _l10n.tr('next_step'),
                             style: GoogleFonts.inter(
                               color: Colors.white,
                               fontSize: 18,

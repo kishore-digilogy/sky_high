@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sky_high/pages/exams/exam_detail_page.dart';
+import 'package:sky_high/core/services/localization_service.dart';
 
 class ExamListPage extends StatefulWidget {
   final String categoryName;
@@ -12,6 +13,7 @@ class ExamListPage extends StatefulWidget {
 }
 
 class _ExamListPageState extends State<ExamListPage> {
+  final LocalizationService _l10n = LocalizationService();
   final List<Map<String, dynamic>> _exams = [
     {
       'title': 'UPSC Civil Services 2026',
@@ -51,7 +53,11 @@ class _ExamListPageState extends State<ExamListPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF0F172A), size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Color(0xFF0F172A),
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -103,7 +109,10 @@ class _ExamListPageState extends State<ExamListPage> {
                         color: (exam['color'] as Color).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Icon(exam['icon'] as IconData, color: exam['color'] as Color),
+                      child: Icon(
+                        exam['icon'] as IconData,
+                        color: exam['color'] as Color,
+                      ),
                     ),
                     const SizedBox(width: 20),
                     Expanded(
@@ -121,7 +130,11 @@ class _ExamListPageState extends State<ExamListPage> {
                           const SizedBox(height: 5),
                           Row(
                             children: [
-                              Icon(Icons.calendar_today, size: 12, color: Colors.grey[400]),
+                              Icon(
+                                Icons.calendar_today,
+                                size: 12,
+                                color: Colors.grey[400],
+                              ),
                               const SizedBox(width: 5),
                               Text(
                                 exam['date'] as String,
@@ -132,13 +145,18 @@ class _ExamListPageState extends State<ExamListPage> {
                               ),
                               const SizedBox(width: 15),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: (exam['color'] as Color).withOpacity(0.05),
+                                  color: (exam['color'] as Color).withOpacity(
+                                    0.05,
+                                  ),
                                   borderRadius: BorderRadius.circular(5),
                                 ),
                                 child: Text(
-                                  exam['difficulty'] as String,
+                                  _l10n.tr((exam['difficulty'] as String).toLowerCase()),
                                   style: GoogleFonts.inter(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -151,7 +169,11 @@ class _ExamListPageState extends State<ExamListPage> {
                         ],
                       ),
                     ),
-                    const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFFE2E8F0)),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: Color(0xFFE2E8F0),
+                    ),
                   ],
                 ),
               ),

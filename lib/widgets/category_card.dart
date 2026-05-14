@@ -51,87 +51,90 @@ class CategoryCard extends StatelessWidget {
         child: Stack(
           children: [
             Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Halo Icon
-                Center(
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: color.withOpacity(0.1),
+                      width: 1,
+                    ),
+                  ),
                   child: Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
+                      color: color.withOpacity(0.05),
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: color.withOpacity(0.1),
-                        width: 1,
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withOpacity(0.1),
+                          blurRadius: 15,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      category.displayIcon.isEmpty
+                          ? '🎓'
+                          : category.displayIcon,
+                      style: const TextStyle(fontSize: 28),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                // Title & Badge Section (Flexible)
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      category.title.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF1E293B),
+                        height: 1.2,
                       ),
                     ),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.05),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: color.withOpacity(0.1),
-                            blurRadius: 15,
-                            spreadRadius: 2,
+                        color: color.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.business_center_rounded,
+                            size: 10,
+                            color: color,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Government Body',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: color,
+                            ),
                           ),
                         ],
                       ),
-                      child: Text(
-                        category.displayIcon.isEmpty
-                            ? '🎓'
-                            : category.displayIcon,
-                        style: const TextStyle(fontSize: 28),
-                      ),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                // Title
-                Text(
-                  category.title.toUpperCase(),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF1E293B),
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                // Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.business_center_rounded,
-                        size: 10,
-                        color: color,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Government Body',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: color,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
+                const SizedBox(height: 14),
                 // Bottom Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -163,8 +166,8 @@ class CategoryCard extends StatelessWidget {
                     ),
                     Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF1F5F9),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(

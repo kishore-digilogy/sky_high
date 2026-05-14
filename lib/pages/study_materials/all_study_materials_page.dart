@@ -6,6 +6,7 @@ import 'package:sky_high/pages/study_materials/pdf_viewer_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:sky_high/core/services/localization_service.dart';
 
 class AllStudyMaterialsPage extends StatefulWidget {
   const AllStudyMaterialsPage({super.key});
@@ -19,6 +20,7 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
   List<StudyMaterialModel> _allMaterials = [];
   List<StudyMaterialModel> _filteredMaterials = [];
   final TextEditingController _searchController = TextEditingController();
+  final LocalizationService _l10n = LocalizationService();
 
   @override
   void initState() {
@@ -58,12 +60,13 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
       backgroundColor: const Color(0xFFF9F9FB),
       appBar: AppBar(
         title: Text(
-          'Study Materials',
+          _l10n.tr('study_materials'),
           style: GoogleFonts.inter(
             fontWeight: FontWeight.bold,
             color: const Color(0xFF1E293B),
             fontSize: 18,
           ),
+          maxLines: 2,
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -98,7 +101,7 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
                 onChanged: _filterMaterials,
                 style: GoogleFonts.inter(fontSize: 15),
                 decoration: InputDecoration(
-                  hintText: 'Search for books, notes...',
+                  hintText: _l10n.tr('search_books_notes'),
                   hintStyle: GoogleFonts.inter(
                     color: const Color(0xFF94A3B8),
                     fontSize: 14,
@@ -137,7 +140,7 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Failed to load materials',
+                          _l10n.tr('failed_load_materials'),
                           style: GoogleFonts.inter(
                             color: const Color(0xFF64748B),
                           ),
@@ -150,7 +153,7 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
                     _allMaterials.isEmpty) {
                   return Center(
                     child: Text(
-                      'No materials available',
+                      _l10n.tr('no_materials_available'),
                       style: GoogleFonts.inter(color: const Color(0xFF64748B)),
                     ),
                   );
@@ -169,7 +172,7 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'No matching materials found',
+                          _l10n.tr('no_matching_found'),
                           style: GoogleFonts.inter(
                             color: const Color(0xFF64748B),
                           ),
@@ -179,18 +182,28 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
                   );
                 }
 
-                return GridView.builder(
+                return SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 20,
-                    childAspectRatio: 0.75,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final itemWidth = (constraints.maxWidth - 16) / 2;
+                      return Wrap(
+                        spacing: 16,
+                        runSpacing: 20,
+                        children: List.generate(_filteredMaterials.length, (
+                          index,
+                        ) {
+                          return SizedBox(
+                            width: itemWidth,
+                            child: _buildGridCard(
+                              _filteredMaterials[index],
+                              index,
+                            ),
+                          );
+                        }),
+                      );
+                    },
                   ),
-                  itemCount: _filteredMaterials.length,
-                  itemBuilder: (context, index) {
-                    return _buildGridCard(_filteredMaterials[index], index);
-                  },
                 );
               },
             ),
@@ -211,7 +224,7 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
               PdfViewerPage.open(context, material.fullFileUrl, material.title);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Video player coming soon!')),
+                SnackBar(content: Text(_l10n.tr('video_player_coming_soon'))),
               );
             }
           },
@@ -232,106 +245,101 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Thumbnail Section
-                Expanded(
-                  flex: 4,
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.05),
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(24),
-                      ),
+                Container(
+                  height: 120, // Give a reasonable base height instead of flex
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.05),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
                     ),
-                    child: Center(
-                      child:
-                          material.thumbnailPath != null &&
-                              material.thumbnailPath!.isNotEmpty
-                          ? ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(24),
-                              ),
-                              child: CachedNetworkImage(
-                                imageUrl: material.fullThumbnailUrl,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                                placeholder: (context, url) => const Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
+                  ),
+                  child: Center(
+                    child:
+                        material.thumbnailPath != null &&
+                            material.thumbnailPath!.isNotEmpty
+                        ? ClipRRect(
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(24),
+                            ),
+                            child: CachedNetworkImage(
+                              imageUrl: material.fullThumbnailUrl,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              placeholder: (context, url) => const Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
                                 ),
-                                errorWidget: (context, url, error) =>
-                                    _buildIconPlaceholder(color),
                               ),
-                            )
-                          : _buildIconPlaceholder(color),
-                    ),
+                              errorWidget: (context, url, error) =>
+                                  _buildIconPlaceholder(color),
+                            ),
+                          )
+                        : _buildIconPlaceholder(color),
                   ),
                 ),
                 // Text Details Section
-                Expanded(
-                  flex: 3,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: color.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            material.displayCategory.toUpperCase(),
-                            style: GoogleFonts.inter(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700,
-                              color: color,
-                              letterSpacing: 0.5,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          material.title,
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          material.displayCategory.toUpperCase(),
                           style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF1E293B),
-                            height: 1.3,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: color,
+                            letterSpacing: 0.5,
                           ),
-                          maxLines: 2,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const Spacer(),
-                        Row(
-                          children: [
-                            Icon(
-                              material.isVideo
-                                  ? Icons.videocam_outlined
-                                  : Icons.description_outlined,
-                              size: 12,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        material.title,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF1E293B),
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            material.isVideo
+                                ? Icons.videocam_outlined
+                                : Icons.description_outlined,
+                            size: 12,
+                            color: const Color(0xFF94A3B8),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            material.isVideo ? 'Video' : 'PDF',
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
                               color: const Color(0xFF94A3B8),
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              material.isVideo ? 'Video' : 'PDF',
-                              style: GoogleFonts.inter(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF94A3B8),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],

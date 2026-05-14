@@ -7,6 +7,8 @@ import 'package:sky_high/pages/dashboard/dashboard_page.dart';
 import 'package:sky_high/pages/onboarding/onboarding_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:sky_high/core/services/localization_service.dart';
+
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -15,6 +17,8 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+  final LocalizationService _l10n = LocalizationService();
+
   @override
   void initState() {
     super.initState();
@@ -96,7 +100,7 @@ class _SplashPageState extends State<SplashPage> {
 
             // Tagline
             Text(
-              'Reach for the stars',
+              _l10n.tr('tagline'),
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,

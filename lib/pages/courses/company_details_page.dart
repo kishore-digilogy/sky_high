@@ -8,6 +8,7 @@ import 'package:sky_high/pages/courses/study_layers_page.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:sky_high/core/services/localization_service.dart';
 
 // ─────────────────────────────────────────────
 //  CONSTANTS
@@ -47,6 +48,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
   final GlobalKey _subPostsKey = GlobalKey();
 
   Map<String, dynamic>? _lastStudiedSubJob;
+  final LocalizationService _l10n = LocalizationService();
 
   @override
   void initState() {
@@ -90,7 +92,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
         });
       } else {
         setState(() {
-          _error = 'Failed to load jobs';
+          _error = _l10n.tr('failed_load_jobs');
           _isLoading = false;
         });
       }
@@ -229,7 +231,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
               autofocus: true,
               style: GoogleFonts.plusJakartaSans(fontSize: 14, color: _kDark),
               decoration: InputDecoration(
-                hintText: 'Search opportunities...',
+                hintText: _l10n.tr('search_opportunities'),
                 hintStyle: GoogleFonts.plusJakartaSans(
                   color: _kGrey,
                   fontSize: 14,
@@ -238,28 +240,6 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
               ),
             )
           : const SizedBox.shrink(),
-      // actions: [
-      //   if (!_isSearching) ...[
-      //     _topActionBtn(
-      //       Icons.bookmark_border_rounded,
-      //       onTap: () => setState(() => _isSearching = true),
-      //     ),
-      //     const SizedBox(width: 8),
-      //     _topActionBtn(Icons.share_outlined),
-      //     const SizedBox(width: 12),
-      //   ] else ...[
-      //     IconButton(
-      //       icon: const Icon(Icons.close, color: _kDark),
-      //       onPressed: () {
-      //         setState(() {
-      //           _isSearching = false;
-      //           _searchController.clear();
-      //           _filterJobs('');
-      //         });
-      //       },
-      //     ),
-      //   ],
-      // ],
     );
   }
 
@@ -312,7 +292,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        'Government Organization',
+                        _l10n.tr('government_org'),
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 11,
                           color: _kGrey,
@@ -371,7 +351,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Build your career. Serve the nation.',
+                  _l10n.tr('build_career_serve'),
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     color: _kGrey,
@@ -403,39 +383,6 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
               ],
             ),
           ),
-          // Train image on right
-          // SizedBox(
-          //   width: 130,
-          //   height: 160,
-          //   child: Stack(
-          //     children: [
-          //       Positioned(
-          //         right: -10,
-          //         top: 0,
-          //         child: Container(
-          //           width: 120,
-          //           height: 120,
-          //           decoration: BoxDecoration(
-          //             shape: BoxShape.circle,
-          //             color: _kPurpleLight,
-          //           ),
-          //         ),
-          //       ),
-          // Positioned(
-          //   right: 0,
-          //   bottom: 0,
-          //   child: widget.company.fullLogoUrl.isNotEmpty
-          //       ? CachedNetworkImage(
-          //           imageUrl: widget.company.fullLogoUrl,
-          //           width: 120,
-          //           fit: BoxFit.contain,
-          //           errorWidget: (c, u, e) => _buildTrainPlaceholder(),
-          //         )
-          //       : _buildTrainPlaceholder(),
-          // ),
-          //     ],
-          //   ),
-          // ),
         ],
       ),
     );
@@ -483,7 +430,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Continue Learning',
+                _l10n.tr('continue_learning'),
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -491,14 +438,6 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                   letterSpacing: -0.3,
                 ),
               ),
-              // Text(
-              //   'View All',
-              //   style: GoogleFonts.plusJakartaSans(
-              //     fontSize: 13,
-              //     color: _kPurple,
-              //     fontWeight: FontWeight.w600,
-              //   ),
-              // ),
             ],
           ),
           const SizedBox(height: 14),
@@ -541,7 +480,8 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _lastStudiedSubJob!['title'] ?? 'Resume Course',
+                        _lastStudiedSubJob!['title'] ??
+                            _l10n.tr('resume_course'),
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
@@ -577,7 +517,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Last studied: Yesterday',
+                        _l10n.tr('last_studied_yesterday'),
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 12,
                           color: const Color(0xFF94A3B8),
@@ -619,7 +559,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                       const Icon(Icons.play_arrow_rounded, size: 18),
                       const SizedBox(width: 4),
                       Text(
-                        'Resume',
+                        _l10n.tr('resume'),
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -640,7 +580,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
   Widget _buildAboutSection() {
     final desc = widget.company.description?.isNotEmpty == true
         ? widget.company.description!
-        : 'One of the world\'s largest railway networks, connecting 7,000+ stations across India — a pillar of national infrastructure and public service excellence.';
+        : _l10n.tr('company_default_desc');
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -648,7 +588,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'About Organisation',
+            _l10n.tr('about_organisation'),
             style: GoogleFonts.plusJakartaSans(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -689,7 +629,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Top Opportunities',
+                _l10n.tr('top_opportunities'),
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -697,14 +637,6 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                   letterSpacing: -0.3,
                 ),
               ),
-              // Text(
-              //   'View All',
-              //   style: GoogleFonts.plusJakartaSans(
-              //     fontSize: 13,
-              //     color: _kPurple,
-              //     fontWeight: FontWeight.w600,
-              //   ),
-              // ),
             ],
           ),
           const SizedBox(height: 14),
@@ -811,7 +743,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
-                                  '${matchingSubs.length} Sub-posts',
+                                  '${matchingSubs.length} ${_l10n.tr('sub_posts')}',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 10,
                                     color: accent,
@@ -917,20 +849,24 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
   // ── Quick Access ──────────────────────────────
   Widget _buildQuickAccess() {
     final items = [
-      _QuickItem(Icons.quiz_outlined, 'Mock Tests', const Color(0xFF6C63FF)),
+      _QuickItem(
+        Icons.quiz_outlined,
+        _l10n.tr('mock_tests'),
+        const Color(0xFF6C63FF),
+      ),
       _QuickItem(
         Icons.menu_book_outlined,
-        'Study Material',
+        _l10n.tr('study_material'),
         const Color(0xFFEC4899),
       ),
       _QuickItem(
         Icons.history_edu_rounded,
-        'Previous Year',
+        _l10n.tr('previous_year'),
         const Color(0xFF10B981),
       ),
       _QuickItem(
         Icons.format_list_bulleted_rounded,
-        'Syllabus',
+        _l10n.tr('syllabus'),
         const Color(0xFFF59E0B),
       ),
     ];
@@ -941,7 +877,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Quick Access',
+            _l10n.tr('quick_access'),
             style: GoogleFonts.plusJakartaSans(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -1029,7 +965,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
               ),
               const SizedBox(height: 12),
               Text(
-                'There are no files available for $title at this moment. We are working hard to bring them to you soon!',
+                _l10n.tr('no_files_available_desc'),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
@@ -1052,7 +988,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                     elevation: 0,
                   ),
                   child: Text(
-                    'Got it',
+                    _l10n.tr('got_it'),
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -1093,7 +1029,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
           ),
           const SizedBox(height: 20),
           Text(
-            'No Opportunities Yet',
+            _l10n.tr('no_opportunities_yet'),
             style: GoogleFonts.plusJakartaSans(
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -1102,7 +1038,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Check back soon for new openings.',
+            _l10n.tr('check_back_soon_openings'),
             textAlign: TextAlign.center,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 13,
@@ -1130,7 +1066,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                 elevation: 0,
               ),
               child: Text(
-                'Browse Materials',
+                _l10n.tr('browse_materials'),
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,

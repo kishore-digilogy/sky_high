@@ -15,6 +15,7 @@ import 'package:sky_high/data/models/mock_test_set_model.dart';
 import 'package:sky_high/data/models/mcq_set_model.dart';
 import 'package:sky_high/pages/exams/mock_test_page.dart';
 import 'package:sky_high/pages/courses/video_player_page.dart';
+import 'package:sky_high/core/services/localization_service.dart';
 
 class StudyLayersPage extends StatefulWidget {
   final ExamItemModel company;
@@ -39,11 +40,12 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
 
   List<StudyLayerModel> _apiLayers = [];
   int _selectedModuleIndex = 0;
+  String? _selectedChapterName;
   final Set<int> _completedModuleIndices = {};
   bool _isLoading = true;
   bool _isPaidUser = false;
   bool _isLoggedIn = false;
-  String _currentLangCode = 'en'; // Default to English
+  String _currentLangCode = 'en';
 
   List<MockTestSetModel> _mockTests = [];
   bool _isMockLoading = false;
@@ -52,49 +54,55 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
   bool _isMcqLoading = false;
   bool _isTitleExpanded = false;
   final ExamService _examService = ExamService();
+  final LocalizationService _l10n = LocalizationService();
 
-  final List<Map<String, dynamic>> _moduleGroups = [
-    {
-      'type': 'basic_info',
-      'title': 'Basic Information',
-      'icon': Icons.info_outline_rounded,
-    },
-    {'type': 'syllabus', 'title': 'Syllabus', 'icon': Icons.menu_book_rounded},
-    {
-      'type': 'preparation_plan',
-      'title': 'Preparation Plan',
-      'icon': Icons.track_changes_rounded,
-    },
-    {
-      'type': 'notes',
-      'title': 'Chapter-wise / Topic-wise Notes',
-      'icon': Icons.article_outlined,
-    },
-    {
-      'type': 'pyq',
-      'title': 'Chapter-wise / Topic-wise Previous Year Questions',
-      'icon': Icons.history_rounded,
-    },
-    {
-      'type': 'mcq',
-      'title': 'Chapter-wise / Topic-wise MCQ',
-      'icon': Icons.quiz_outlined,
-    },
-    {
-      'type': 'video',
-      'title': 'Chapter-wise / Topic-wise Video Lessons',
-      'icon': Icons.videocam_rounded,
-    },
-    {
-      'type': 'mock_test',
-      'title': 'Online Test Series',
-      'icon': Icons.quiz_outlined,
-    },
-  ];
+  late final List<Map<String, dynamic>> _moduleGroups;
 
   @override
   void initState() {
     super.initState();
+    _moduleGroups = [
+      {
+        'type': 'basic_info',
+        'title': _l10n.tr('mod_basic_info'),
+        'icon': Icons.info_outline_rounded,
+      },
+      {
+        'type': 'syllabus',
+        'title': _l10n.tr('mod_syllabus'),
+        'icon': Icons.menu_book_rounded,
+      },
+      {
+        'type': 'preparation_plan',
+        'title': _l10n.tr('mod_prep_plan'),
+        'icon': Icons.track_changes_rounded,
+      },
+      {
+        'type': 'notes',
+        'title': _l10n.tr('mod_notes'),
+        'icon': Icons.article_outlined,
+      },
+      {
+        'type': 'pyq',
+        'title': _l10n.tr('mod_pyq'),
+        'icon': Icons.history_rounded,
+      },
+      {
+        'type': 'mcq',
+        'title': _l10n.tr('mod_mcq'),
+        'icon': Icons.quiz_outlined,
+      },
+      {
+        'type': 'video',
+        'title': _l10n.tr('mod_video_lessons'),
+        'icon': Icons.videocam_rounded,
+      },
+      {
+        'type': 'mock_test',
+        'title': _l10n.tr('mod_test_series'),
+        'icon': Icons.quiz_outlined,
+      },
+    ];
     _selectedModuleIndex = widget.initialModuleIndex ?? 0;
     _checkSubscription();
     _fetchApiLayers();
@@ -242,7 +250,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  'LEARNING JOURNEY',
+                  _l10n.tr('learning_journey'),
                   style: GoogleFonts.inter(
                     fontSize: 9,
                     fontWeight: FontWeight.w800,
@@ -298,7 +306,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'MODULES',
+                _l10n.tr('modules'),
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -380,7 +388,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                       strokeWidth: 6,
                       backgroundColor: const Color(0xFFF1F5F9),
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF6366F1),
+                        Color(0xFF1E293B),
                       ),
                     ),
                   ),
@@ -393,7 +401,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                     ),
                     child: const Icon(
                       Icons.rocket_launch_rounded,
-                      color: Color(0xFF6366F1),
+                      color: Color(0xFF1E293B),
                       size: 24,
                     ),
                   ),
@@ -406,19 +414,20 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Your Progress',
+                      _l10n.tr('your_progress'),
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
                         color: const Color(0xFF1E293B),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
-                      'Keep learning, you\'re doing great! 🚀',
+                      _l10n.tr('keep_learning_great'),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         color: const Color(0xFF64748B),
+                        fontWeight: FontWeight.w500,
                         height: 1.4,
                       ),
                     ),
@@ -431,7 +440,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF6366F1),
+                  color: const Color(0xFF1E293B),
                 ),
               ),
             ],
@@ -444,7 +453,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               minHeight: 8,
               backgroundColor: const Color(0xFFF1F5F9),
               valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF6366F1),
+                Color(0xFF1E293B),
               ),
             ),
           ),
@@ -459,17 +468,8 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     bool isSelected,
     bool isLocked,
   ) {
-    final List<Color> modColors = [
-      const Color(0xFF6366F1), // Indigo
-      const Color(0xFFF43F5E), // Rose
-      const Color(0xFF06B6D4), // Cyan
-      const Color(0xFF10B981), // Emerald
-      const Color(0xFFF59E0B), // Amber
-      const Color(0xFF3B82F6), // Blue
-      const Color(0xFF8B5CF6), // Violet
-      const Color(0xFF0EA5E9), // Sky
-    ];
-    final color = modColors[index % modColors.length];
+    // Use black for all text/icons, but we will highlight the left bar if selected
+    final Color color = const Color(0xFF1E293B);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -501,21 +501,133 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               }
             }
 
-            setState(() => _selectedModuleIndex = index);
-            _storage.addRecentStudy({
-              'company': widget.company.toJson(),
-              'modIndex': index,
-              'modTitle': group['title'],
-              'timestamp': DateTime.now().toIso8601String(),
-            });
-            if (index == 4) {
-              _fetchMcqSets('pyq');
-            } else if (index == 5) {
-              _fetchMcqSets('mcq');
-            } else if (index == 7 && _mockTests.isEmpty) {
-              _fetchMockTests();
+            if (index != _selectedModuleIndex &&
+                !_completedModuleIndices.contains(_selectedModuleIndex) &&
+                !_completedModuleIndices.contains(index)) {
+              showDialog(
+                context: context,
+                builder: (context) => Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  backgroundColor: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFEEF2FF),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.check_circle_outline_rounded,
+                            color: Color(0xFF6366F1),
+                            size: 36,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Complete Module?',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF1E293B),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'You are about to switch to another module. Would you like to mark the current module as completed to update your progress?',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            color: const Color(0xFF64748B),
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              setState(() {
+                                _completedModuleIndices.add(
+                                  _selectedModuleIndex,
+                                );
+                              });
+                              _switchToModule(index, group);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF6366F1),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              'Yes, Mark as Completed',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _switchToModule(index, group);
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF64748B),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              side: const BorderSide(color: Color(0xFFE2E8F0)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              'No, Just Switch',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            foregroundColor: const Color(0xFF94A3B8),
+                            minimumSize: const Size(double.infinity, 48),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+              return;
             }
-            Navigator.pop(context);
+
+            _switchToModule(index, group);
           },
           borderRadius: BorderRadius.circular(16),
           child: IntrinsicHeight(
@@ -525,7 +637,9 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 Container(
                   width: 4,
                   decoration: BoxDecoration(
-                    color: color,
+                    color: isSelected
+                        ? const Color(0xFF10B981)
+                        : Colors.transparent,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(16),
                       bottomLeft: Radius.circular(16),
@@ -575,7 +689,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'MOD ${index + 1}',
+                        '${_l10n.tr('module_prefix')} ${index + 1}',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
@@ -619,6 +733,30 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     );
   }
 
+  void _switchToModule(int index, Map<String, dynamic> group) {
+    setState(() {
+      _selectedModuleIndex = index;
+      _selectedChapterName = null;
+    });
+    _storage.addRecentStudy({
+      'company': widget.company.toJson(),
+      'modIndex': index,
+      'modTitle': group['title'],
+      'timestamp': DateTime.now().toIso8601String(),
+    });
+    if (index == 4) {
+      _fetchMcqSets('pyq');
+    } else if (index == 5) {
+      _fetchMcqSets('mcq');
+    } else if (index == 7 && _mockTests.isEmpty) {
+      _fetchMockTests();
+    }
+    // Only pop if a drawer or dialog is open
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
+  }
+
   IconData _getModuleIcon(int modNum) {
     switch (modNum) {
       case 1:
@@ -646,26 +784,6 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     final group = _moduleGroups[_selectedModuleIndex];
     final String layerName = group['type'];
 
-    // Check if the current view should show empty content to adjust card color
-    bool shouldShowEmpty = false;
-    if (layerName == 'skip') {
-      shouldShowEmpty = true;
-    } else if (layerName == 'mock' && !_isMockLoading && _mockTests.isEmpty) {
-      shouldShowEmpty = true;
-    } else if ((layerName == 'mcq' || layerName == 'pyq') &&
-        !_isMcqLoading &&
-        _mcqSets.isEmpty) {
-      shouldShowEmpty = true;
-    } else if (layerName != 'mock' &&
-        layerName != 'mcq' &&
-        layerName != 'pyq' &&
-        !_isLoading) {
-      final filteredItems = _apiLayers
-          .where((item) => item.layer.toLowerCase() == layerName.toLowerCase())
-          .toList();
-      if (filteredItems.isEmpty) shouldShowEmpty = true;
-    }
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
       child: Column(
@@ -677,7 +795,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: shouldShowEmpty ? const Color(0xFFFAEFE1) : Colors.white,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   // BoxShadow(
@@ -737,6 +855,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 }
 
                 _selectedModuleIndex = nextIndex;
+                _selectedChapterName = null;
 
                 // Fetch data for the newly selected module
                 if (_selectedModuleIndex == 4) {
@@ -748,10 +867,8 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 }
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Congratulations! You have completed all modules! 🎉',
-                    ),
+                  SnackBar(
+                    content: Text(_l10n.tr('all_modules_completed')),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
@@ -771,10 +888,12 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                isLastModule ? 'Finish Journey' : 'Complete & Next Module',
+                isLastModule
+                    ? _l10n.tr('finish_journey')
+                    : _l10n.tr('complete_next_module'),
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 16,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(width: 12),
@@ -835,7 +954,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'MOD ${index + 1}',
+                  '${_l10n.tr('mod_prefix')} ${index + 1}',
                   style: GoogleFonts.plusJakartaSans(
                     color: color,
                     fontSize: 9,
@@ -883,17 +1002,16 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     final String layerName = group['type'];
 
     if (layerName == 'skip') {
-      return _buildEmptyContent(
-        message:
-            'This module is currently being integrated.\nPlease check back soon.',
-      );
+      return _buildEmptyContent(message: _l10n.tr('module_integrated_soon'));
     }
 
     if (layerName == 'mock_test') {
       return _isMockLoading
           ? const Center(child: CircularProgressIndicator())
           : _mockTests.isEmpty
-          ? _buildEmptyContent(message: 'No test series available yet.')
+          ? (_selectedModuleIndex >= 3 && _selectedModuleIndex <= 7
+                ? _buildDummyFoldersView()
+                : _buildEmptyContent(message: _l10n.tr('no_test_series')))
           : _buildMockTestView();
     }
 
@@ -901,9 +1019,9 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
       return _isMcqLoading
           ? const Center(child: CircularProgressIndicator())
           : _mcqSets.isEmpty
-          ? _buildEmptyContent(
-              message: 'No sets available for this module yet.',
-            )
+          ? (_selectedModuleIndex >= 3 && _selectedModuleIndex <= 7
+                ? _buildDummyFoldersView()
+                : _buildEmptyContent(message: _l10n.tr('no_sets_available')))
           : _buildMcqSetView();
     }
 
@@ -912,8 +1030,26 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
         .toList();
 
     if (filteredItems.isEmpty) {
-      return _buildEmptyContent();
+      return (_selectedModuleIndex >= 3 && _selectedModuleIndex <= 7)
+          ? _buildDummyFoldersView()
+          : _buildEmptyContent();
     }
+
+    // Check if we should show folders
+    final hasChapters = filteredItems.any(
+      (item) => item.chapterName != null && item.chapterName!.isNotEmpty,
+    );
+    if (hasChapters && _selectedChapterName == null) {
+      return _buildRealChapterFoldersView(filteredItems);
+    }
+
+    final itemsToShow = _selectedChapterName == null
+        ? filteredItems
+        : filteredItems
+              .where(
+                (item) => (item.chapterName ?? 'Other') == _selectedChapterName,
+              )
+              .toList();
 
     final bool useGrid = layerName.toLowerCase() != 'basic_info';
 
@@ -921,32 +1057,68 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Available Materials',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF1E293B),
-                ),
-              ),
-              Row(
-                children: [
-                  Text(
-                    '${filteredItems.length} items',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF64748B),
+              if (_selectedChapterName != null)
+                InkWell(
+                  onTap: () => setState(() => _selectedChapterName = null),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 14,
+                          color: Color(0xFF6366F1),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Back to Folders',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF6366F1),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.filter_list_rounded,
-                    size: 18,
-                    color: Color(0xFF64748B),
+                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _selectedChapterName ?? _l10n.tr('available_materials'),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        _l10n
+                            .tr('items_count')
+                            .replaceAll(
+                              '{count}',
+                              itemsToShow.length.toString(),
+                            ),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.filter_list_rounded,
+                        size: 18,
+                        color: Color(0xFF64748B),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -963,29 +1135,155 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                   ),
-                  itemCount: filteredItems.length + 1, // +1 for the banner
+                  itemCount: itemsToShow.length + 1, // +1 for the banner
                   itemBuilder: (context, index) {
-                    if (index == filteredItems.length) {
+                    if (index == itemsToShow.length) {
                       return const SizedBox.shrink(); // Handled by Sliver logic if needed, but for now just empty
                     }
                     return _buildLayerContentCard(
-                      filteredItems[index],
+                      itemsToShow[index],
                       isGrid: true,
                     );
                   },
                 )
               : ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: filteredItems.length,
+                  itemCount: itemsToShow.length,
                   itemBuilder: (context, index) {
                     return _buildLayerContentCard(
-                      filteredItems[index],
+                      itemsToShow[index],
                       isGrid: false,
                     );
                   },
                 ),
         ),
         if (useGrid) _buildFooterBanner(),
+      ],
+    );
+  }
+
+  Widget _buildRealChapterFoldersView(List<StudyLayerModel> items) {
+    final Map<String, List<StudyLayerModel>> grouped = {};
+    for (var item in items) {
+      final name = item.chapterName ?? 'Other';
+      if (!grouped.containsKey(name)) {
+        grouped[name] = [];
+      }
+      grouped[name]!.add(item);
+    }
+
+    final chapterNames = grouped.keys.toList();
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _l10n.tr('available_materials'),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 5 : 2,
+              childAspectRatio: MediaQuery.of(context).size.width > 600
+                  ? 2.8
+                  : 2.1,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: chapterNames.length,
+            itemBuilder: (context, index) {
+              final name = chapterNames[index];
+              final count = grouped[name]!.length;
+
+              return InkWell(
+                onTap: () {
+                  setState(() {
+                    _selectedChapterName = name;
+                  });
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.folder_rounded,
+                          color: Color(0xFF6366F1),
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              name,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF1E293B),
+                                height: 1.2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              '$count ${_l10n.tr('items')}',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                color: const Color(0xFF64748B),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: Color(0xFFE2E8F0),
+                        size: 16,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ],
     );
   }
@@ -1372,7 +1670,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'This content is locked. Upgrade to unlock.',
+                _l10n.tr('content_locked_upgrade'),
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -1476,16 +1774,174 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
   void _showWIPAlert() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Work in Progress'),
-        content: const Text('Video player integration is coming soon.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SvgPicture.asset('assets/Icons/coming_soon.svg', height: 120),
+              const SizedBox(height: 24),
+              Text(
+                'Coming Soon!',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'We are working hard to bring this material to you. Please check back later!',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  color: const Color(0xFF64748B),
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Got it!',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildDummyFoldersView() {
+    final List<String> subjects = [
+      'Indian History',
+      'Indian Economy',
+      'Indian Polity & Governance',
+      'Indian & World Geography',
+      'Indian Constitution',
+      'General Science',
+      'Current Affairs',
+      'General Arithmetic',
+      'Quantitative Aptitude',
+      'General Intelligence & Reasoning',
+      'Electrical Engineering',
+      'Mechanical Engineering',
+      'Civil Engineering',
+      'Electronics & Communication Engineering',
+      'Computer Science Engineering',
+    ];
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _l10n.tr('available_materials'),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 5 : 2,
+              childAspectRatio: MediaQuery.of(context).size.width > 600
+                  ? 2.5
+                  : 2.2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: subjects.length,
+            itemBuilder: (context, index) {
+              return InkWell(
+                onTap: () => _showWIPAlert(),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.folder_rounded,
+                          color: Color(0xFFCBD5E1),
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          subjects[index],
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF475569),
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: Color(0xFFE2E8F0),
+                        size: 16,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -1536,20 +1992,20 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             const Icon(Icons.lock_rounded, color: Colors.orange),
             const SizedBox(width: 10),
             Text(
-              'Premium Content',
+              _l10n.tr('premium_content'),
               style: GoogleFonts.inter(fontWeight: FontWeight.bold),
             ),
           ],
         ),
         content: Text(
-          'This module is part of our Elite Learning Path. Upgrade your subscription to unlock all modules and advanced test series.',
+          _l10n.tr('premium_module_desc'),
           style: GoogleFonts.inter(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Maybe Later',
+              _l10n.tr('maybe_later'),
               style: GoogleFonts.inter(color: Colors.grey),
             ),
           ),
@@ -1568,7 +2024,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               ),
             ),
             child: Text(
-              'Upgrade Now',
+              _l10n.tr('upgrade_now'),
               style: GoogleFonts.inter(color: Colors.white),
             ),
           ),
@@ -1614,7 +2070,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               child: Column(
                 children: [
                   Text(
-                    'Login Required',
+                    _l10n.tr('login_required'),
                     style: GoogleFonts.inter(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -1623,7 +2079,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Please login to access premium modules and track your progress.',
+                    _l10n.tr('login_module_desc'),
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       fontSize: 14,
@@ -1638,7 +2094,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                         child: TextButton(
                           onPressed: () => Navigator.pop(context),
                           child: Text(
-                            'Maybe Later',
+                            _l10n.tr('maybe_later'),
                             style: GoogleFonts.inter(
                               fontWeight: FontWeight.w600,
                               color: const Color(0xFF94A3B8),
@@ -1677,7 +2133,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                             ),
                           ),
                           child: Text(
-                            'Login Now',
+                            _l10n.tr('login_now'),
                             style: GoogleFonts.inter(
                               fontWeight: FontWeight.bold,
                             ),
@@ -1730,19 +2186,19 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Exit Learning Journey?',
+                    _l10n.tr('exit_learning_journey'),
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF1E293B),
+                      color: const Color(0xFF0F172A),
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Your progress for this session will be saved. Are you sure you want to exit?',
+                    _l10n.tr('exit_confirm_desc'),
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
                       color: const Color(0xFF64748B),
                       height: 1.5,
@@ -1761,8 +2217,8 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                             ),
                           ),
                           child: Text(
-                            'Keep Learning',
-                            style: GoogleFonts.inter(
+                            _l10n.tr('keep_learning_btn'),
+                            style: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w600,
                               color: const Color(0xFF94A3B8),
                             ),
@@ -1778,15 +2234,15 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             elevation: 0,
                           ),
                           child: Text(
-                            'Yes, Exit',
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
+                            _l10n.tr('yes_exit'),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -2249,6 +2705,7 @@ class _InstructionGuideDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final LocalizationService _l10n = LocalizationService();
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -2285,7 +2742,7 @@ class _InstructionGuideDialog extends StatelessWidget {
             ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
             const SizedBox(height: 24),
             Text(
-              'Your Learning Hub',
+              _l10n.tr('instruction_guide_title'),
               style: GoogleFonts.inter(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -2294,7 +2751,7 @@ class _InstructionGuideDialog extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Access all your study modules, mock tests, and video lessons from the side menu.',
+              _l10n.tr('instruction_guide_desc'),
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 14,
@@ -2303,14 +2760,11 @@ class _InstructionGuideDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 32),
-            _buildStep(
-              Icons.touch_app_rounded,
-              'Tap the menu icon to switch modules',
-            ),
+            _buildStep(Icons.touch_app_rounded, _l10n.tr('instruction_step_1')),
             const SizedBox(height: 16),
             _buildStep(
               Icons.auto_awesome_rounded,
-              'Track your progress in each section',
+              _l10n.tr('instruction_step_2'),
             ),
             const SizedBox(height: 40),
             SizedBox(
@@ -2327,7 +2781,7 @@ class _InstructionGuideDialog extends StatelessWidget {
                   elevation: 0,
                 ),
                 child: Text(
-                  'Got it, Let\'s Go!',
+                  _l10n.tr('got_it_lets_go'),
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

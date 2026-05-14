@@ -296,7 +296,6 @@ class _DashboardPageState extends State<DashboardPage> {
                 _buildContinueStudyingSection(),
                 const SizedBox(height: 30),
                 _buildCoursesSection(),
-                const SizedBox(height: 15),
                 _buildFreeExamsSection(),
                 _buildStudyMaterialsSection(),
                 const SizedBox(height: 15),
@@ -355,7 +354,7 @@ class _DashboardPageState extends State<DashboardPage> {
               ).animate().scale(duration: 600.ms, curve: Curves.easeInOut),
               const SizedBox(height: 32),
               Text(
-                'Identity Required',
+                _l10n.tr('identity_required'),
                 style: GoogleFonts.inter(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
@@ -365,7 +364,7 @@ class _DashboardPageState extends State<DashboardPage> {
               ).animate().slideY(begin: 0.2),
               const SizedBox(height: 12),
               Text(
-                'Sign in to sync your progress, access premium certificates, and join the elite community.',
+                _l10n.tr('signin_sync'),
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: const Color(0xFF64748B),
@@ -406,7 +405,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    'SIGN IN NOW',
+                    _l10n.tr('signin_now').toUpperCase(),
                     style: GoogleFonts.inter(
                       color: Colors.white,
                       fontSize: 16,
@@ -551,7 +550,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 _buildSettingsItem(
                   Icons.logout_rounded,
-                  'Logout',
+                  _l10n.tr('logout'),
                   () => _showLogoutDialog(context),
                   isDestructive: true,
                 ),
@@ -1818,112 +1817,72 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildQuickActionsGrid() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 160,
-                  child: _buildActionCard(
-                    'My Courses',
-                    'Continue\nlearning',
-                    const Color(0xFFF5F3FF),
-                    const Color(0xFF6366F1),
-                    Icons.assignment_rounded,
-                    () async {
-                      final categories = await _categoriesFuture;
-                      if (categories != null &&
-                          categories.isNotEmpty &&
-                          mounted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                AllCategoriesPage(categories: categories),
-                          ),
-                        );
-                      } else if (mounted) {
-                        _showNoContentDialog('Courses');
-                      }
-                    },
-                  ),
-                ),
+          Expanded(
+            child: SizedBox(
+              height: 180,
+              child: _buildActionCard(
+                _l10n.tr('my_courses'),
+                _l10n.tr('continue_learning_sub'),
+                const Color(0xFFF5F3FF),
+                const Color(0xFF6366F1),
+                Icons.assignment_rounded,
+                () async {
+                  final categories = await _categoriesFuture;
+                  if (categories != null &&
+                      categories.isNotEmpty &&
+                      mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            AllCategoriesPage(categories: categories),
+                      ),
+                    );
+                  } else if (mounted) {
+                    _showNoContentDialog(
+                      'no_courses_available',
+                      'check_back_later_courses',
+                    );
+                  }
+                },
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: SizedBox(
-                  height: 160,
-                  child: _buildActionCard(
-                    'Mock Tests',
-                    'Practice &\nimprove',
-                    const Color(0xFFFFF7ED),
-                    const Color(0xFFF97316),
-                    Icons.assignment_turned_in_rounded,
-                    () => _showNoContentDialog('Mock Tests'),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 160,
-                  child: _buildActionCard(
-                    'Study Materials',
-                    'Notes, PDFs\n& more',
-                    const Color(0xFFF0FDF4),
-                    const Color(0xFF10B981),
-                    Icons.auto_stories_rounded,
-                    () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const AllStudyMaterialsPage(),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: SizedBox(
+              height: 180,
+              child: _buildActionCard(
+                _l10n.tr('study_materials'),
+                _l10n.tr('notes_pdfs_sub'),
+                const Color(0xFFF0FDF4),
+                const Color(0xFF10B981),
+                Icons.auto_stories_rounded,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AllStudyMaterialsPage(),
+                    ),
+                  );
+                },
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: SizedBox(
-                  height: 160,
-                  child: _buildActionCard(
-                    'Leaderboard',
-                    'Compete &\nachieve',
-                    const Color(0xFFEFF6FF),
-                    const Color(0xFF3B82F6),
-                    Icons.emoji_events_rounded,
-                    () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const LeaderboardPage(),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _showNoContentDialog(String title) {
+  void _showNoContentDialog(String titleKey, String descKey) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
-          'No $title Available',
+          _l10n.tr(titleKey),
           style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.bold,
             color: const Color(0xFF1E293B),
@@ -1946,7 +1905,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Currently, there are no ${title.toLowerCase()} available for your selected preferences. Please check back later!',
+              _l10n.tr(descKey),
               textAlign: TextAlign.center,
               style: GoogleFonts.plusJakartaSans(
                 color: const Color(0xFF64748B),
@@ -1960,7 +1919,7 @@ class _DashboardPageState extends State<DashboardPage> {
             child: TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
-                'Got it',
+                _l10n.tr('got_it'),
                 style: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF6366F1),
@@ -2003,6 +1962,8 @@ class _DashboardPageState extends State<DashboardPage> {
             const Spacer(),
             Text(
               title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
@@ -2017,6 +1978,8 @@ class _DashboardPageState extends State<DashboardPage> {
                 Expanded(
                   child: Text(
                     subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       color: const Color(0xFF64748B),
@@ -2074,19 +2037,19 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildCategories() {
     final categories = [
       {
-        'name': 'Business',
+        'name': _l10n.tr('cat_business'),
         'icon': Icons.lightbulb_outline,
         'color': const Color(0xFFFDE68A),
         'iconColor': const Color(0xFFD97706),
       },
       {
-        'name': 'Marketing',
+        'name': _l10n.tr('cat_marketing'),
         'icon': Icons.campaign_outlined,
         'color': const Color(0xFFDDD6FE),
         'iconColor': const Color(0xFF7C3AED),
       },
       {
-        'name': 'Design',
+        'name': _l10n.tr('cat_design'),
         'icon': Icons.brush_outlined,
         'color': const Color(0xFFFECACA),
         'iconColor': const Color(0xFFDC2626),
@@ -2184,7 +2147,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   });
                 },
                 child: Text(
-                  'Dismiss All',
+                  _l10n.tr('dismiss_all'),
                   style: GoogleFonts.inter(
                     color: const Color(0xFF64748B),
                     fontSize: 12,
@@ -2324,7 +2287,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Progress',
+                              _l10n.tr('progress'),
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 color: const Color(0xFF94A3B8),
@@ -2498,7 +2461,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Explore top government exam categories',
+                        _l10n.tr('explore_gov_exams'),
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 13,
                           color: const Color(0xFF64748B),
@@ -2534,37 +2497,59 @@ class _DashboardPageState extends State<DashboardPage> {
             const SizedBox(height: 25),
             if (snapshot.hasError || categories.isEmpty)
               _buildEmptyState(
-                'No courses available right now',
+                _l10n.tr('no_courses_right_now'),
                 'assets/Icons/courses_icon.svg',
               )
             else
               Column(
                 children: [
-                  SizedBox(
-                    height: 450, // Slightly reduced to make room for indicator
-                    child: GridView.builder(
-                      controller: _categoriesScrollController,
-                      padding: const EdgeInsets.only(
-                        left: 24,
-                        right: 24,
-                        bottom: 8,
-                      ),
-                      scrollDirection: Axis.horizontal,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            childAspectRatio: 210 / 170,
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    controller: _categoriesScrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Row 1
+                        IntrinsicHeight(
+                          child: Row(
+                            children: [
+                              for (int i = 0; i < categories.length; i += 2)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 16),
+                                  child: SizedBox(
+                                    width: 170,
+                                    child: CategoryCard(
+                                      category: categories[i],
+                                      index: i,
+                                      isTrending: i == 1,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
-                      itemCount: categories.length,
-                      itemBuilder: (context, index) {
-                        return CategoryCard(
-                          category: categories[index],
-                          index: index,
-                          isTrending: index == 1,
-                        );
-                      },
+                        ),
+                        const SizedBox(height: 16),
+                        // Row 2
+                        IntrinsicHeight(
+                          child: Row(
+                            children: [
+                              for (int i = 1; i < categories.length; i += 2)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 16),
+                                  child: SizedBox(
+                                    width: 170,
+                                    child: CategoryCard(
+                                      category: categories[i],
+                                      index: i,
+                                      isTrending: i == 1,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -2663,7 +2648,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Discover the best learning paths',
+                            _l10n.tr('discover_learning_paths'),
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
@@ -2671,7 +2656,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                           ),
                           Text(
-                            'Smart preparation for your bright future',
+                            _l10n.tr('smart_prep_future'),
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12,
                               color: const Color(0xFF64748B),
@@ -4051,7 +4036,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Join Community',
+                            _l10n.tr('join_community'),
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
@@ -4060,7 +4045,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Connect with 50,000+ Aspirants',
+                            _l10n.tr('connect_aspirants'),
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -4096,7 +4081,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Join WhatsApp Community',
+                          _l10n.tr('join_whatsapp'),
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
@@ -4196,7 +4181,7 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'India\'s leading learning platform for government exams.',
+                _l10n.tr('about_platform_desc'),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
@@ -4224,25 +4209,25 @@ class _DashboardPageState extends State<DashboardPage> {
             children: [
               _buildFooterCard(
                 icon: Icons.email_outlined,
-                title: 'Email',
+                title: _l10n.tr('email'),
                 subtitle: 'support@skyhigh.com',
                 color: const Color(0xFF6366F1),
               ),
               _buildFooterCard(
                 icon: Icons.phone_outlined,
-                title: 'Call',
+                title: _l10n.tr('call'),
                 subtitle: '+91 98765 43210',
                 color: const Color(0xFF8B5CF6),
               ),
               _buildFooterCard(
                 icon: Icons.location_on_outlined,
-                title: 'Address',
+                title: _l10n.tr('address'),
                 subtitle: 'Delhi, India',
                 color: const Color(0xFFEC4899),
               ),
               _buildFooterCard(
                 icon: Icons.facebook_rounded,
-                title: 'Facebook',
+                title: _l10n.tr('facebook'),
                 subtitle: '/skyhighlearning',
                 color: const Color(0xFF3B82F6),
               ),
@@ -4251,7 +4236,7 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 60),
           // Copyright
           Text(
-            '© 2026 SkyHigh Learning. All rights reserved.',
+            _l10n.tr('copyright_text'),
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12,
               color: const Color(0xFF94A3B8),

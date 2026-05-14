@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:sky_high/core/services/localization_service.dart';
 
 class LeaderboardPage extends StatelessWidget {
-  const LeaderboardPage({super.key});
+  LeaderboardPage({super.key});
+
+  final LocalizationService _l10n = LocalizationService();
 
   @override
   Widget build(BuildContext context) {
@@ -70,12 +73,13 @@ class LeaderboardPage extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            'Leaderboard',
+            _l10n.tr('leaderboard'),
             style: GoogleFonts.plusJakartaSans(
               color: const Color(0xFF1E293B),
               fontWeight: FontWeight.w800,
               fontSize: 20,
             ),
+            maxLines: 2,
           ),
           const SizedBox(width: 12),
           Container(
@@ -88,25 +92,25 @@ class LeaderboardPage extends StatelessWidget {
           ),
         ],
       ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 20),
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFF1F5F9)),
-            ),
-            child: const Icon(
-              Icons.info_outline_rounded,
-              color: Color(0xFF6366F1),
-              size: 22,
-            ),
-          ),
-        ),
-      ],
+      // actions: [
+      //   Padding(
+      //     padding: const EdgeInsets.only(right: 20),
+      //     child: Container(
+      //       width: 44,
+      //       height: 44,
+      //       decoration: BoxDecoration(
+      //         color: const Color(0xFFF8FAFC),
+      //         borderRadius: BorderRadius.circular(12),
+      //         border: Border.all(color: const Color(0xFFF1F5F9)),
+      //       ),
+      //       child: const Icon(
+      //         Icons.info_outline_rounded,
+      //         color: Color(0xFF6366F1),
+      //         size: 22,
+      //       ),
+      //     ),
+      //   ),
+      // ],
     );
   }
 
@@ -135,7 +139,7 @@ class LeaderboardPage extends StatelessWidget {
         ).animate().scale(duration: 600.ms, curve: Curves.easeOut),
         const SizedBox(height: 24),
         Text(
-          'No Rankings Yet!',
+          _l10n.tr('no_rankings_yet'),
           style: GoogleFonts.plusJakartaSans(
             fontSize: 24,
             fontWeight: FontWeight.w800,
@@ -146,7 +150,7 @@ class LeaderboardPage extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 40),
           child: Text(
-            'The leaderboard is empty for now.\nStart learning and be the first to make it here!',
+            _l10n.tr('leaderboard_empty_desc'),
             textAlign: TextAlign.center,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 14,
@@ -175,7 +179,7 @@ class LeaderboardPage extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Climb the leaderboard',
+                _l10n.tr('climb_leaderboard'),
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -192,24 +196,24 @@ class LeaderboardPage extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           _buildStepItem(
-            'Study & Learn',
-            'Complete modules and expand your knowledge',
+            _l10n.tr('study_learn_title'),
+            _l10n.tr('study_learn_desc'),
             Icons.menu_book_rounded,
             const Color(0xFFEEF2FF),
             const Color(0xFF6366F1),
             true,
           ),
           _buildStepItem(
-            'Take Tests',
-            'Attempt tests and improve your score',
+            _l10n.tr('take_tests_title'),
+            _l10n.tr('take_tests_desc'),
             Icons.assignment_turned_in_rounded,
             const Color(0xFFFFF1F2),
             const Color(0xFFFB7185),
             true,
           ),
           _buildStepItem(
-            'Earn Points',
-            'Score higher and climb the ranks',
+            _l10n.tr('earn_points_title'),
+            _l10n.tr('earn_points_desc'),
             Icons.stars_rounded,
             const Color(0xFFF0FDF4),
             const Color(0xFF22C55E),
@@ -318,7 +322,7 @@ class LeaderboardPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Be consistent today,',
+                      _l10n.tr('consistency_today'),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -326,7 +330,7 @@ class LeaderboardPage extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Lead the leaderboard tomorrow!',
+                      _l10n.tr('lead_tomorrow'),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
