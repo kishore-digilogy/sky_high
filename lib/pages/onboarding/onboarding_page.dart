@@ -62,114 +62,120 @@ class _OnboardingPageState extends State<OnboardingPage> {
           // Elegant Background Decorations
           const Positioned.fill(child: _BackgroundDecor()),
 
-          PageView.builder(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentPage = index;
-              });
-            },
-            itemCount: _items.length,
-            itemBuilder: (context, index) {
-              return OnboardingSlide(item: _items[index]);
-            },
-          ),
-
-          // Navigation UI
-          Positioned(
-            bottom: 40,
-            left: 30,
-            right: 30,
+          SafeArea(
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    _items.length,
-                    (index) => AnimatedContainer(
-                      duration: const Duration(milliseconds: 400),
-                      margin: const EdgeInsets.symmetric(horizontal: 5),
-                      height: 6,
-                      width: _currentPage == index ? 32 : 12,
-                      decoration: BoxDecoration(
-                        color: _currentPage == index
-                            ? _items[_currentPage].color
-                            : Colors.grey.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentPage = index;
+                      });
+                    },
+                    itemCount: _items.length,
+                    itemBuilder: (context, index) {
+                      return OnboardingSlide(item: _items[index]);
+                    },
                   ),
                 ),
-                const SizedBox(height: 48),
-                Row(
-                  children: [
-                    if (_currentPage != _items.length - 1)
-                      Expanded(
-                        child: TextButton(
-                          onPressed: () => _finishOnboarding(),
-                          child: Text(
-                            _l10n.tr('skip'),
-                            style: GoogleFonts.inter(
-                              color: Colors.grey[400],
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
+                // Navigation UI
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(30, 20, 30, 30),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          _items.length,
+                          (index) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 400),
+                            margin: const EdgeInsets.symmetric(horizontal: 5),
+                            height: 6,
+                            width: _currentPage == index ? 32 : 12,
+                            decoration: BoxDecoration(
+                              color: _currentPage == index
+                                  ? _items[_currentPage].color
+                                  : Colors.grey.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                         ),
                       ),
-                    Expanded(
-                      flex: 2,
-                      child: GestureDetector(
-                        onTap: () {
-                          if (_currentPage == _items.length - 1) {
-                            _finishOnboarding();
-                          } else {
-                            _pageController.nextPage(
-                              duration: const Duration(milliseconds: 600),
-                              curve: Curves.easeInOut,
-                            );
-                          }
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          height: 64,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                _items[_currentPage].color,
-                                _items[_currentPage].color.withOpacity(0.8),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: _items[_currentPage].color.withOpacity(
-                                  0.3,
+                      const SizedBox(height: 32),
+                      Row(
+                        children: [
+                          if (_currentPage != _items.length - 1)
+                            Expanded(
+                              child: TextButton(
+                                onPressed: () => _finishOnboarding(),
+                                child: Text(
+                                  _l10n.tr('skip'),
+                                  style: GoogleFonts.inter(
+                                    color: Colors.grey[400],
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
                               ),
-                            ],
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            _currentPage == _items.length - 1
-                                ? _l10n.tr('get_started')
-                                : _l10n.tr('next_step'),
-                            style: GoogleFonts.inter(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
+                            ),
+                          Expanded(
+                            flex: 2,
+                            child: GestureDetector(
+                              onTap: () {
+                                if (_currentPage == _items.length - 1) {
+                                  _finishOnboarding();
+                                } else {
+                                  _pageController.nextPage(
+                                    duration: const Duration(milliseconds: 600),
+                                    curve: Curves.easeInOut,
+                                  );
+                                }
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      _items[_currentPage].color,
+                                      _items[_currentPage].color.withOpacity(
+                                        0.8,
+                                      ),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: _items[_currentPage].color
+                                          .withOpacity(0.3),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                  ],
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  _currentPage == _items.length - 1
+                                      ? _l10n.tr('get_started')
+                                      : _l10n.tr('next_step'),
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ).animate().moveY(begin: 30, end: 0),
                 ),
               ],
-            ).animate().moveY(begin: 30, end: 0),
+            ),
           ),
         ],
       ),
@@ -281,103 +287,121 @@ class OnboardingSlide extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 40.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Spacer(flex: 2),
-          // stylized image container
-          Container(
-            height: 320,
-            alignment: Alignment.center,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                      width: 280,
-                      height: 280,
-                      decoration: BoxDecoration(
-                        color: item.color.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(40),
-                        boxShadow: [
-                          BoxShadow(
-                            color: item.color.withOpacity(0.05),
-                            blurRadius: 40,
-                            spreadRadius: 10,
-                          ),
-                        ],
-                      ),
-                    )
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .rotate(begin: -0.05, end: 0.05, duration: 4.seconds),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 40.0,
+                vertical: 20.0,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // stylized image container
+                  Container(
+                    height: 320,
+                    alignment: Alignment.center,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                              width: 280,
+                              height: 280,
+                              decoration: BoxDecoration(
+                                color: item.color.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(40),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: item.color.withOpacity(0.05),
+                                    blurRadius: 40,
+                                    spreadRadius: 10,
+                                  ),
+                                ],
+                              ),
+                            )
+                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                            .rotate(
+                              begin: -0.05,
+                              end: 0.05,
+                              duration: 4.seconds,
+                            ),
 
-                SvgPicture.asset(item.image, height: 260)
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .moveY(
-                      begin: -15,
-                      end: 15,
-                      duration: 3.seconds,
-                      curve: Curves.easeInOut,
-                    )
-                    .scale(
-                      begin: const Offset(1, 1),
-                      end: const Offset(1.05, 1.05),
-                      duration: 3.seconds,
+                        SvgPicture.asset(item.image, height: 260)
+                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                            .moveY(
+                              begin: -15,
+                              end: 15,
+                              duration: 3.seconds,
+                              curve: Curves.easeInOut,
+                            )
+                            .scale(
+                              begin: const Offset(1, 1),
+                              end: const Offset(1.05, 1.05),
+                              duration: 3.seconds,
+                            ),
+                      ],
                     ),
-              ],
+                  ),
+                  const SizedBox(height: 40),
+                  Column(
+                    children: [
+                      Text(
+                        item.title,
+                        style: GoogleFonts.inter(
+                          fontSize: 34,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF1A1A2E),
+                          height: 1.1,
+                          letterSpacing: -1,
+                        ),
+                        textAlign: TextAlign.center,
+                      ).animate().moveY(begin: 30, end: 0),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: item.accent.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Text(
+                          item.highlight.toUpperCase(),
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: item.accent,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ).animate().scale(),
+                      const SizedBox(height: 24),
+                      Text(
+                            item.description,
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              color: Colors.blueGrey[400],
+                              height: 1.6,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            textAlign: TextAlign.center,
+                          )
+                          .animate()
+                          .fadeIn(delay: 500.ms)
+                          .moveY(begin: 20, end: 0),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 60),
-          Column(
-            children: [
-              Text(
-                item.title,
-                style: GoogleFonts.inter(
-                  fontSize: 34,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF1A1A2E),
-                  height: 1.1,
-                  letterSpacing: -1,
-                ),
-                textAlign: TextAlign.center,
-              ).animate().moveY(begin: 30, end: 0),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: item.accent.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Text(
-                  item.highlight.toUpperCase(),
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: item.accent,
-                    letterSpacing: 2,
-                  ),
-                ),
-              ).animate().scale(),
-              const SizedBox(height: 24),
-              Text(
-                item.description,
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: Colors.blueGrey[400],
-                  height: 1.6,
-                  fontWeight: FontWeight.w400,
-                ),
-                textAlign: TextAlign.center,
-              ).animate().fadeIn(delay: 500.ms).moveY(begin: 20, end: 0),
-            ],
-          ),
-          const Spacer(flex: 3),
-        ],
-      ),
+        );
+      },
     );
   }
 }

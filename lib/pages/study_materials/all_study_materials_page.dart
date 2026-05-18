@@ -7,6 +7,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:sky_high/core/services/localization_service.dart';
+import 'package:get_it/get_it.dart';
+import 'package:sky_high/core/services/storage_service.dart';
 
 class AllStudyMaterialsPage extends StatefulWidget {
   const AllStudyMaterialsPage({super.key});
@@ -29,7 +31,8 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
   }
 
   void _loadMaterials() {
-    _materialsFuture = ExamService().getStudyMaterials();
+    final language = GetIt.I<StorageService>().getSelectedLanguage();
+    _materialsFuture = ExamService().getStudyMaterials(language: language);
     _materialsFuture.then((materials) {
       if (mounted) {
         setState(() {

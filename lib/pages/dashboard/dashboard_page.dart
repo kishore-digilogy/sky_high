@@ -66,10 +66,11 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
+    final selectedLang = GetIt.I<StorageService>().getSelectedLanguage();
     _categoriesFuture = ExamService().getCategories();
     _testimonialsFuture = ExamService().getTestimonials();
-    _freeExamsFuture = ExamService().getFreeExams();
-    _studyMaterialsFuture = ExamService().getStudyMaterials();
+    _freeExamsFuture = ExamService().getFreeExams(language: selectedLang);
+    _studyMaterialsFuture = ExamService().getStudyMaterials(language: selectedLang);
     _loadNotificationCount();
     _startBannerTimer();
     _loadRecentStudy();
@@ -96,10 +97,11 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _refreshData() async {
     setState(() {
+      final selectedLang = GetIt.I<StorageService>().getSelectedLanguage();
       _categoriesFuture = ExamService().getCategories();
       _testimonialsFuture = ExamService().getTestimonials();
-      _freeExamsFuture = ExamService().getFreeExams();
-      _studyMaterialsFuture = ExamService().getStudyMaterials();
+      _freeExamsFuture = ExamService().getFreeExams(language: selectedLang);
+      _studyMaterialsFuture = ExamService().getStudyMaterials(language: selectedLang);
       _loadNotificationCount();
       _loadRecentStudy();
     });
@@ -161,6 +163,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
@@ -168,9 +171,22 @@ class _DashboardPageState extends State<DashboardPage> {
       builder: (context) {
         return Container(
           padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFBFDFB), // Soft green tint background like in the image
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                const Color(0xFFE8F5E9).withOpacity(0.3), // Soft light-green gradient overlay
+                Colors.white,
+              ],
+            ),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Pull Bar
               Container(
                 width: 40,
                 height: 4,
@@ -180,88 +196,147 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              Text(
-                _l10n.tr('settings'),
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1E293B),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: languages.length,
-                  itemBuilder: (context, index) {
-                    final lang = languages[index];
-                    final isSelected = currentLang == lang['name'];
-
-                    return GestureDetector(
-                      onTap: () async {
-                        await GetIt.I<StorageService>().setSelectedLanguage(
-                          lang['name']!,
-                        );
-                        Navigator.pop(context);
-                        _refreshData(); // Refresh API data with new language
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? primaryColor.withOpacity(0.1)
-                              : const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isSelected
-                                ? primaryColor
-                                : Colors.transparent,
-                            width: 2,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Text(
-                              lang['icon']!,
-                              style: const TextStyle(fontSize: 24),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    lang['native']!,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF1E293B),
-                                    ),
-                                  ),
-                                  Text(
-                                    lang['name']!,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      color: const Color(0xFF64748B),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (isSelected)
-                              Icon(
-                                Icons.check_circle_rounded,
-                                color: primaryColor,
-                                size: 24,
-                              ),
-                          ],
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Pick your language",
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A),
                         ),
                       ),
-                    );
-                  },
-                ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Learn in the language you love",
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          color: const Color(0xFF4CAF50),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Text(
+                    '🌿',
+                    style: TextStyle(fontSize: 28),
+                  ),
+                ],
               ),
+              const SizedBox(height: 24),
+              // Grid View for 3 columns
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 3,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.76, // Perfectly tall rectangular ratios as in the design
+                children: languages.map((lang) {
+                  final isSelected = currentLang == lang['name'];
+
+                  return GestureDetector(
+                    onTap: () async {
+                      await GetIt.I<StorageService>().setSelectedLanguage(
+                        lang['name']!,
+                      );
+                      Navigator.pop(context);
+                      _refreshData(); // Refresh API data with new language
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: isSelected
+                              ? const Color(0xFF4CAF50)
+                              : const Color(0xFFF1F5F9),
+                          width: isSelected ? 2 : 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isSelected
+                                ? const Color(0xFF4CAF50).withOpacity(0.06)
+                                : Colors.black.withOpacity(0.02),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 8),
+                          // Rounded Flag circle
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.04),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              lang['icon']!,
+                              style: const TextStyle(fontSize: 28),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Native Language label
+                          Text(
+                            lang['native']!,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          // English Name label
+                          Text(
+                            lang['name']!,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              color: const Color(0xFF64748B),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // Bottom Checkmark indicator
+                          if (isSelected)
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF4CAF50),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.check_rounded,
+                                color: Colors.white,
+                                size: 12,
+                              ),
+                            )
+                          else
+                            const SizedBox(height: 20), // Empty spacer to keep layout aligned
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 12),
             ],
           ),
         );
@@ -489,7 +564,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildSubscriptionBanner(),
+                // _buildSubscriptionBanner(),
                 // const SizedBox(height: 24),
 
                 // Stats Row
@@ -981,10 +1056,9 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
-                GetIt.I<StorageService>().setToken(null);
-                GetIt.I<StorageService>().setUserData(null);
+                await GetIt.I<StorageService>().clearUserRelatedData();
                 setState(() {}); // Refresh to show login screen
               },
               style: ElevatedButton.styleFrom(
@@ -1830,9 +1904,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 Icons.assignment_rounded,
                 () async {
                   final categories = await _categoriesFuture;
-                  if (categories != null &&
-                      categories.isNotEmpty &&
-                      mounted) {
+                  if (categories != null && categories.isNotEmpty && mounted) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -3356,6 +3428,11 @@ class _DashboardPageState extends State<DashboardPage> {
         final storage = GetIt.I<StorageService>();
         final isLoggedIn = storage.getToken() != null;
 
+        final currentUserIdStr = storage.getUserData()?['id']?.toString();
+        final hasReviewed = testimonials.any(
+          (t) => t.userId.toString() == currentUserIdStr,
+        );
+
         return Column(
           children: [
             const SizedBox(height: 60),
@@ -3426,7 +3503,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             const SizedBox(height: 32),
             // Write a Review Button
-            if (isLoggedIn)
+            if (isLoggedIn && !hasReviewed)
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
@@ -3478,14 +3555,17 @@ class _DashboardPageState extends State<DashboardPage> {
             // Horizontal Scrollable Cards
             SizedBox(
               height: 300,
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                itemCount: testimonials.length,
-                itemBuilder: (context, index) {
-                  return _buildTestimonialCard(testimonials[index], index);
-                },
+              child: Center(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: testimonials.length,
+                  itemBuilder: (context, index) {
+                    return _buildTestimonialCard(testimonials[index], index);
+                  },
+                ),
               ),
             ),
           ],
@@ -4498,15 +4578,18 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
 
             // Content
-            Center(
+            Align(
+              alignment: Alignment.centerLeft,
               child: Padding(
-                padding: const EdgeInsets.only(left: 60),
+                padding: const EdgeInsets.only(left: 110, right: 16),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       message,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -4517,6 +4600,8 @@ class _DashboardPageState extends State<DashboardPage> {
                     const SizedBox(height: 6),
                     Text(
                       'Check back later for new updates',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,

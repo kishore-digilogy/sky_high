@@ -199,12 +199,19 @@ class _LoginPageState extends State<LoginPage> {
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final screenWidth = MediaQuery.of(context).size.width;
+                final rawWidth = MediaQuery.of(context).size.width;
                 final screenHeight = MediaQuery.of(context).size.height;
+                final screenWidth = math.min(rawWidth, 450.0);
 
                 return SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.08),
-                  child: Column(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 500),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.08,
+                        ),
+                        child: Column(
                     children: [
                       SizedBox(height: screenHeight * 0.08),
 
@@ -409,9 +416,12 @@ class _LoginPageState extends State<LoginPage> {
                       SizedBox(height: screenHeight * 0.06),
                     ],
                   ),
-                );
-              },
+                ),
+              ),
             ),
+          );
+        },
+      ),
           ),
 
           // Floating Back Button

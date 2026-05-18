@@ -178,7 +178,7 @@ class ExamService {
         queryParameters: {
           'language': language,
           'limit': limit,
-          'setName': setName,
+          'set_name': setName,
         },
       );
       if (response.statusCode == 200) {
@@ -209,7 +209,7 @@ class ExamService {
         queryParameters: {
           'language': language,
           'limit': limit,
-          'setName': setName == 'Untitled' ? null : setName,
+          'set_name': setName == 'Untitled' ? null : setName,
           'company_id': companyId,
         },
       );
@@ -257,18 +257,27 @@ class ExamService {
     required String questionType,
     int? chapterId,
     int? topicId,
+    int? subtopicId,
     String? setName,
   }) async {
     try {
+      final queryParams = {
+        'question_type': questionType,
+        'company_id': companyId,
+        'chapter_id': chapterId,
+        'topic_id': topicId,
+        'subtopic_id': subtopicId,
+        'set_name': setName,
+      };
+
+      final uri = Uri.parse('$baseUrl/mock-tests/questions').replace(
+        queryParameters: queryParams.map((k, v) => MapEntry(k, v?.toString())),
+      );
+      print("Fetching MCQ Questions URL: $uri");
+
       final response = await _dio.get(
         '$baseUrl/mock-tests/questions',
-        queryParameters: {
-          'question_type': questionType,
-          'company_id': companyId,
-          'chapter_id': chapterId,
-          'topic_id': topicId,
-          'set_name': setName,
-        },
+        queryParameters: queryParams,
       );
       if (response.statusCode == 200 || response.statusCode == 304) {
         final List<dynamic> data = response.data;

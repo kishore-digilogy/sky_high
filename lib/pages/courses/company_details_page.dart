@@ -183,7 +183,6 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                 key: _subPostsKey,
                 child: _buildExpandedSubPosts(),
               ),
-            SliverToBoxAdapter(child: _buildQuickAccess()),
             const SliverToBoxAdapter(child: SizedBox(height: 40)),
           ],
         ),

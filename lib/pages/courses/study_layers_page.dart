@@ -388,7 +388,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                       strokeWidth: 6,
                       backgroundColor: const Color(0xFFF1F5F9),
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF1E293B),
+                        Color(0xFF6366F1),
                       ),
                     ),
                   ),
@@ -401,7 +401,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                     ),
                     child: const Icon(
                       Icons.rocket_launch_rounded,
-                      color: Color(0xFF1E293B),
+                      color: Color(0xFF6366F1),
                       size: 24,
                     ),
                   ),
@@ -440,7 +440,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF1E293B),
+                  color: const Color(0xFF6366F1),
                 ),
               ),
             ],
@@ -453,7 +453,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               minHeight: 8,
               backgroundColor: const Color(0xFFF1F5F9),
               valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF1E293B),
+                Color(0xFF6366F1),
               ),
             ),
           ),
@@ -468,8 +468,16 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     bool isSelected,
     bool isLocked,
   ) {
-    // Use black for all text/icons, but we will highlight the left bar if selected
-    final Color color = const Color(0xFF1E293B);
+    final List<Color> modColors = [
+      const Color(0xFF6366F1), // Indigo
+      const Color(0xFFF43F5E), // Rose
+      const Color(0xFF10B981), // Emerald
+      const Color(0xFFF59E0B), // Amber
+      const Color(0xFF3B82F6), // Blue
+      const Color(0xFF8B5CF6), // Violet
+      const Color(0xFF0EA5E9), // Sky
+    ];
+    final Color color = modColors[index % modColors.length];
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -511,115 +519,118 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                     borderRadius: BorderRadius.circular(24),
                   ),
                   backgroundColor: Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFEEF2FF),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.check_circle_outline_rounded,
-                            color: Color(0xFF6366F1),
-                            size: 36,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Complete Module?',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF1E293B),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'You are about to switch to another module. Would you like to mark the current module as completed to update your progress?',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            color: const Color(0xFF64748B),
-                            height: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              setState(() {
-                                _completedModuleIndices.add(
-                                  _selectedModuleIndex,
-                                );
-                              });
-                              _switchToModule(index, group);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF6366F1),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFEEF2FF),
+                              shape: BoxShape.circle,
                             ),
-                            child: Text(
-                              'Yes, Mark as Completed',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
+                            child: const Icon(
+                              Icons.check_circle_outline_rounded,
+                              color: Color(0xFF6366F1),
+                              size: 36,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              _switchToModule(index, group);
-                            },
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF64748B),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              side: const BorderSide(color: Color(0xFFE2E8F0)),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              'No, Just Switch',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: TextButton.styleFrom(
-                            foregroundColor: const Color(0xFF94A3B8),
-                            minimumSize: const Size(double.infinity, 48),
-                          ),
-                          child: Text(
-                            'Cancel',
+                          const SizedBox(height: 20),
+                          Text(
+                            'Complete Module?',
+                            textAlign: TextAlign.center,
                             style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF1E293B),
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          Text(
+                            'You are about to switch to another module. Would you like to mark the current module as completed to update your progress?',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              color: const Color(0xFF64748B),
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                setState(() {
+                                  _completedModuleIndices.add(
+                                    _selectedModuleIndex,
+                                  );
+                                });
+                                _switchToModule(index, group);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF6366F1),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: Text(
+                                'Yes, Mark as Completed',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _switchToModule(index, group);
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF64748B),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                side: const BorderSide(color: Color(0xFFE2E8F0)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(
+                                'No, Just Switch',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              foregroundColor: const Color(0xFF94A3B8),
+                              minimumSize: const Size(double.infinity, 48),
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -637,9 +648,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 Container(
                   width: 4,
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFF10B981)
-                        : Colors.transparent,
+                    color: isSelected ? color : Colors.transparent,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(16),
                       bottomLeft: Radius.circular(16),
@@ -784,35 +793,34 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     final group = _moduleGroups[_selectedModuleIndex];
     final String layerName = group['type'];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildContentHeader(group['title'], index: _selectedModuleIndex),
-          const SizedBox(height: 24),
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  // BoxShadow(
-                  //   color: Colors.black.withOpacity(0.03),
-                  //   blurRadius: 20,
-                  //   offset: const Offset(0, 10),
-                  // ),
-                ],
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 800),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildContentHeader(group['title'], index: _selectedModuleIndex),
+              const SizedBox(height: 24),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: _buildMaterialsView(),
+                  ),
+                ),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: _buildMaterialsView(),
-              ),
-            ),
+              _buildCompleteAndNextButton(),
+            ],
           ),
-          _buildCompleteAndNextButton(),
-        ],
+        ),
       ),
     );
   }
@@ -1035,11 +1043,8 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           : _buildEmptyContent();
     }
 
-    // Check if we should show folders
-    final hasChapters = filteredItems.any(
-      (item) => item.chapterName != null && item.chapterName!.isNotEmpty,
-    );
-    if (hasChapters && _selectedChapterName == null) {
+    // Always show folders first if no chapter is selected (Skip for first 3 modules)
+    if (_selectedChapterName == null && _selectedModuleIndex >= 3) {
       return _buildRealChapterFoldersView(filteredItems);
     }
 
@@ -1047,9 +1052,20 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
         ? filteredItems
         : filteredItems
               .where(
-                (item) => (item.chapterName ?? 'Other') == _selectedChapterName,
+                (item) =>
+                    (item.chapterName ?? 'General') == _selectedChapterName,
               )
               .toList();
+
+    final Map<String, List<StudyLayerModel>> topicGrouped = {};
+    for (var item in itemsToShow) {
+      final tName = item.topicName ?? 'General Topics';
+      if (!topicGrouped.containsKey(tName)) {
+        topicGrouped[tName] = [];
+      }
+      topicGrouped[tName]!.add(item);
+    }
+    final topicNames = topicGrouped.keys.toList();
 
     final bool useGrid = layerName.toLowerCase() != 'basic_info';
 
@@ -1126,36 +1142,50 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           ),
         ),
         Expanded(
-          child: useGrid
-              ? GridView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.78,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                  ),
-                  itemCount: itemsToShow.length + 1, // +1 for the banner
-                  itemBuilder: (context, index) {
-                    if (index == itemsToShow.length) {
-                      return const SizedBox.shrink(); // Handled by Sliver logic if needed, but for now just empty
-                    }
-                    return _buildLayerContentCard(
-                      itemsToShow[index],
-                      isGrid: true,
-                    );
-                  },
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: itemsToShow.length,
-                  itemBuilder: (context, index) {
-                    return _buildLayerContentCard(
-                      itemsToShow[index],
-                      isGrid: false,
-                    );
-                  },
-                ),
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: topicNames.length,
+            itemBuilder: (context, tIndex) {
+              final topicName = topicNames[tIndex];
+              final items = topicGrouped[topicName]!;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTopicHeader(topicName, const Color(0xFF6366F1)),
+                  if (useGrid)
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.78,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        return _buildLayerContentCard(
+                          items[index],
+                          isGrid: true,
+                        );
+                      },
+                    )
+                  else
+                    Column(
+                      children: items
+                          .map(
+                            (item) =>
+                                _buildLayerContentCard(item, isGrid: false),
+                          )
+                          .toList(),
+                    ),
+                  const SizedBox(height: 24),
+                ],
+              );
+            },
+          ),
         ),
         if (useGrid) _buildFooterBanner(),
       ],
@@ -1165,7 +1195,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
   Widget _buildRealChapterFoldersView(List<StudyLayerModel> items) {
     final Map<String, List<StudyLayerModel>> grouped = {};
     for (var item in items) {
-      final name = item.chapterName ?? 'Other';
+      final name = item.chapterName ?? 'General';
       if (!grouped.containsKey(name)) {
         grouped[name] = [];
       }
@@ -1173,7 +1203,26 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     }
 
     final chapterNames = grouped.keys.toList();
+    final Map<String, int> itemCountMap = grouped.map(
+      (key, value) => MapEntry(key, value.length),
+    );
 
+    return _buildGenericChapterFoldersView(
+      chapterNames: chapterNames,
+      itemCountMap: itemCountMap,
+      onTap: (name) {
+        setState(() {
+          _selectedChapterName = name;
+        });
+      },
+    );
+  }
+
+  Widget _buildGenericChapterFoldersView({
+    required List<String> chapterNames,
+    required Map<String, int> itemCountMap,
+    required Function(String) onTap,
+  }) {
     return Column(
       children: [
         Padding(
@@ -1198,7 +1247,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: MediaQuery.of(context).size.width > 600 ? 5 : 2,
               childAspectRatio: MediaQuery.of(context).size.width > 600
-                  ? 2.8
+                  ? 1.5
                   : 2.1,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
@@ -1206,17 +1255,13 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             itemCount: chapterNames.length,
             itemBuilder: (context, index) {
               final name = chapterNames[index];
-              final count = grouped[name]!.length;
+              final count = itemCountMap[name] ?? 0;
 
               return InkWell(
-                onTap: () {
-                  setState(() {
-                    _selectedChapterName = name;
-                  });
-                },
+                onTap: () => onTap(name),
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -1232,7 +1277,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(12),
@@ -1240,10 +1285,10 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                         child: const Icon(
                           Icons.folder_rounded,
                           color: Color(0xFF6366F1),
-                          size: 24,
+                          size: 20,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1252,18 +1297,19 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                             Text(
                               name,
                               style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
                                 color: const Color(0xFF1E293B),
                                 height: 1.2,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
+                            const SizedBox(height: 2),
                             Text(
                               '$count ${_l10n.tr('items')}',
                               style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11,
+                                fontSize: 12,
                                 color: const Color(0xFF64748B),
                               ),
                               maxLines: 1,
@@ -1285,6 +1331,61 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildBackToFoldersButton() {
+    return InkWell(
+      onTap: () => setState(() => _selectedChapterName = null),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 14,
+              color: Color(0xFF6366F1),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Back to Folders',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF6366F1),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopicHeader(String topicName, Color color) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 24, 4, 16),
+      child: Row(
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'TOPIC: ${topicName.toUpperCase()}',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: color,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1643,12 +1744,10 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             ],
           ),
           const SizedBox(height: 20),
-          if (isLocked)
-            _buildLockPrompt()
-          else if (url == null)
-            _buildNotAvailablePrompt()
+          if (url != null && !isLocked)
+            _buildActionButton(title, url, isPdf, isVideo)
           else
-            _buildActionButton(title, url, isPdf, isVideo),
+            _buildNotAvailablePrompt(),
         ],
       ),
     );
@@ -1777,56 +1876,59 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SvgPicture.asset('assets/Icons/coming_soon.svg', height: 120),
-              const SizedBox(height: 24),
-              Text(
-                'Coming Soon!',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF1E293B),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'We are working hard to bring this material to you. Please check back later!',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  color: const Color(0xFF64748B),
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6366F1),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'Got it!',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SvgPicture.asset('assets/Icons/coming_soon.svg', height: 120),
+                const SizedBox(height: 24),
+                Text(
+                  'Coming Soon!',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF1E293B),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                Text(
+                  'We are working hard to bring this material to you. Please check back later!',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    color: const Color(0xFF64748B),
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6366F1),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      'Got it!',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1876,7 +1978,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: MediaQuery.of(context).size.width > 600 ? 5 : 2,
               childAspectRatio: MediaQuery.of(context).size.width > 600
-                  ? 2.5
+                  ? 1.5
                   : 2.2,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
@@ -1887,7 +1989,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 onTap: () => _showWIPAlert(),
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -1903,7 +2005,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(12),
@@ -1911,16 +2013,16 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                         child: const Icon(
                           Icons.folder_rounded,
                           color: Color(0xFFCBD5E1),
-                          size: 24,
+                          size: 20,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           subjects[index],
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
                             color: const Color(0xFF475569),
                             height: 1.2,
                           ),
@@ -2002,30 +2104,16 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           style: GoogleFonts.inter(),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              _l10n.tr('maybe_later'),
-              style: GoogleFonts.inter(color: Colors.grey),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const PaymentScreen()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                _l10n.tr('close'),
+                style: GoogleFonts.inter(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            child: Text(
-              _l10n.tr('upgrade_now'),
-              style: GoogleFonts.inter(color: Colors.white),
             ),
           ),
         ],
@@ -2156,100 +2244,103 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           context: context,
           builder: (context) => Dialog(
             backgroundColor: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 30,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEE2E2),
-                      shape: BoxShape.circle,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
                     ),
-                    child: const Icon(
-                      Icons.logout_rounded,
-                      color: Color(0xFFEF4444),
-                      size: 32,
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEE2E2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.logout_rounded,
+                        color: Color(0xFFEF4444),
+                        size: 32,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    _l10n.tr('exit_learning_journey'),
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF0F172A),
+                    const SizedBox(height: 24),
+                    Text(
+                      _l10n.tr('exit_learning_journey'),
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF0F172A),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    _l10n.tr('exit_confirm_desc'),
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      color: const Color(0xFF64748B),
-                      height: 1.5,
+                    const SizedBox(height: 12),
+                    Text(
+                      _l10n.tr('exit_confirm_desc'),
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        color: const Color(0xFF64748B),
+                        height: 1.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            _l10n.tr('keep_learning_btn'),
-                            style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF94A3B8),
+                            child: Text(
+                              _l10n.tr('keep_learning_btn'),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF94A3B8),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1E293B),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1E293B),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
                             ),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            _l10n.tr('yes_exit'),
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
+                            child: Text(
+                              _l10n.tr('yes_exit'),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -2258,20 +2349,74 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
   }
 
   Widget _buildMockTestView() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: _mockTests.length,
-      itemBuilder: (context, index) {
-        final test = _mockTests[index];
-        return _buildMockTestCard(test);
-      },
+    final Map<String, List<MockTestSetModel>> grouped = {};
+    for (var test in _mockTests) {
+      final name = test.chapterName ?? 'General';
+      if (!grouped.containsKey(name)) {
+        grouped[name] = [];
+      }
+      grouped[name]!.add(test);
+    }
+
+    final chapterNames = grouped.keys.toList();
+    final Map<String, int> itemCountMap = grouped.map(
+      (key, value) => MapEntry(key, value.length),
+    );
+
+    if (_selectedChapterName == null && chapterNames.isNotEmpty) {
+      return _buildGenericChapterFoldersView(
+        chapterNames: chapterNames,
+        itemCountMap: itemCountMap,
+        onTap: (name) => setState(() => _selectedChapterName = name),
+      );
+    }
+
+    final chapterItems = _selectedChapterName == null
+        ? _mockTests
+        : grouped[_selectedChapterName] ?? [];
+
+    // Group items by topic within chapter
+    final Map<String, List<MockTestSetModel>> topicGrouped = {};
+    for (var item in chapterItems) {
+      final tName = item.topicName ?? 'General Topics';
+      if (!topicGrouped.containsKey(tName)) {
+        topicGrouped[tName] = [];
+      }
+      topicGrouped[tName]!.add(item);
+    }
+
+    final topicNames = topicGrouped.keys.toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_selectedChapterName != null) _buildBackToFoldersButton(),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: topicNames.length,
+            itemBuilder: (context, tIndex) {
+              final topicName = topicNames[tIndex];
+              final sets = topicGrouped[topicName]!;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTopicHeader(topicName, Colors.orange),
+                  ...sets.map((test) => _buildMockTestCard(test)).toList(),
+                  const SizedBox(height: 16),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildMockTestCard(MockTestSetModel test) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -2284,402 +2429,298 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.layers, color: Colors.orange, size: 20),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MockTestPage(
+                setName: test.setName,
+                companyName: widget.company.name,
+                companyId: widget.company.id,
+                chapterId: test.chapterId,
+                topicId: test.topicId,
+                subtopicId: test.subtopicId,
               ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'CHAPTER',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange,
-                      letterSpacing: 1.1,
-                    ),
-                  ),
-                  Text(
-                    test.chapterName ?? 'General',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1E293B),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Container(
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(
-                  color: Colors.orange,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'TOPIC: ${test.topicName?.toUpperCase() ?? 'N/A'}',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MockTestPage(
-                    setName: test.setName,
-                    companyName: widget.company.name,
-                    companyId: widget.company.id,
-                  ),
-                ),
-              );
-            },
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(20),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFF1F5F9)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: const Color(0xFFF1F5F9)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Icon(
+                        Icons.description_outlined,
+                        size: 32,
+                        color: Colors.grey.withOpacity(0.3),
+                      ),
                     ),
-                    child: Stack(
-                      children: [
-                        Center(
-                          child: Icon(
-                            Icons.description_outlined,
-                            size: 40,
-                            color: Colors.grey.withOpacity(0.3),
+                    Positioned(
+                      top: 6,
+                      left: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6366F1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'MOCK TEST',
+                          style: GoogleFonts.inter(
+                            fontSize: 6,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
-                        Positioned(
-                          top: 8,
-                          left: 8,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  test.setName ?? 'Untitled',
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E293B),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: Color(0xFF94A3B8),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMcqSetView() {
+    final Map<String, List<McqSetModel>> grouped = {};
+    for (var set in _mcqSets) {
+      final name = set.chapterName ?? 'General';
+      if (!grouped.containsKey(name)) {
+        grouped[name] = [];
+      }
+      grouped[name]!.add(set);
+    }
+
+    final chapterNames = grouped.keys.toList();
+    final Map<String, int> itemCountMap = grouped.map(
+      (key, value) => MapEntry(key, value.length),
+    );
+
+    if (_selectedChapterName == null && chapterNames.isNotEmpty) {
+      return _buildGenericChapterFoldersView(
+        chapterNames: chapterNames,
+        itemCountMap: itemCountMap,
+        onTap: (name) => setState(() => _selectedChapterName = name),
+      );
+    }
+
+    final chapterItems = _selectedChapterName == null
+        ? _mcqSets
+        : grouped[_selectedChapterName] ?? [];
+
+    // Group items by topic within chapter
+    final Map<String, List<McqSetModel>> topicGrouped = {};
+    for (var item in chapterItems) {
+      final tName = item.topicName ?? 'General Topics';
+      if (!topicGrouped.containsKey(tName)) {
+        topicGrouped[tName] = [];
+      }
+      topicGrouped[tName]!.add(item);
+    }
+
+    final topicNames = topicGrouped.keys.toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_selectedChapterName != null) _buildBackToFoldersButton(),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: topicNames.length,
+            itemBuilder: (context, tIndex) {
+              final topicName = topicNames[tIndex];
+              final sets = topicGrouped[topicName]!;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTopicHeader(topicName, const Color(0xFFEF4444)),
+                  ...sets.map((set) => _buildMcqSetCard(set)).toList(),
+                  const SizedBox(height: 16),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMcqSetCard(McqSetModel set) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: InkWell(
+          onTap: () {
+            final group = _moduleGroups[_selectedModuleIndex];
+            final String layerName = group['type']; // 'mcq' or 'pyq'
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MockTestPage(
+                  setName: set.setName,
+                  companyName: widget.company.name,
+                  companyId: widget.company.id,
+                  chapterId: set.chapterId,
+                  topicId: set.topicId,
+                  subtopicId: set.subtopicId,
+                  questionType: layerName,
+                ),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFF1F5F9)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Icon(
+                          Icons.track_changes_rounded,
+                          size: 32,
+                          color: Colors.red.withOpacity(0.3),
+                        ),
+                      ),
+                      Positioned(
+                        top: 6,
+                        left: 6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'QUIZ',
+                            style: GoogleFonts.inter(
+                              fontSize: 6,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 6,
+                        left: 0,
+                        right: 0,
+                        child: Center(
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF6366F1),
-                              borderRadius: BorderRadius.circular(4),
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              'MOCK TEST',
+                              '${set.questionCount ?? 0} Qs',
                               style: GoogleFonts.inter(
-                                fontSize: 7,
+                                fontSize: 9,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: Colors.red,
                               ),
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      test.setName ?? 'Untitled',
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF1E293B),
                       ),
-                    ),
+                    ],
                   ),
-                  const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: Color(0xFF94A3B8),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMcqSetView() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: _mcqSets.length,
-      itemBuilder: (context, index) {
-        final set = _mcqSets[index];
-        return _buildMcqSetCard(set);
-      },
-    );
-  }
-
-  Widget _buildMcqSetCard(McqSetModel set) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with Chapter Name
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFF5F5),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEF4444),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.layers,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'CHAPTER',
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFFEF4444),
-                            letterSpacing: 1.1,
-                          ),
-                        ),
-                        Text(
-                          set.chapterName ?? 'General',
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF1E293B),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEF4444).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                const SizedBox(width: 12),
+                Expanded(
                   child: Text(
-                    '1 item',
+                    set.setName ?? 'Untitled',
                     style: GoogleFonts.inter(
-                      fontSize: 10,
+                      fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFFEF4444),
+                      color: const Color(0xFF1E293B),
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: Color(0xFF94A3B8),
                 ),
               ],
             ),
           ),
-
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEF4444),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'TOPIC: ${set.topicName?.toUpperCase() ?? 'N/A'}',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFFEF4444),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                InkWell(
-                  onTap: () {
-                    final group = _moduleGroups[_selectedModuleIndex];
-                    final String layerName = group['type']; // 'mcq' or 'pyq'
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MockTestPage(
-                          setName: set.setName,
-                          companyName: widget.company.name,
-                          companyId: widget.company.id,
-                          chapterId: set.chapterId,
-                          topicId: set.topicId,
-                          questionType: layerName,
-                        ),
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFF1F5F9)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Stack(
-                            children: [
-                              Center(
-                                child: Icon(
-                                  Icons.track_changes_rounded,
-                                  size: 40,
-                                  color: Colors.red.withOpacity(0.3),
-                                ),
-                              ),
-                              Positioned(
-                                top: 8,
-                                left: 8,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    'QUIZ',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 7,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 8,
-                                left: 0,
-                                right: 0,
-                                child: Center(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      '${set.questionCount ?? 0} Qs',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.red,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            set.setName ?? 'Untitled',
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1E293B),
-                            ),
-                          ),
-                        ),
-                        const Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 14,
-                          color: Color(0xFF94A3B8),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -2709,8 +2750,10 @@ class _InstructionGuideDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      child: Container(
-        padding: const EdgeInsets.all(32),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 450),
+        child: Container(
+          padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(30),
@@ -2791,6 +2834,7 @@ class _InstructionGuideDialog extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9));
   }

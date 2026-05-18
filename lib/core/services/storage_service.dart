@@ -107,6 +107,20 @@ class StorageService {
     await _prefs.setString(_languageKey, language);
   }
 
+  Future<void> clearUserRelatedData() async {
+    await _prefs.remove(_tokenKey);
+    await _prefs.remove(_userDataKey);
+    await _prefs.remove(_recentStudyKey);
+    
+    // Also clear any company-specific last studied keys
+    final keys = _prefs.getKeys();
+    for (final key in keys) {
+      if (key.startsWith('last_studied_')) {
+        await _prefs.remove(key);
+      }
+    }
+  }
+
   Future<void> clearAll() async {
     await _prefs.clear();
   }

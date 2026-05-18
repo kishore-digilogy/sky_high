@@ -17,6 +17,7 @@ class MockTestPage extends StatefulWidget {
   final int? companyId;
   final int? chapterId;
   final int? topicId;
+  final int? subtopicId;
   final String? questionType;
 
   const MockTestPage({
@@ -26,6 +27,7 @@ class MockTestPage extends StatefulWidget {
     this.companyId,
     this.chapterId,
     this.topicId,
+    this.subtopicId,
     this.questionType,
   });
 
@@ -38,6 +40,7 @@ class _MockTestPageState extends State<MockTestPage> {
   final LocalizationService _l10n = LocalizationService();
   List<MockQuestionModel> _questions = [];
   bool _isLoading = true;
+  bool _isPaletteOpen = true;
   int _currentIndex = 0;
   Map<int, String?> _userAnswers = {};
   Set<int> _markedForReview = {};
@@ -76,6 +79,7 @@ class _MockTestPageState extends State<MockTestPage> {
 
   Future<void> _loadQuestions() async {
     try {
+      final language = GetIt.I<StorageService>().getSelectedLanguage();
       List<MockQuestionModel> questions;
       if (widget.questionType != null && widget.companyId != null) {
         questions = await _examService.getMcqQuestions(
@@ -83,6 +87,7 @@ class _MockTestPageState extends State<MockTestPage> {
           questionType: widget.questionType!,
           chapterId: widget.chapterId,
           topicId: widget.topicId,
+          subtopicId: widget.subtopicId,
           setName: widget.setName,
         );
       } else if (widget.companyName != null && widget.companyId != null) {
@@ -90,10 +95,12 @@ class _MockTestPageState extends State<MockTestPage> {
           companyName: widget.companyName!,
           companyId: widget.companyId!,
           setName: widget.setName,
+          language: language,
         );
       } else {
         questions = await _examService.getMockQuestions(
           setName: widget.setName ?? '',
+          language: language,
         );
       }
 
@@ -550,7 +557,7 @@ class _MockTestPageState extends State<MockTestPage> {
                         ),
                       ),
                       // Sidebar Palette
-                      _buildSidebar(isMobile),
+                      if (_isPaletteOpen) _buildSidebar(isMobile),
                     ],
                   ),
             if (_isSubmitting)
@@ -596,133 +603,138 @@ class _MockTestPageState extends State<MockTestPage> {
         SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            child: Column(
-              children: [
-                const SizedBox(height: 10),
-                // Icon and Title
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.assignment_rounded,
-                    color: Colors.white,
-                    size: 40,
-                  ),
-                ).animate().scale(duration: 400.ms),
-                const SizedBox(height: 20),
-                Text(
-                  widget.setName ?? "Untitled",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ).animate().fadeIn(delay: 200.ms),
-                const SizedBox(height: 40),
-                // Stats Card
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
-                        blurRadius: 30,
-                        offset: const Offset(0, 10),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    // Icon and Title
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        shape: BoxShape.circle,
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          _buildStatCard(
-                            Icons.help_outline,
-                            _l10n.tr('questions'),
-                            '$totalQuestions',
-                            const Color(0xFF3B82F6),
-                          ),
-                          const SizedBox(width: 12),
-                          _buildStatCard(
-                            Icons.timer_outlined,
-                            _l10n.tr('minutes'),
-                            '$totalMinutes',
-                            const Color(0xFF22C55E),
+                      child: const Icon(
+                        Icons.assignment_rounded,
+                        color: Colors.white,
+                        size: 40,
+                      ),
+                    ).animate().scale(duration: 400.ms),
+                    const SizedBox(height: 20),
+                    Text(
+                      widget.setName ?? "Untitled",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ).animate().fadeIn(delay: 200.ms),
+                    const SizedBox(height: 40),
+                    // Stats Card
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 30,
+                            offset: const Offset(0, 10),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 30),
-                      // Rules Section
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          _l10n.tr('important_rules'),
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF94A3B8),
-                            letterSpacing: 1.2,
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              _buildStatCard(
+                                Icons.help_outline,
+                                _l10n.tr('questions'),
+                                '$totalQuestions',
+                                const Color(0xFF3B82F6),
+                              ),
+                              const SizedBox(width: 12),
+                              _buildStatCard(
+                                Icons.timer_outlined,
+                                _l10n.tr('minutes'),
+                                '$totalMinutes',
+                                const Color(0xFF22C55E),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildRuleItem(
-                        Icons.check_circle_outline,
-                        _l10n.tr('rule_1'),
-                      ),
-                      _buildRuleItem(
-                        Icons.info_outline,
-                        _l10n.tr('rule_2').replaceAll('{min}', totalMinutes.toString()),
-                      ),
-                      _buildRuleItem(
-                        Icons.lock_clock_outlined,
-                        _l10n.tr('rule_3'),
-                      ),
-                      _buildRuleItem(
-                        Icons.language,
-                        _l10n.tr('rule_4'),
-                      ),
-                      const SizedBox(height: 40),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _hasStarted = true;
-                            });
-                            _startTimer();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3B82F6),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            elevation: 8,
-                            shadowColor: const Color(
-                              0xFF3B82F6,
-                            ).withOpacity(0.4),
-                          ),
-                          child: Text(
-                            _l10n.tr('start_test_now'),
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1,
+                          const SizedBox(height: 30),
+                          // Rules Section
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              _l10n.tr('important_rules'),
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF94A3B8),
+                                letterSpacing: 1.2,
+                              ),
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 16),
+                          _buildRuleItem(
+                            Icons.check_circle_outline,
+                            _l10n.tr('rule_1'),
+                          ),
+                          _buildRuleItem(
+                            Icons.info_outline,
+                            _l10n.tr('rule_2').replaceAll('{min}', totalMinutes.toString()),
+                          ),
+                          _buildRuleItem(
+                            Icons.lock_clock_outlined,
+                            _l10n.tr('rule_3'),
+                          ),
+                          _buildRuleItem(
+                            Icons.language,
+                            _l10n.tr('rule_4'),
+                          ),
+                          const SizedBox(height: 40),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _hasStarted = true;
+                                });
+                                _startTimer();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF3B82F6),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 20),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                elevation: 8,
+                                shadowColor: const Color(
+                                  0xFF3B82F6,
+                                ).withOpacity(0.4),
+                              ),
+                              child: Text(
+                                _l10n.tr('start_test_now'),
+                                style: GoogleFonts.inter(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1),
-              ],
+                    ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -915,6 +927,15 @@ class _MockTestPageState extends State<MockTestPage> {
           ),
           _buildActionButton(Icons.description_outlined, 'Paper'),
           _buildActionButton(Icons.info_outline, 'Info'),
+          _buildActionButton(
+            _isPaletteOpen ? Icons.grid_view_rounded : Icons.grid_on_rounded,
+            _isPaletteOpen ? 'Close Palette' : 'Open Palette',
+            onPressed: () {
+              setState(() {
+                _isPaletteOpen = !_isPaletteOpen;
+              });
+            },
+          ),
         ] else ...[
           // Mobile compact timer
           Center(
@@ -959,11 +980,11 @@ class _MockTestPageState extends State<MockTestPage> {
     );
   }
 
-  Widget _buildActionButton(IconData icon, String label) {
+  Widget _buildActionButton(IconData icon, String label, {VoidCallback? onPressed}) {
     return Container(
       margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
       child: OutlinedButton.icon(
-        onPressed: () {},
+        onPressed: onPressed ?? () {},
         icon: Icon(icon, size: 16, color: Colors.white70),
         label: Text(
           label,
@@ -1644,7 +1665,13 @@ class _MockTestPageState extends State<MockTestPage> {
       padding: const EdgeInsets.all(20),
       child: ElevatedButton(
         onPressed: () {
-          if (isMobile) Navigator.pop(context);
+          if (isMobile) {
+            Navigator.pop(context);
+          } else {
+            setState(() {
+              _isPaletteOpen = false;
+            });
+          }
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF0F172A),
