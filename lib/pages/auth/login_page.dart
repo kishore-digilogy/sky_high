@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sky_high/core/services/storage_service.dart';
+import 'package:sky_high/core/services/api_service.dart';
 import 'package:sky_high/pages/dashboard/dashboard_page.dart';
 import 'dart:math' as math;
 import 'dart:async';
@@ -22,12 +23,12 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   final _otpController = TextEditingController();
   bool _isLoading = false;
-  bool _isOtpLogin = true;
   bool _otpSent = false;
-  bool _obscurePassword = true;
-  final LocalizationService _l10n = LocalizationService();
+  bool _isOtpLogin = true;
   Timer? _resendTimer;
   int _resendSeconds = 0;
+  bool _obscurePassword = true;
+  final LocalizationService _l10n = LocalizationService();
 
   @override
   void dispose() {
@@ -55,7 +56,6 @@ class _LoginPageState extends State<LoginPage> {
       _showSnackBar(_l10n.tr('enter_email'));
       return;
     }
-
     if (_isOtpLogin) {
       if (!_otpSent) {
         await _sendOtp();
@@ -74,9 +74,9 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _sendOtp() async {
     setState(() => _isLoading = true);
     try {
-      final dio = Dio();
+      final dio = ApiService().dio;
       await dio.post(
-        'https://skyhighapi.digilogy.dev/api/auth/send-otp',
+        '${ApiService.baseUrl}/auth/send-otp',
         data: {'email': _emailController.text.trim()},
       );
       setState(() {
@@ -98,10 +98,10 @@ class _LoginPageState extends State<LoginPage> {
     }
     setState(() => _isLoading = true);
     try {
-      final dio = Dio();
+      final dio = ApiService().dio;
       // Step 1: Verify OTP
       final response = await dio.post(
-        'https://skyhighapi.digilogy.dev/api/auth/verify-otp',
+        '${ApiService.baseUrl}/auth/verify-otp',
         data: {
           'email': _emailController.text.trim(),
           'otp': _otpController.text.trim(),
@@ -116,7 +116,7 @@ class _LoginPageState extends State<LoginPage> {
         if (resetToken != null) {
           // Step 2: Login with OTP using the resetToken
           final loginResponse = await dio.post(
-            'https://skyhighapi.digilogy.dev/api/auth/login-with-otp',
+            '${ApiService.baseUrl}/auth/login-with-otp',
             data: {
               'email': _emailController.text.trim(),
               'resetToken': resetToken,
@@ -139,9 +139,9 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _loginWithPassword() async {
     setState(() => _isLoading = true);
     try {
-      final dio = Dio();
+      final dio = ApiService().dio;
       final response = await dio.post(
-        'https://skyhighapi.digilogy.dev/api/auth/login',
+        '${ApiService.baseUrl}/auth/login',
         data: {
           'email': _emailController.text.trim(),
           'password': _passwordController.text,

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sky_high/core/services/storage_service.dart';
+import 'package:sky_high/core/services/api_service.dart';
 import 'package:sky_high/pages/auth/login_page.dart';
 import 'package:dio/dio.dart';
 import 'package:sky_high/pages/dashboard/dashboard_page.dart';
@@ -94,15 +95,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
     };
 
     debugPrint("--- VERIFY PAYMENT START ---");
-    debugPrint("URL: https://skyhighapi.digilogy.dev/api/payment/verify");
+    debugPrint("URL: ${ApiService.baseUrl}/payment/verify");
     debugPrint("Payload: $payload");
 
     try {
-      final dio = Dio();
+      final dio = ApiService().dio;
       final token = GetIt.I<StorageService>().getToken();
 
       final apiResponse = await dio.post(
-        'https://skyhighapi.digilogy.dev/api/payment/verify',
+        '${ApiService.baseUrl}/payment/verify',
         data: payload,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
@@ -170,12 +171,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     setState(() => _isProcessing = true);
 
     try {
-      final dio = Dio();
+      final dio = ApiService().dio;
       final token = GetIt.I<StorageService>().getToken();
       final receiptId = "receipt_${DateTime.now().millisecondsSinceEpoch}";
 
       final orderResponse = await dio.post(
-        'https://skyhighapi.digilogy.dev/api/payment/create-order',
+        '${ApiService.baseUrl}/payment/create-order',
         data: {'amount': 1180, 'currency': 'INR', 'receipt': receiptId},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
@@ -895,9 +896,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                   }
                                   setDialogState(() => isLoading = true);
                                   try {
-                                    final dio = Dio();
+                                    final dio = ApiService().dio;
                                     final response = await dio.post(
-                                      'https://skyhighapi.digilogy.dev/api/auth/verify-otp',
+                                      '${ApiService.baseUrl}/auth/verify-otp',
                                       data: {
                                         'email': emailController.text.trim(),
                                         'otp': otpController.text.trim(),
@@ -913,7 +914,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                       if (resetToken != null) {
                                         // Step 2: Login with OTP using the resetToken
                                         final loginResponse = await dio.post(
-                                          'https://skyhighapi.digilogy.dev/api/auth/login-with-otp',
+                                          '${ApiService.baseUrl}/auth/login-with-otp',
                                           data: {
                                             'email': emailController.text
                                                 .trim(),
@@ -974,9 +975,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                   }
                                   setDialogState(() => isLoading = true);
                                   try {
-                                    final dio = Dio();
+                                    final dio = ApiService().dio;
                                     await dio.post(
-                                      'https://skyhighapi.digilogy.dev/api/auth/send-otp',
+                                      '${ApiService.baseUrl}/auth/send-otp',
                                       data: {
                                         'email': emailController.text.trim(),
                                       },
@@ -1014,9 +1015,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 setDialogState(() => isLoading = true);
 
                                 try {
-                                  final dio = Dio();
+                                  final dio = ApiService().dio;
                                   final response = await dio.post(
-                                    'https://skyhighapi.digilogy.dev/api/auth/login',
+                                    '${ApiService.baseUrl}/auth/login',
                                     data: {
                                       'email': emailController.text.trim(),
                                       'password': passwordController.text,

@@ -1,16 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:sky_high/core/services/api_service.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
 
-  final Dio _dio = Dio(
-    BaseOptions(
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
-    ),
-  );
-  final String baseUrl = 'https://skyhighapi.digilogy.dev/api';
+  final Dio _dio = ApiService().dio;
+  final String baseUrl = ApiService.baseUrl;
 
   NotificationService._internal();
 

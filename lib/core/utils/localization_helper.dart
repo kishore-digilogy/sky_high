@@ -3,8 +3,9 @@ import 'package:sky_high/core/services/storage_service.dart';
 
 class LocalizationHelper {
   static String getLocalized(Map<String, dynamic> json, String baseKey) {
-    if (!GetIt.I.isRegistered<StorageService>()) return json[baseKey]?.toString() ?? '';
-    
+    if (!GetIt.I.isRegistered<StorageService>())
+      return json[baseKey]?.toString() ?? '';
+
     final language = GetIt.I<StorageService>().getSelectedLanguage();
     String? suffix;
     switch (language) {

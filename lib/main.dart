@@ -7,14 +7,13 @@ import 'package:sky_high/pages/splash/splash_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:sky_high/firebase_options.dart';
+import 'package:sky_high/widgets/connectivity_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Initialize OneSignal
   // Remove this method to stop OneSignal Debug logs
@@ -62,6 +61,9 @@ class MyApp extends StatelessWidget {
         ),
         colorSchemeSeed: const Color(0xFF6C63FF),
       ),
+      builder: (context, child) {
+        return ConnectivityWrapper(child: child!);
+      },
       home: const SplashPage(),
     );
   }

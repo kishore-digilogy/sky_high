@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'dart:convert';
 
 class StudyLayerModel {
   final int id;
@@ -18,6 +19,7 @@ class StudyLayerModel {
   final int? subJobId;
   final int? jobId;
   final int? isActive;
+  final List<String> imagesGallery;
 
   StudyLayerModel({
     required this.id,
@@ -46,6 +48,7 @@ class StudyLayerModel {
     this.subJobId,
     this.jobId,
     this.isActive,
+    this.imagesGallery = const [],
   });
 
   factory StudyLayerModel.fromJson(Map<String, dynamic> json) {
@@ -76,7 +79,33 @@ class StudyLayerModel {
       subJobId: json['sub_job_id'],
       jobId: json['job_id'],
       isActive: json['is_active'],
+      imagesGallery: _parseImagesGallery(json['images_gallery']),
     );
+  }
+
+  static List<String> _parseImagesGallery(dynamic data) {
+    if (data == null) return [];
+    if (data is String) {
+      try {
+        final decoded = json.decode(data);
+        if (decoded is List) {
+          return decoded.map((e) => e.toString()).toList();
+        }
+      } catch (e) {
+        return [];
+      }
+    }
+    if (data is List) {
+      return data.map((e) => e.toString()).toList();
+    }
+    return [];
+  }
+
+  String getFullImageUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+    if (path.startsWith('http')) return path;
+    final cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return 'https://digilogy-skyhigh.s3.eu-north-1.amazonaws.com/$cleanPath';
   }
 
   String getLocalizedTitle(String langCode) {

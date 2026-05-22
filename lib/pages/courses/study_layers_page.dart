@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:sky_high/core/services/exam_service.dart';
 import 'package:sky_high/core/services/storage_service.dart';
+import 'package:sky_high/core/services/api_service.dart';
 import 'package:sky_high/data/models/exam_category_model.dart';
 import 'package:sky_high/data/models/study_layer_model.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:sky_high/pages/auth/login_page.dart';
-import 'package:sky_high/pages/subscription/payment_screen.dart';
-import 'package:sky_high/pages/study_materials/pdf_viewer_page.dart';
 import 'package:sky_high/data/models/mock_test_set_model.dart';
 import 'package:sky_high/data/models/mcq_set_model.dart';
-import 'package:sky_high/pages/exams/mock_test_page.dart';
-import 'package:sky_high/pages/courses/video_player_page.dart';
 import 'package:sky_high/core/services/localization_service.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+// Import our newly created modular sub-widgets
+import 'widgets/study_layers_dialogs.dart';
+import 'widgets/study_sidebar.dart';
+import 'widgets/chapter_folders_view.dart';
+import 'widgets/mcq_set_view.dart';
+import 'widgets/mock_test_view.dart';
+import 'widgets/study_materials_view.dart';
 
 class StudyLayersPage extends StatefulWidget {
   final ExamItemModel company;
@@ -35,7 +39,7 @@ class StudyLayersPage extends StatefulWidget {
 
 class _StudyLayersPageState extends State<StudyLayersPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final Dio _dio = Dio();
+  final Dio _dio = ApiService().dio;
   final StorageService _storage = GetIt.I<StorageService>();
 
   List<StudyLayerModel> _apiLayers = [];
@@ -45,7 +49,9 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
   bool _isLoading = true;
   bool _isPaidUser = false;
   bool _isLoggedIn = false;
-  String _currentLangCode = 'en';
+  double _progress = 0.0; // Progress fraction (0.0 - 1.0)
+
+  final String _currentLangCode = 'en';
 
   List<MockTestSetModel> _mockTests = [];
   bool _isMockLoading = false;
@@ -106,6 +112,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     _selectedModuleIndex = widget.initialModuleIndex ?? 0;
     _checkSubscription();
     _fetchApiLayers();
+    _fetchUserProgress();
 
     // Trigger initial data fetch based on selected module
     if (_selectedModuleIndex == 4) {
@@ -121,12 +128,73 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     final userData = _storage.getUserData();
     _isLoggedIn = _storage.getToken() != null;
     if (userData != null) {
-      // Assuming 'subscription_status' or similar field
       _isPaidUser =
           userData['subscription_status'] == 'paid' ||
           userData['is_paid'] == true;
     } else {
       _isPaidUser = false;
+    }
+  }
+
+  // ── Progress Tracking ──────────────────────────────────────────────────
+
+  /// Module key list aligned with _moduleGroups order
+  static const List<String> _moduleKeys = [
+    'basic_info',
+    'syllabus',
+    'preparation_plan',
+    'notes',
+    'pyq',
+    'mcq',
+    'video',
+    'mock_test',
+  ];
+
+  /// Load server-side progress and populate _completedModuleIndices
+  Future<void> _fetchUserProgress() async {
+    // Always fetch progress regardless of login status
+    try {
+      final data = await ExamService().getUserProgress(
+        companyId: widget.company.id,
+        subJobId: widget.jobId,
+      );
+
+      final completedList = data['completedList'];
+      final progressValue = data['progress'];
+      if (progressValue is num) {
+        setState(() {
+          _progress = progressValue / 100.0;
+        });
+      }
+      if (completedList is List && mounted) {
+        final completed = <int>{};
+        for (final moduleId in completedList) {
+          final idx = _moduleKeys.indexOf(moduleId.toString());
+          if (idx != -1) completed.add(idx);
+        }
+        setState(() {
+          _completedModuleIndices
+            ..clear()
+            ..addAll(completed);
+        });
+      }
+    } catch (e) {
+      // Non-critical – progress will stay local
+    }
+  }
+
+  /// Push a single module completion to the server
+  Future<void> _updateProgressOnServer(int moduleIndex) async {
+    if (!_isLoggedIn || moduleIndex >= _moduleKeys.length) return;
+    try {
+      await ExamService().updateUserProgress(
+        moduleId: _moduleKeys[moduleIndex],
+        isCompleted: 1,
+        companyId: widget.company.id,
+        subJobId: widget.jobId,
+      );
+    } catch (e) {
+      // Silently ignore – the local state is already updated
     }
   }
 
@@ -138,10 +206,9 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
       }
 
       final response = await _dio.get(
-        'https://skyhighapi.digilogy.dev/api/admin/study-layers',
+        '${ApiService.baseUrl}/admin/study-layers',
         queryParameters: queryParams,
       );
-      print(response.data);
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         setState(() {
@@ -151,10 +218,12 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           _isLoading = false;
         });
 
-        // Open guide or drawer based on flag
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!_storage.isStudyGuideShown) {
-            _showInstructionGuide();
+            StudyLayersDialogs.showInstructionGuide(
+              context: context,
+              storage: _storage,
+            );
           }
         });
       }
@@ -169,7 +238,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     setState(() => _isMockLoading = true);
     try {
       final response = await _dio.get(
-        'https://skyhighapi.digilogy.dev/api/mock-tests/sets/${widget.company.name}',
+        '${ApiService.baseUrl}/mock-tests/sets/${widget.company.name}',
         queryParameters: {'company_id': widget.company.id},
       );
       if (response.statusCode == 200) {
@@ -208,9 +277,13 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
       canPop: false,
       onPopInvoked: (didPop) async {
         if (didPop) return;
-        final shouldPop = await _showExitConfirmation();
+        final navigator = Navigator.of(context);
+        final shouldPop = await StudyLayersDialogs.showExitConfirmation(
+          context: context,
+          l10n: _l10n,
+        );
         if (shouldPop && mounted) {
-          Navigator.of(context).pop();
+          navigator.pop();
         }
       },
       child: Scaffold(
@@ -227,8 +300,12 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               size: 20,
             ),
             onPressed: () async {
-              if (await _showExitConfirmation()) {
-                Navigator.pop(context);
+              final navigator = Navigator.of(context);
+              if (await StudyLayersDialogs.showExitConfirmation(
+                context: context,
+                l10n: _l10n,
+              )) {
+                navigator.pop();
               }
             },
           ),
@@ -280,463 +357,49 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             const SizedBox(width: 8),
           ],
         ),
-        drawer: Drawer(
-          width: MediaQuery.of(context).size.width * 0.85,
-          backgroundColor: Colors.white,
-          child: SafeArea(child: _buildSidebar()),
+        drawer: StudySidebar(
+          moduleGroups: _moduleGroups,
+          selectedModuleIndex: _selectedModuleIndex,
+          completedModuleIndices: _completedModuleIndices,
+          isPaidUser: _isPaidUser,
+          isLoggedIn: _isLoggedIn,
+          l10n: _l10n,
+          onModuleSelected: (index, group) {
+            _switchToModule(index, group);
+          },
+          onLoginRequired: () => StudyLayersDialogs.showLoginRequiredDialog(
+            context: context,
+            l10n: _l10n,
+            onLoginSuccess: () {
+              setState(() {
+                _checkSubscription();
+                _fetchApiLayers();
+              });
+            },
+          ),
+          onLockedAlert: () => StudyLayersDialogs.showLockedDialog(
+            context: context,
+            l10n: _l10n,
+            storage: _storage,
+            onLoginSuccess: () {
+              setState(() {
+                _checkSubscription();
+                _fetchApiLayers();
+              });
+            },
+          ),
+          onMarkCompleted: (completedIndex) {
+            setState(() {
+              _completedModuleIndices.add(completedIndex);
+            });
+            _updateProgressOnServer(completedIndex);
+          },
         ),
         body: SafeArea(
           top: false,
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _buildMainContent(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSidebar() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 12, 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _l10n.tr('modules'),
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF1E293B),
-                  letterSpacing: 0.5,
-                ),
-              ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.close_rounded,
-                    color: Color(0xFF64748B),
-                    size: 18,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Progress Card
-        _buildProgressCard(),
-
-        // Modules List
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            itemCount: _moduleGroups.length,
-            itemBuilder: (context, index) {
-              final group = _moduleGroups[index];
-              final isSelected = _selectedModuleIndex == index;
-              final isLocked = index >= 3 && !_isPaidUser;
-              return _buildModuleTile(group, index, isSelected, isLocked);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProgressCard() {
-    final double progress =
-        _completedModuleIndices.length / _moduleGroups.length;
-    final int percentage = (progress * 100).toInt();
-
-    return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6366F1).withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              // Circular Progress with Rocket
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 70,
-                    height: 70,
-                    child: CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 6,
-                      backgroundColor: const Color(0xFFF1F5F9),
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF6366F1),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.rocket_launch_rounded,
-                      color: Color(0xFF6366F1),
-                      size: 24,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 20),
-              // Progress Text
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _l10n.tr('your_progress'),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _l10n.tr('keep_learning_great'),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        color: const Color(0xFF64748B),
-                        fontWeight: FontWeight.w500,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                '$percentage%',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF6366F1),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: const Color(0xFFF1F5F9),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF6366F1),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildModuleTile(
-    Map<String, dynamic> group,
-    int index,
-    bool isSelected,
-    bool isLocked,
-  ) {
-    final List<Color> modColors = [
-      const Color(0xFF6366F1), // Indigo
-      const Color(0xFFF43F5E), // Rose
-      const Color(0xFF10B981), // Emerald
-      const Color(0xFFF59E0B), // Amber
-      const Color(0xFF3B82F6), // Blue
-      const Color(0xFF8B5CF6), // Violet
-      const Color(0xFF0EA5E9), // Sky
-    ];
-    final Color color = modColors[index % modColors.length];
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: isSelected
-                ? color.withOpacity(0.12)
-                : Colors.black.withOpacity(0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            if (index >= 3) {
-              if (!_isLoggedIn) {
-                _showLoginRequiredDialog();
-                return;
-              }
-              if (!_isPaidUser) {
-                _showLockedDialog();
-                return;
-              }
-            }
-
-            if (index != _selectedModuleIndex &&
-                !_completedModuleIndices.contains(_selectedModuleIndex) &&
-                !_completedModuleIndices.contains(index)) {
-              showDialog(
-                context: context,
-                builder: (context) => Dialog(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  backgroundColor: Colors.white,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFEEF2FF),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.check_circle_outline_rounded,
-                              color: Color(0xFF6366F1),
-                              size: 36,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            'Complete Module?',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF1E293B),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'You are about to switch to another module. Would you like to mark the current module as completed to update your progress?',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 14,
-                              color: const Color(0xFF64748B),
-                              height: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                setState(() {
-                                  _completedModuleIndices.add(
-                                    _selectedModuleIndex,
-                                  );
-                                });
-                                _switchToModule(index, group);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF6366F1),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: Text(
-                                'Yes, Mark as Completed',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                _switchToModule(index, group);
-                              },
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFF64748B),
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                side: const BorderSide(color: Color(0xFFE2E8F0)),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Text(
-                                'No, Just Switch',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFF94A3B8),
-                              minimumSize: const Size(double.infinity, 48),
-                            ),
-                            child: Text(
-                              'Cancel',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-              return;
-            }
-
-            _switchToModule(index, group);
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                // Left Color Bar
-                Container(
-                  width: 4,
-                  decoration: BoxDecoration(
-                    color: isSelected ? color : Colors.transparent,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      bottomLeft: Radius.circular(16),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Number Circle
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    (index + 1).toString().padLeft(2, '0'),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Icon Badge
-                Container(
-                  width: 44,
-                  height: 44,
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    isLocked ? Icons.lock_outline_rounded : group['icon'],
-                    color: color,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Title Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${_l10n.tr('module_prefix')} ${index + 1}',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: color,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        group['title'],
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1E293B),
-                          height: 1.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Arrow
-                Container(
-                  margin: const EdgeInsets.only(right: 12),
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFF1F5F9)),
-                  ),
-                  child: Icon(
-                    Icons.chevron_right_rounded,
-                    color: color,
-                    size: 18,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );
@@ -760,38 +423,13 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     } else if (index == 7 && _mockTests.isEmpty) {
       _fetchMockTests();
     }
-    // Only pop if a drawer or dialog is open
     if (Navigator.canPop(context)) {
       Navigator.pop(context);
     }
   }
 
-  IconData _getModuleIcon(int modNum) {
-    switch (modNum) {
-      case 1:
-        return Icons.info_outline_rounded;
-      case 2:
-        return Icons.menu_book_rounded;
-      case 3:
-        return Icons.track_changes_rounded;
-      case 4:
-        return Icons.article_outlined;
-      case 5:
-        return Icons.history_edu_rounded;
-      case 6:
-        return Icons.fact_check_rounded;
-      case 7:
-        return Icons.videocam_rounded;
-      case 8:
-        return Icons.quiz_outlined;
-      default:
-        return Icons.layers_outlined;
-    }
-  }
-
   Widget _buildMainContent() {
     final group = _moduleGroups[_selectedModuleIndex];
-    final String layerName = group['type'];
 
     return Center(
       child: ConstrainedBox(
@@ -803,13 +441,37 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             children: [
               _buildContentHeader(group['title'], index: _selectedModuleIndex),
               const SizedBox(height: 24),
+              if (_isLoggedIn) ...[
+                // Progress indicator showing percentage from API
+                Row(
+                  children: [
+                    Expanded(
+                      child: LinearProgressIndicator(
+                        value: _progress,
+                        backgroundColor: const Color(0xFFE5E7EB),
+                        color: const Color(0xFF6366F1),
+                        minHeight: 8,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      "${(_progress * 100).toInt()}%",
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+              ],
               Expanded(
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(24),
-                    boxShadow: [],
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
@@ -818,99 +480,6 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 ),
               ),
               _buildCompleteAndNextButton(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCompleteAndNextButton() {
-    final bool isLastModule = _selectedModuleIndex == _moduleGroups.length - 1;
-    final Color color = const Color(0xFF6366F1);
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 24),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.2),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: ElevatedButton(
-          onPressed: () {
-            setState(() {
-              _completedModuleIndices.add(_selectedModuleIndex);
-
-              if (!isLastModule) {
-                final int nextIndex = _selectedModuleIndex + 1;
-
-                // Safety check for locked modules (consistent with drawer logic)
-                if (nextIndex >= 3) {
-                  if (!_isLoggedIn) {
-                    _showLoginRequiredDialog();
-                    return;
-                  }
-                  if (!_isPaidUser) {
-                    _showLockedDialog();
-                    return;
-                  }
-                }
-
-                _selectedModuleIndex = nextIndex;
-                _selectedChapterName = null;
-
-                // Fetch data for the newly selected module
-                if (_selectedModuleIndex == 4) {
-                  _fetchMcqSets('pyq');
-                } else if (_selectedModuleIndex == 5) {
-                  _fetchMcqSets('mcq');
-                } else if (_selectedModuleIndex == 7 && _mockTests.isEmpty) {
-                  _fetchMockTests();
-                }
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(_l10n.tr('all_modules_completed')),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              }
-            });
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: color,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 64),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            elevation: 0,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                isLastModule
-                    ? _l10n.tr('finish_journey')
-                    : _l10n.tr('complete_next_module'),
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Icon(
-                isLastModule
-                    ? Icons.celebration_rounded
-                    : Icons.arrow_forward_rounded,
-                size: 20,
-              ),
             ],
           ),
         ),
@@ -938,7 +507,6 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
       ),
       child: Row(
         children: [
-          // Module Badge Pill
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
@@ -973,7 +541,6 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             ),
           ),
           const SizedBox(width: 20),
-          // Title
           Expanded(
             child: Text(
               title,
@@ -987,7 +554,6 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               softWrap: true,
             ),
           ),
-          // Illustration
           Container(
             width: 44,
             height: 44,
@@ -1020,7 +586,18 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           ? (_selectedModuleIndex >= 3 && _selectedModuleIndex <= 7
                 ? _buildDummyFoldersView()
                 : _buildEmptyContent(message: _l10n.tr('no_test_series')))
-          : _buildMockTestView();
+          : MockTestView(
+              mockTests: _mockTests,
+              selectedChapterName: _selectedChapterName,
+              companyName: widget.company.name,
+              companyId: widget.company.id,
+              l10n: _l10n,
+              onChapterChanged: (name) {
+                setState(() {
+                  _selectedChapterName = name;
+                });
+              },
+            );
     }
 
     if (layerName == 'mcq' || layerName == 'pyq') {
@@ -1030,1020 +607,55 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           ? (_selectedModuleIndex >= 3 && _selectedModuleIndex <= 7
                 ? _buildDummyFoldersView()
                 : _buildEmptyContent(message: _l10n.tr('no_sets_available')))
-          : _buildMcqSetView();
+          : McqSetView(
+              mcqSets: _mcqSets,
+              selectedChapterName: _selectedChapterName,
+              companyName: widget.company.name,
+              companyId: widget.company.id,
+              questionType: layerName,
+              l10n: _l10n,
+              onChapterChanged: (name) {
+                setState(() {
+                  _selectedChapterName = name;
+                });
+              },
+            );
     }
 
-    final filteredItems = _apiLayers
-        .where((item) => item.layer.toLowerCase() == layerName.toLowerCase())
-        .toList();
-
-    if (filteredItems.isEmpty) {
-      return (_selectedModuleIndex >= 3 && _selectedModuleIndex <= 7)
-          ? _buildDummyFoldersView()
-          : _buildEmptyContent();
-    }
-
-    // Always show folders first if no chapter is selected (Skip for first 3 modules)
-    if (_selectedChapterName == null && _selectedModuleIndex >= 3) {
-      return _buildRealChapterFoldersView(filteredItems);
-    }
-
-    final itemsToShow = _selectedChapterName == null
-        ? filteredItems
-        : filteredItems
-              .where(
-                (item) =>
-                    (item.chapterName ?? 'General') == _selectedChapterName,
-              )
-              .toList();
-
-    final Map<String, List<StudyLayerModel>> topicGrouped = {};
-    for (var item in itemsToShow) {
-      final tName = item.topicName ?? 'General Topics';
-      if (!topicGrouped.containsKey(tName)) {
-        topicGrouped[tName] = [];
-      }
-      topicGrouped[tName]!.add(item);
-    }
-    final topicNames = topicGrouped.keys.toList();
-
-    final bool useGrid = layerName.toLowerCase() != 'basic_info';
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (_selectedChapterName != null)
-                InkWell(
-                  onTap: () => setState(() => _selectedChapterName = null),
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 14,
-                          color: Color(0xFF6366F1),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Back to Folders',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF6366F1),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _selectedChapterName ?? _l10n.tr('available_materials'),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF1E293B),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        _l10n
-                            .tr('items_count')
-                            .replaceAll(
-                              '{count}',
-                              itemsToShow.length.toString(),
-                            ),
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF64748B),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.filter_list_rounded,
-                        size: 18,
-                        color: Color(0xFF64748B),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: topicNames.length,
-            itemBuilder: (context, tIndex) {
-              final topicName = topicNames[tIndex];
-              final items = topicGrouped[topicName]!;
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildTopicHeader(topicName, const Color(0xFF6366F1)),
-                  if (useGrid)
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.78,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                          ),
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        return _buildLayerContentCard(
-                          items[index],
-                          isGrid: true,
-                        );
-                      },
-                    )
-                  else
-                    Column(
-                      children: items
-                          .map(
-                            (item) =>
-                                _buildLayerContentCard(item, isGrid: false),
-                          )
-                          .toList(),
-                    ),
-                  const SizedBox(height: 24),
-                ],
-              );
-            },
-          ),
-        ),
-        if (useGrid) _buildFooterBanner(),
-      ],
-    );
-  }
-
-  Widget _buildRealChapterFoldersView(List<StudyLayerModel> items) {
-    final Map<String, List<StudyLayerModel>> grouped = {};
-    for (var item in items) {
-      final name = item.chapterName ?? 'General';
-      if (!grouped.containsKey(name)) {
-        grouped[name] = [];
-      }
-      grouped[name]!.add(item);
-    }
-
-    final chapterNames = grouped.keys.toList();
-    final Map<String, int> itemCountMap = grouped.map(
-      (key, value) => MapEntry(key, value.length),
-    );
-
-    return _buildGenericChapterFoldersView(
-      chapterNames: chapterNames,
-      itemCountMap: itemCountMap,
-      onTap: (name) {
+    return StudyMaterialsView(
+      apiLayers: _apiLayers,
+      layerName: layerName,
+      selectedModuleIndex: _selectedModuleIndex,
+      selectedChapterName: _selectedChapterName,
+      isPaidUser: _isPaidUser,
+      currentLangCode: _currentLangCode,
+      l10n: _l10n,
+      onChapterChanged: (name) {
         setState(() {
           _selectedChapterName = name;
         });
       },
-    );
-  }
-
-  Widget _buildGenericChapterFoldersView({
-    required List<String> chapterNames,
-    required Map<String, int> itemCountMap,
-    required Function(String) onTap,
-  }) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _l10n.tr('available_materials'),
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF1E293B),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 5 : 2,
-              childAspectRatio: MediaQuery.of(context).size.width > 600
-                  ? 1.5
-                  : 2.1,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
-            itemCount: chapterNames.length,
-            itemBuilder: (context, index) {
-              final name = chapterNames[index];
-              final count = itemCountMap[name] ?? 0;
-
-              return InkWell(
-                onTap: () => onTap(name),
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFF1F5F9)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.folder_rounded,
-                          color: Color(0xFF6366F1),
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              name,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF1E293B),
-                                height: 1.2,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '$count ${_l10n.tr('items')}',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                color: const Color(0xFF64748B),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: Color(0xFFE2E8F0),
-                        size: 16,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBackToFoldersButton() {
-    return InkWell(
-      onTap: () => setState(() => _selectedChapterName = null),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 14,
-              color: Color(0xFF6366F1),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Back to Folders',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF6366F1),
-              ),
-            ),
-          ],
-        ),
+      onLockedAlert: () => StudyLayersDialogs.showLockedDialog(
+        context: context,
+        l10n: _l10n,
+        storage: _storage,
+        onLoginSuccess: () {
+          setState(() {
+            _checkSubscription();
+            _fetchApiLayers();
+          });
+        },
       ),
-    );
-  }
-
-  Widget _buildTopicHeader(String topicName, Color color) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 24, 4, 16),
-      child: Row(
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'TOPIC: ${topicName.toUpperCase()}',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: color,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFooterBanner() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFDBEAFE)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.article_rounded,
-              color: Color(0xFF3B82F6),
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'New materials will be added regularly.',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1E40AF),
-                  ),
-                ),
-                Text(
-                  'Keep learning, keep growing! 🚀',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    color: const Color(0xFF60A5FA),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(
-            Icons.auto_awesome_rounded,
-            color: Color(0xFF93C5FD),
-            size: 16,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLayerContentCard(StudyLayerModel item, {required bool isGrid}) {
-    final title = item.getLocalizedTitle(_currentLangCode);
-    final date = item.getFormattedDate();
-    final isLocked = !item.isFree && !_isPaidUser;
-    final url = item.getLocalizedUrl(_currentLangCode);
-
-    if (isGrid) {
-      return _buildGridResourceCard(item, title, url, date, isLocked);
-    }
-
-    // If it has a URL, treat it as a resource so it can be opened
-    if (url != null) {
-      return _buildResourceCard(item, title, url, date, isLocked);
-    }
-
-    if (item.layer.toLowerCase() == 'basic_info' ||
-        item.layer.toLowerCase() == 'syllabus' ||
-        item.layer.toLowerCase() == 'preparation_plan') {
-      final content = item.getLocalizedContent(_currentLangCode);
-      return _buildBasicInfoCard(title, content, date);
-    } else {
-      return _buildResourceCard(item, title, url, date, isLocked);
-    }
-  }
-
-  Widget _buildGridResourceCard(
-    StudyLayerModel item,
-    String title,
-    String? url,
-    String date,
-    bool isLocked,
-  ) {
-    final bool isPdf = url?.toLowerCase().endsWith('.pdf') ?? false;
-    final Color color = const Color(0xFF6366F1);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            if (isLocked) {
-              _showLockedDialog();
-            } else if (url != null) {
-              if (isPdf) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PdfViewerPage(pdfUrl: url, title: title),
-                  ),
-                );
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        VideoPlayerPage(videoUrl: url, title: title),
-                  ),
-                );
-              }
-            }
-          },
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Icon
-                _buildResourceIcon(isPdf),
-                const Spacer(),
-                // Title
-                Text(
-                  title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1E293B),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                // Date
-                Text(
-                  date,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10,
-                    color: const Color(0xFF94A3B8),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // View Button
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  alignment: Alignment.center,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        isPdf ? 'View PDF' : 'Watch Video',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: color,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 8,
-                        color: color,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildResourceIcon(bool isPdf) {
-    return Container(
-      width: 50,
-      height: 65,
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFE4E6), // Soft pink
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Icon(
-            isPdf
-                ? Icons.description_rounded
-                : Icons.play_circle_filled_rounded,
-            color: const Color(0xFFFB7185),
-            size: 32,
-          ),
-          Positioned(
-            bottom: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFB7185),
-                borderRadius: BorderRadius.circular(3),
-              ),
-              child: Text(
-                isPdf ? 'PDF' : 'VIDEO',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 7,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getFileSize(int id) {
-    final sizes = ['1.2 MB', '2.4 MB', '3.1 MB', '1.8 MB', '2.7 MB', '0.9 MB'];
-    return sizes[id % sizes.length];
-  }
-
-  Widget _buildBasicInfoCard(String title, String? content, String date) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: const Color(0xFF1E293B),
-                  ),
-                ),
-              ),
-              Text(
-                date,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: const Color(0xFF94A3B8),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          if (content != null && content.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Text(
-              content,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: const Color(0xFF64748B),
-                height: 1.6,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildResourceCard(
-    StudyLayerModel item,
-    String title,
-    String? url,
-    String date,
-    bool isLocked,
-  ) {
-    if (url == null && !isLocked) return const SizedBox.shrink();
-
-    final bool isPdf = url?.toLowerCase().endsWith('.pdf') ?? false;
-    final bool isVideo = url?.toLowerCase().endsWith('.mp4') ?? false;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: const Color(0xFF1E293B),
-                  ),
-                ),
-              ),
-              Text(
-                date,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: const Color(0xFF94A3B8),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          if (url != null && !isLocked)
-            _buildActionButton(title, url, isPdf, isVideo)
-          else
-            _buildNotAvailablePrompt(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLockPrompt() {
-    return InkWell(
-      onTap: () => _showLockedDialog(),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.orange.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.withOpacity(0.1)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.lock_rounded, size: 18, color: Colors.orange),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                _l10n.tr('content_locked_upgrade'),
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.orange[800],
-                ),
-              ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 12,
-              color: Colors.orange,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNotAvailablePrompt() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.info_outline_rounded,
-            size: 18,
-            color: Color(0xFF64748B),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            'Not available in this language',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: const Color(0xFF64748B),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton(
-    String title,
-    String url,
-    bool isPdf,
-    bool isVideo,
-  ) {
-    return ElevatedButton(
-      onPressed: () {
-        if (isPdf) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PdfViewerPage(pdfUrl: url, title: title),
-            ),
-          );
-        } else if (isVideo) {
-          // debugPrint('🎯 Watch Video Button Tapped!');
-          // debugPrint('🎬 Full Video URL: $url');
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  VideoPlayerPage(videoUrl: url, title: title),
-            ),
-          );
-        }
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isPdf
-            ? const Color(0xFFEF4444)
-            : const Color(0xFF6366F1),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        minimumSize: const Size(double.infinity, 50),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            isPdf
-                ? Icons.picture_as_pdf_rounded
-                : Icons.play_circle_fill_rounded,
-            size: 20,
-          ),
-          const SizedBox(width: 10),
-          Text(
-            isPdf ? 'View PDF' : 'Watch Video',
-            style: GoogleFonts.inter(fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showWIPAlert() {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SvgPicture.asset('assets/Icons/coming_soon.svg', height: 120),
-                const SizedBox(height: 24),
-                Text(
-                  'Coming Soon!',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'We are working hard to bring this material to you. Please check back later!',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    color: const Color(0xFF64748B),
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6366F1),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      'Got it!',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      emptyContent: _buildEmptyContent(),
+      dummyFoldersView: _buildDummyFoldersView(),
     );
   }
 
   Widget _buildDummyFoldersView() {
-    final List<String> subjects = [
-      'Indian History',
-      'Indian Economy',
-      'Indian Polity & Governance',
-      'Indian & World Geography',
-      'Indian Constitution',
-      'General Science',
-      'Current Affairs',
-      'General Arithmetic',
-      'Quantitative Aptitude',
-      'General Intelligence & Reasoning',
-      'Electrical Engineering',
-      'Mechanical Engineering',
-      'Civil Engineering',
-      'Electronics & Communication Engineering',
-      'Computer Science Engineering',
-    ];
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _l10n.tr('available_materials'),
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF1E293B),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 5 : 2,
-              childAspectRatio: MediaQuery.of(context).size.width > 600
-                  ? 1.5
-                  : 2.2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
-            itemCount: subjects.length,
-            itemBuilder: (context, index) {
-              return InkWell(
-                onTap: () => _showWIPAlert(),
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFF1F5F9)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.folder_rounded,
-                          color: Color(0xFFCBD5E1),
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          subjects[index],
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF475569),
-                            height: 1.2,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: Color(0xFFE2E8F0),
-                        size: 16,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
+    return ChapterFoldersView(
+      isDummy: true,
+      l10n: _l10n,
+      onDummyTap: () => StudyLayersDialogs.showWIPAlert(context),
     );
   }
 
@@ -2077,784 +689,115 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     );
   }
 
-  void _showLockedDialog() {
-    final userData = _storage.getUserData();
+  Widget _buildCompleteAndNextButton() {
+    final bool isLastModule = _selectedModuleIndex == _moduleGroups.length - 1;
+    final Color color = const Color(0xFF6366F1);
 
-    if (userData == null) {
-      _showLoginRequiredDialog();
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            const Icon(Icons.lock_rounded, color: Colors.orange),
-            const SizedBox(width: 10),
-            Text(
-              _l10n.tr('premium_content'),
-              style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.2),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
-        content: Text(
-          _l10n.tr('premium_module_desc'),
-          style: GoogleFonts.inter(),
-        ),
-        actions: [
-          Center(
-            child: TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                _l10n.tr('close'),
-                style: GoogleFonts.inter(
-                  color: Colors.grey[600],
+        child: ElevatedButton(
+          onPressed: () {
+            final completedIdx = _selectedModuleIndex;
+            setState(() {
+              _completedModuleIndices.add(_selectedModuleIndex);
+
+              if (!isLastModule) {
+                final int nextIndex = _selectedModuleIndex + 1;
+
+                if (nextIndex >= 3) {
+                  if (!_isLoggedIn) {
+                    StudyLayersDialogs.showLoginRequiredDialog(
+                      context: context,
+                      l10n: _l10n,
+                      onLoginSuccess: () {
+                        setState(() {
+                          _checkSubscription();
+                          _fetchApiLayers();
+                        });
+                      },
+                    );
+                    return;
+                  }
+                  if (!_isPaidUser) {
+                    StudyLayersDialogs.showLockedDialog(
+                      context: context,
+                      l10n: _l10n,
+                      storage: _storage,
+                      onLoginSuccess: () {
+                        setState(() {
+                          _checkSubscription();
+                          _fetchApiLayers();
+                        });
+                      },
+                    );
+                    return;
+                  }
+                }
+
+                _selectedModuleIndex = nextIndex;
+                _selectedChapterName = null;
+
+                if (_selectedModuleIndex == 4) {
+                  _fetchMcqSets('pyq');
+                } else if (_selectedModuleIndex == 5) {
+                  _fetchMcqSets('mcq');
+                } else if (_selectedModuleIndex == 7 && _mockTests.isEmpty) {
+                  _fetchMockTests();
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(_l10n.tr('all_modules_completed')),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            });
+            _updateProgressOnServer(completedIdx);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: color,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(double.infinity, 64),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            elevation: 0,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                isLastModule
+                    ? _l10n.tr('finish_journey')
+                    : _l10n.tr('complete_next_module'),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showLoginRequiredDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        contentPadding: EdgeInsets.zero,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 30),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.05),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
-              ),
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.account_circle_outlined,
-                    size: 40,
-                    color: Colors.blue,
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Text(
-                    _l10n.tr('login_required'),
-                    style: GoogleFonts.inter(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    _l10n.tr('login_module_desc'),
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: const Color(0xFF64748B),
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(
-                            _l10n.tr('maybe_later'),
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF94A3B8),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            Navigator.pop(context);
-                            final success = await Navigator.push<bool>(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const LoginPage(returnToPreviousPage: true),
-                              ),
-                            );
-
-                            if (success == true) {
-                              setState(() {
-                                _checkSubscription();
-                                // Re-fetch or refresh necessary data
-                                _fetchApiLayers();
-                              });
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            _l10n.tr('login_now'),
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<bool> _showExitConfirmation() async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => Dialog(
-            backgroundColor: Colors.transparent,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(32),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 30,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFEE2E2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.logout_rounded,
-                        color: Color(0xFFEF4444),
-                        size: 32,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      _l10n.tr('exit_learning_journey'),
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      _l10n.tr('exit_confirm_desc'),
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14,
-                        color: const Color(0xFF64748B),
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            child: Text(
-                              _l10n.tr('keep_learning_btn'),
-                              style: GoogleFonts.plusJakartaSans(
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF94A3B8),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1E293B),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: Text(
-                              _l10n.tr('yes_exit'),
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ) ??
-        false;
-  }
-
-  Widget _buildMockTestView() {
-    final Map<String, List<MockTestSetModel>> grouped = {};
-    for (var test in _mockTests) {
-      final name = test.chapterName ?? 'General';
-      if (!grouped.containsKey(name)) {
-        grouped[name] = [];
-      }
-      grouped[name]!.add(test);
-    }
-
-    final chapterNames = grouped.keys.toList();
-    final Map<String, int> itemCountMap = grouped.map(
-      (key, value) => MapEntry(key, value.length),
-    );
-
-    if (_selectedChapterName == null && chapterNames.isNotEmpty) {
-      return _buildGenericChapterFoldersView(
-        chapterNames: chapterNames,
-        itemCountMap: itemCountMap,
-        onTap: (name) => setState(() => _selectedChapterName = name),
-      );
-    }
-
-    final chapterItems = _selectedChapterName == null
-        ? _mockTests
-        : grouped[_selectedChapterName] ?? [];
-
-    // Group items by topic within chapter
-    final Map<String, List<MockTestSetModel>> topicGrouped = {};
-    for (var item in chapterItems) {
-      final tName = item.topicName ?? 'General Topics';
-      if (!topicGrouped.containsKey(tName)) {
-        topicGrouped[tName] = [];
-      }
-      topicGrouped[tName]!.add(item);
-    }
-
-    final topicNames = topicGrouped.keys.toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (_selectedChapterName != null) _buildBackToFoldersButton(),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: topicNames.length,
-            itemBuilder: (context, tIndex) {
-              final topicName = topicNames[tIndex];
-              final sets = topicGrouped[topicName]!;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildTopicHeader(topicName, Colors.orange),
-                  ...sets.map((test) => _buildMockTestCard(test)).toList(),
-                  const SizedBox(height: 16),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMockTestCard(MockTestSetModel test) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => MockTestPage(
-                setName: test.setName,
-                companyName: widget.company.name,
-                companyId: widget.company.id,
-                chapterId: test.chapterId,
-                topicId: test.topicId,
-                subtopicId: test.subtopicId,
-              ),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFF1F5F9)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Icon(
-                        Icons.description_outlined,
-                        size: 32,
-                        color: Colors.grey.withOpacity(0.3),
-                      ),
-                    ),
-                    Positioned(
-                      top: 6,
-                      left: 6,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 5,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF6366F1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'MOCK TEST',
-                          style: GoogleFonts.inter(
-                            fontSize: 6,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  test.setName ?? 'Untitled',
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1E293B),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: Color(0xFF94A3B8),
+              Icon(
+                isLastModule
+                    ? Icons.celebration_rounded
+                    : Icons.arrow_forward_rounded,
+                size: 20,
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildMcqSetView() {
-    final Map<String, List<McqSetModel>> grouped = {};
-    for (var set in _mcqSets) {
-      final name = set.chapterName ?? 'General';
-      if (!grouped.containsKey(name)) {
-        grouped[name] = [];
-      }
-      grouped[name]!.add(set);
-    }
-
-    final chapterNames = grouped.keys.toList();
-    final Map<String, int> itemCountMap = grouped.map(
-      (key, value) => MapEntry(key, value.length),
-    );
-
-    if (_selectedChapterName == null && chapterNames.isNotEmpty) {
-      return _buildGenericChapterFoldersView(
-        chapterNames: chapterNames,
-        itemCountMap: itemCountMap,
-        onTap: (name) => setState(() => _selectedChapterName = name),
-      );
-    }
-
-    final chapterItems = _selectedChapterName == null
-        ? _mcqSets
-        : grouped[_selectedChapterName] ?? [];
-
-    // Group items by topic within chapter
-    final Map<String, List<McqSetModel>> topicGrouped = {};
-    for (var item in chapterItems) {
-      final tName = item.topicName ?? 'General Topics';
-      if (!topicGrouped.containsKey(tName)) {
-        topicGrouped[tName] = [];
-      }
-      topicGrouped[tName]!.add(item);
-    }
-
-    final topicNames = topicGrouped.keys.toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (_selectedChapterName != null) _buildBackToFoldersButton(),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: topicNames.length,
-            itemBuilder: (context, tIndex) {
-              final topicName = topicNames[tIndex];
-              final sets = topicGrouped[topicName]!;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildTopicHeader(topicName, const Color(0xFFEF4444)),
-                  ...sets.map((set) => _buildMcqSetCard(set)).toList(),
-                  const SizedBox(height: 16),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMcqSetCard(McqSetModel set) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: InkWell(
-          onTap: () {
-            final group = _moduleGroups[_selectedModuleIndex];
-            final String layerName = group['type']; // 'mcq' or 'pyq'
-
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MockTestPage(
-                  setName: set.setName,
-                  companyName: widget.company.name,
-                  companyId: widget.company.id,
-                  chapterId: set.chapterId,
-                  topicId: set.topicId,
-                  subtopicId: set.subtopicId,
-                  questionType: layerName,
-                ),
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFF1F5F9)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Stack(
-                    children: [
-                      Center(
-                        child: Icon(
-                          Icons.track_changes_rounded,
-                          size: 32,
-                          color: Colors.red.withOpacity(0.3),
-                        ),
-                      ),
-                      Positioned(
-                        top: 6,
-                        left: 6,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 5,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.orange,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'QUIZ',
-                            style: GoogleFonts.inter(
-                              fontSize: 6,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 6,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '${set.questionCount ?? 0} Qs',
-                              style: GoogleFonts.inter(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    set.setName ?? 'Untitled',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1E293B),
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 14,
-                  color: Color(0xFF94A3B8),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showInstructionGuide() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => _InstructionGuideDialog(
-        onGetStarted: () {
-          Navigator.pop(context);
-          _storage.setStudyGuideShown(true);
-        },
-      ),
-    );
-  }
-}
-
-class _InstructionGuideDialog extends StatelessWidget {
-  final VoidCallback onGetStarted;
-
-  const _InstructionGuideDialog({required this.onGetStarted});
-
-  @override
-  Widget build(BuildContext context) {
-    final LocalizationService _l10n = LocalizationService();
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 450),
-        child: Container(
-          padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 30,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: const Color(0xFF3B82F6).withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.menu_open_rounded,
-                  color: Color(0xFF3B82F6),
-                  size: 40,
-                ),
-              ),
-            ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
-            const SizedBox(height: 24),
-            Text(
-              _l10n.tr('instruction_guide_title'),
-              style: GoogleFonts.inter(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _l10n.tr('instruction_guide_desc'),
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: const Color(0xFF64748B),
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 32),
-            _buildStep(Icons.touch_app_rounded, _l10n.tr('instruction_step_1')),
-            const SizedBox(height: 16),
-            _buildStep(
-              Icons.auto_awesome_rounded,
-              _l10n.tr('instruction_step_2'),
-            ),
-            const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: onGetStarted,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3B82F6),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  _l10n.tr('got_it_lets_go'),
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      ),
-    ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9));
-  }
-
-  Widget _buildStep(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, color: const Color(0xFF3B82F6), size: 20),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF334155),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

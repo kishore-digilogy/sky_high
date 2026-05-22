@@ -5,11 +5,11 @@ class LocalizationService {
   static final LocalizationService _instance = LocalizationService._internal();
   factory LocalizationService() => _instance;
   LocalizationService._internal();
-
   final StorageService _storage = GetIt.I<StorageService>();
 
   static const Map<String, Map<String, String>> _translations = {
     'English': {
+      'free_study_materials': 'Free Study Materials',
       'search_hint': 'Search courses, tests, subjects...',
       'categories': 'Categories',
       'continue_studying': 'Continue Studying',
@@ -282,8 +282,15 @@ class LocalizationService {
       'cat_business': 'Business',
       'cat_marketing': 'Marketing',
       'cat_design': 'Design',
+      'no_internet': 'No Connection',
+      'connect_internet': 'Connect Internet',
+      'connect_internet_desc':
+          'Please check your internet connection and try again.',
+      'try_again': 'Try Again',
+      'checking_connection': 'Checking...',
     },
     'Tamil': {
+      'free_study_materials': 'இலவச பாடப் பொருட்கள்',
       'search_hint': 'பாடங்கள், தேர்வுகள், பாடங்களைத் தேடுங்கள்...',
       'categories': 'வகைகள்',
       'continue_studying': 'தொடர்ந்து படிக்கவும்',
@@ -572,8 +579,15 @@ class LocalizationService {
       'cat_business': 'வணிகம்',
       'cat_marketing': 'சந்தைப்படுத்தல்',
       'cat_design': 'வடிவமைப்பு',
+      'no_internet': 'இணைய இணைப்பு இல்லை',
+      'connect_internet': 'இணையத்தை இணைக்கவும்',
+      'connect_internet_desc':
+          'தயவுசெய்து உங்கள் இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.',
+      'try_again': 'மீண்டும் முயற்சி செய்',
+      'checking_connection': 'சரிபார்க்கிறது...',
     },
     'Telugu': {
+      'free_study_materials': 'ఉచిత అధ్యయన సామాగ్రి',
       'search_hint': 'కోర్సులు, పరీక్షలు, సబ్జెక్టుల కోసం వెతకండి...',
       'categories': 'వర్గాలు',
       'continue_studying': 'చదువు కొనసాగించండి',
@@ -786,8 +800,15 @@ class LocalizationService {
       'got_it_lets_go': 'అర్థమైంది, వెళ్దాం!',
       'keep_learning_btn': 'నేర్చుకుంటూ ఉండండి',
       'yes_exit': 'అవును, నిష్క్రమించు',
+      'no_internet': 'కనెక్షన్ లేదు',
+      'connect_internet': 'ఇంటర్నెట్ కనెక్ట్ చేయండి',
+      'connect_internet_desc':
+          'దయచేసి మీ ఇంటర్నెట్ కనెక్షన్‌ని తనిఖీ చేసి, మళ్లీ ప్రయత్నించండి.',
+      'try_again': 'మళ్ళీ ప్రయత్నించండి',
+      'checking_connection': 'తనిఖీ చేస్తోంది...',
     },
     'Hindi': {
+      'free_study_materials': 'मुफ्त अध्ययन सामग्री',
       'search_hint': 'कोर्स, टेस्ट, विषय खोजें...',
       'categories': 'श्रेणियाँ',
       'continue_studying': 'पढ़ाई जारी रखें',
@@ -995,8 +1016,15 @@ class LocalizationService {
       'got_it_lets_go': 'समझ गया, चलें!',
       'keep_learning_btn': 'सीखते रहें',
       'yes_exit': 'हाँ, बाहर निकलें',
+      'no_internet': 'कोई कनेक्शन नहीं',
+      'connect_internet': 'इंटरनेट कनेक्ट करें',
+      'connect_internet_desc':
+          'कृपया अपना इंटरनेट कनेक्शन जांचें और पुनः प्रयास करें।',
+      'try_again': 'पुनः प्रयास करें',
+      'checking_connection': 'जांच की जा रही है...',
     },
     'Malayalam': {
+      'free_study_materials': 'സൗജന്യ പഠന സാമഗ്രികൾ',
       'search_hint': 'കോഴ്സുകൾ, പരീക്ഷകൾ തിരയുക...',
       'categories': 'വിഭാഗങ്ങൾ',
       'continue_studying': 'പഠനം തുടരുക',
@@ -1215,8 +1243,15 @@ class LocalizationService {
       'got_it_lets_go': 'മനസ്സിലായി, പോകാം!',
       'keep_learning_btn': 'പഠനം തുടരുക',
       'yes_exit': 'അതെ, പുറത്തുകടക്കുക',
+      'no_internet': 'കണക്ഷൻ ഇല്ല',
+      'connect_internet': 'ഇന്റർനെറ്റ് ബന്ധിപ്പിക്കുക',
+      'connect_internet_desc':
+          'ദയവായി നിങ്ങളുടെ ഇന്റർനെറ്റ് കണക്ഷൻ പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക.',
+      'try_again': 'വീണ്ടും ശ്രമിക്കുക',
+      'checking_connection': 'പരിശോധിക്കുന്നു...',
     },
     'Kannada': {
+      'free_study_materials': 'ಉಚಿತ ಅಧ್ಯಯನ ಸಾಮಗ್ರಿಗಳು',
       'search_hint': 'ಕೋರ್ಸ್‌ಗಳು, ಪರೀಕ್ಷೆಗಳನ್ನು ಹುಡುಕಿ...',
       'categories': 'ವರ್ಗಗಳು',
       'continue_studying': 'ಓದುವುದನ್ನು ಮುಂದುವರಿಸಿ',
@@ -1428,6 +1463,12 @@ class LocalizationService {
       'got_it_lets_go': 'ಸರಿ, ಹೋಗೋಣ!',
       'keep_learning_btn': 'ಕಲಿಯುತ್ತಿರಿ',
       'yes_exit': 'ಹೌದು, ನಿರ್ಗಮಿಸಿ',
+      'no_internet': 'ಸಂಪರ್ಕವಿಲ್ಲ',
+      'connect_internet': 'ಇಂಟರ್ನೆಟ್ ಸಂಪರ್ಕಿಸಿ',
+      'connect_internet_desc':
+          'ದಯವಿಟ್ಟು ನಿಮ್ಮ ಇಂಟರ್ನೆಟ್ ಸಂಪರ್ಕವನ್ನು ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+      'try_again': 'ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ',
+      'checking_connection': 'ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ...',
     },
   };
 

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sky_high/core/services/storage_service.dart';
+import 'package:sky_high/core/services/api_service.dart';
 import 'package:sky_high/data/models/exam_category_model.dart';
 import 'package:sky_high/data/models/testimonial_model.dart';
 import 'package:sky_high/data/models/free_exam_model.dart';
@@ -12,31 +13,10 @@ class ExamService {
   static final ExamService _instance = ExamService._internal();
   factory ExamService() => _instance;
 
-  final Dio _dio = Dio(
-    BaseOptions(
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
-    ),
-  );
-  final String baseUrl = 'https://skyhighapi.digilogy.dev/api';
+  final Dio _dio = ApiService().dio;
+  final String baseUrl = ApiService.baseUrl;
 
-  ExamService._internal() {
-    _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) {
-          try {
-            final token = GetIt.I<StorageService>().getToken();
-            if (token != null && token.isNotEmpty) {
-              options.headers['Authorization'] = 'Bearer $token';
-            }
-          } catch (e) {
-            print("ExamService: Error getting token for interceptor: $e");
-          }
-          return handler.next(options);
-        },
-      ),
-    );
-  }
+  ExamService._internal();
 
   Future<List<ExamCategoryModel>> getCategories() async {
     try {
@@ -178,10 +158,10 @@ class ExamService {
         queryParameters: {
           'language': language,
           'limit': limit,
-          'set_name': setName,
+          'setName': setName,
         },
       );
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 304) {
         final List<dynamic> data = response.data;
         return data
             .map(
@@ -358,6 +338,57 @@ class ExamService {
     } catch (e) {
       print("ExamService: Error posting testimonial: $e");
       throw Exception('Failed to submit testimonial: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> getUserProgress({
+    required int companyId,
+    int? subJobId,
+  }) async {
+    try {
+      final queryParams = {
+        'company_id': companyId,
+        if (subJobId != null) 'sub_job_id': subJobId,
+      };
+      final response = await _dio.get(
+        '$baseUrl/user-progress',
+        queryParameters: queryParams,
+      );
+      print("resposne:${response.data}");
+      if (response.statusCode == 200 || response.statusCode == 304) {
+        return response.data as Map<String, dynamic>;
+      }
+      return {};
+    } catch (e) {
+      print('Error getting user progress: $e');
+      return {};
+    }
+  }
+
+  Future<Map<String, dynamic>> updateUserProgress({
+    required String moduleId,
+    required int isCompleted,
+    required int companyId,
+    int? subJobId,
+  }) async {
+    try {
+      final payload = {
+        "moduleId": moduleId,
+        "isCompleted": isCompleted,
+        "companyId": companyId,
+        if (subJobId != null) "subJobId": subJobId,
+      };
+      final response = await _dio.post(
+        '$baseUrl/user-progress/update',
+        data: payload,
+      );
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      }
+      return {};
+    } catch (e) {
+      print('Error updating user progress: $e');
+      return {};
     }
   }
 }

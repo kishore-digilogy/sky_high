@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dio/dio.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:sky_high/core/services/api_service.dart';
 import 'package:sky_high/data/models/exam_category_model.dart';
 import 'package:sky_high/data/models/job_model.dart';
 import 'package:sky_high/pages/courses/study_layers_page.dart';
@@ -32,7 +33,7 @@ class CompanyDetailsPage extends StatefulWidget {
 }
 
 class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
-  final Dio _dio = Dio();
+  final Dio _dio = ApiService().dio;
   List<JobModel> _jobs = [];
   List<JobModel> _filteredJobs = [];
   bool _isLoading = true;
@@ -70,7 +71,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
   Future<void> _fetchJobs() async {
     try {
       final response = await _dio.get(
-        'https://skyhighapi.digilogy.dev/api/admin/posted-jobs',
+        '${ApiService.baseUrl}/admin/posted-jobs',
         queryParameters: {'company_id': widget.company.id},
       );
       if (response.statusCode == 200) {
@@ -78,7 +79,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
         final allJobs = data.map((json) => JobModel.fromJson(json)).toList();
 
         final subRes = await _dio.get(
-          'https://skyhighapi.digilogy.dev/api/admin/sub-posted-jobs',
+          '${ApiService.baseUrl}/admin/sub-posted-jobs',
           queryParameters: {'company_id': widget.company.id},
         );
         if (subRes.statusCode == 200) {
@@ -1235,7 +1236,7 @@ class _SubJobEmptyCard extends StatefulWidget {
 }
 
 class _SubJobEmptyCardState extends State<_SubJobEmptyCard> {
-  final Dio _dio = Dio();
+  final Dio _dio = ApiService().dio;
   bool _loading = true;
   String _syllabusContent = '';
 
@@ -1248,7 +1249,7 @@ class _SubJobEmptyCardState extends State<_SubJobEmptyCard> {
   Future<void> _fetchSyllabus() async {
     try {
       final response = await _dio.get(
-        'https://skyhighapi.digilogy.dev/api/admin/study-layers',
+        '/admin/study-layers',
         queryParameters: {
           'company_id': widget.company.id,
           'sub_job_id': widget.jobId,
