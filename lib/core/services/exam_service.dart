@@ -8,6 +8,7 @@ import 'package:sky_high/data/models/free_exam_model.dart';
 import 'package:sky_high/data/models/study_material_model.dart';
 import 'package:sky_high/data/models/mock_question_model.dart';
 import 'package:sky_high/data/models/mcq_set_model.dart';
+import 'package:sky_high/data/models/mock_test_result_model.dart';
 
 class ExamService {
   static final ExamService _instance = ExamService._internal();
@@ -389,6 +390,25 @@ class ExamService {
     } catch (e) {
       print('Error updating user progress: $e');
       return {};
+    }
+  }
+
+  Future<List<MockTestResultModel>> getMockTestResults(int userId) async {
+    try {
+      final response = await _dio.get('$baseUrl/mock-tests/results/$userId');
+      if (response.statusCode == 200 || response.statusCode == 304) {
+        final List<dynamic> data = response.data;
+        return data
+            .map(
+              (json) =>
+                  MockTestResultModel.fromJson(json as Map<String, dynamic>),
+            )
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error getting mock test results: $e');
+      return [];
     }
   }
 }

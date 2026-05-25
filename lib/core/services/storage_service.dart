@@ -8,6 +8,7 @@ class StorageService {
   static const String _recentStudyKey = 'recent_study';
   static const String _studyGuideShownKey = 'study_guide_shown';
   static const String _languageKey = 'selected_language';
+  static const String _savedEmailsKey = 'saved_emails';
 
   final SharedPreferences _prefs;
 
@@ -105,6 +106,28 @@ class StorageService {
 
   Future<void> setSelectedLanguage(String language) async {
     await _prefs.setString(_languageKey, language);
+  }
+
+  List<String> getSavedEmails() {
+    final list = _prefs.getStringList(_savedEmailsKey);
+    return list != null ? List<String>.from(list) : [];
+  }
+
+  Future<void> saveEmail(String email) async {
+    final cleanEmail = email.trim().toLowerCase();
+    if (cleanEmail.isEmpty) return;
+
+    final List<String> emails = getSavedEmails();
+    // Remove if already exists so we can move it to the top/first position
+    emails.remove(cleanEmail);
+    emails.insert(0, cleanEmail);
+
+    // Keep only the top 5 most recent
+    if (emails.length > 5) {
+      emails.removeRange(5, emails.length);
+    }
+
+    await _prefs.setStringList(_savedEmailsKey, emails);
   }
 
   Future<void> clearUserRelatedData() async {

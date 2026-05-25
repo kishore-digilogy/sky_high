@@ -1,6 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sky_high/core/services/storage_service.dart';
+import 'package:sky_high/main.dart';
+import 'package:sky_high/pages/auth/login_page.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -96,7 +99,7 @@ params:${response.requestOptions.queryParameters}
         /// ==============================
         /// ERROR
         /// ==============================
-        onError: (DioException e, handler) {
+        onError: (DioException e, handler) async {
           print('''
 ╔══════════════════════════════════════════╗
 ║               API ERROR                 ║
@@ -128,6 +131,37 @@ ${e.message}
 
 ════════════════════════════════════════════
 ''');
+
+          // Check if response contains the session expired message
+          final responseData = e.response?.data;
+          bool isSessionExpired = false;
+          
+          if (responseData != null) {
+            final responseString = responseData.toString().toLowerCase();
+            if (responseString.contains('session expired or logged in from another device')) {
+              isSessionExpired = true;
+            }
+          }
+          
+          if (isSessionExpired) {
+            try {
+              // 1. Clear local storage token and user related data
+              await GetIt.I<StorageService>().clearUserRelatedData();
+              
+              // 2. Redirect globally using navigatorKey to LoginPage with the expired message
+              MyApp.navigatorKey.currentState?.pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (context) => const LoginPage(
+                    returnToPreviousPage: false,
+                    errorMessage: 'Session expired or logged in from another device',
+                  ),
+                ),
+                (route) => false,
+              );
+            } catch (err) {
+              print('ApiService: Error handling session expiration: $err');
+            }
+          }
 
           return handler.next(e);
         },

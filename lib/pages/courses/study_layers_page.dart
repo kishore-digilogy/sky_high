@@ -12,6 +12,8 @@ import 'package:sky_high/data/models/mock_test_set_model.dart';
 import 'package:sky_high/data/models/mcq_set_model.dart';
 import 'package:sky_high/core/services/localization_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:sky_high/pages/study_materials/pdf_viewer_page.dart';
 
 // Import our newly created modular sub-widgets
 import 'widgets/study_layers_dialogs.dart';
@@ -50,6 +52,8 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
   bool _isPaidUser = false;
   bool _isLoggedIn = false;
   double _progress = 0.0; // Progress fraction (0.0 - 1.0)
+  String? _currentCompletedModule;
+  String? _nextModule;
 
   final String _currentLangCode = 'en';
 
@@ -150,6 +154,17 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     'mock_test',
   ];
 
+  int _getModuleIndex(String moduleId) {
+    if (moduleId.startsWith('mod')) {
+      final numStr = moduleId.substring(3);
+      final parsed = int.tryParse(numStr);
+      if (parsed != null && parsed >= 1 && parsed <= _moduleKeys.length) {
+        return parsed - 1;
+      }
+    }
+    return _moduleKeys.indexOf(moduleId);
+  }
+
   /// Load server-side progress and populate _completedModuleIndices
   Future<void> _fetchUserProgress() async {
     // Always fetch progress regardless of login status
@@ -161,15 +176,19 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
 
       final completedList = data['completedList'];
       final progressValue = data['progress'];
-      if (progressValue is num) {
+      if (mounted) {
         setState(() {
-          _progress = progressValue / 100.0;
+          if (progressValue is num) {
+            _progress = progressValue / 100.0;
+          }
+          _currentCompletedModule = data['currentCompletedModule']?.toString();
+          _nextModule = data['nextModule']?.toString();
         });
       }
       if (completedList is List && mounted) {
         final completed = <int>{};
         for (final moduleId in completedList) {
-          final idx = _moduleKeys.indexOf(moduleId.toString());
+          final idx = _getModuleIndex(moduleId.toString());
           if (idx != -1) completed.add(idx);
         }
         setState(() {
@@ -177,6 +196,19 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             ..clear()
             ..addAll(completed);
         });
+      }
+
+      // Open module directly based on response field currentCompletedModule
+      final currentCompletedModule = data['currentCompletedModule'];
+      if (currentCompletedModule != null && mounted) {
+        final targetIndex = _getModuleIndex(currentCompletedModule.toString());
+        if (targetIndex != -1 && targetIndex < _moduleGroups.length) {
+          _switchToModule(
+            targetIndex,
+            _moduleGroups[targetIndex],
+            closeDrawer: false,
+          );
+        }
       }
     } catch (e) {
       // Non-critical – progress will stay local
@@ -193,6 +225,8 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
         companyId: widget.company.id,
         subJobId: widget.jobId,
       );
+      // Re-fetch user progress to keep the percentage and completed modules synced exactly
+      await _fetchUserProgress();
     } catch (e) {
       // Silently ignore – the local state is already updated
     }
@@ -358,6 +392,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           ],
         ),
         drawer: StudySidebar(
+          progress: _progress,
           moduleGroups: _moduleGroups,
           selectedModuleIndex: _selectedModuleIndex,
           completedModuleIndices: _completedModuleIndices,
@@ -365,7 +400,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           isLoggedIn: _isLoggedIn,
           l10n: _l10n,
           onModuleSelected: (index, group) {
-            _switchToModule(index, group);
+            _switchToModule(index, group, closeDrawer: true);
           },
           onLoginRequired: () => StudyLayersDialogs.showLoginRequiredDialog(
             context: context,
@@ -405,7 +440,11 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     );
   }
 
-  void _switchToModule(int index, Map<String, dynamic> group) {
+  void _switchToModule(
+    int index,
+    Map<String, dynamic> group, {
+    bool closeDrawer = false,
+  }) {
     setState(() {
       _selectedModuleIndex = index;
       _selectedChapterName = null;
@@ -423,7 +462,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     } else if (index == 7 && _mockTests.isEmpty) {
       _fetchMockTests();
     }
-    if (Navigator.canPop(context)) {
+    if (closeDrawer && Navigator.canPop(context)) {
       Navigator.pop(context);
     }
   }
@@ -689,9 +728,357 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     );
   }
 
+  Future<void> _generateCertificate() async {
+    // Show a beautiful, non-dismissible loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return PopScope(
+          canPop: false,
+          child: Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            backgroundColor: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Generating Certificate...',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF111844),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'We are creating your official course certificate. Please wait a moment...',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    try {
+      final response = await _dio.post(
+        '/certificates/generate',
+        data: {
+          'categoryId': widget.company.id,
+          'job_id': null,
+          'sub_job_id': widget.jobId?.toString(),
+        },
+      );
+
+      // Dismiss the loading dialog
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      if (response.statusCode == 200 && response.data != null) {
+        final success = response.data['success'] ?? false;
+        if (success) {
+          final rawPdfUrl = response.data['pdfUrl'] ?? '';
+          final code = response.data['code'] ?? '';
+          final message = response.data['message'] ?? 'Certificate generated successfully!';
+
+          // Standardize http to https for ATS/Cleartext security
+          String pdfUrl = rawPdfUrl;
+          if (pdfUrl.startsWith('http://')) {
+            pdfUrl = pdfUrl.replaceFirst('http://', 'https://');
+          }
+
+          if (mounted) {
+            _showCertificateSuccessDialog(pdfUrl, code, message);
+          }
+          return;
+        }
+      }
+
+      throw Exception('Failed to generate certificate');
+    } catch (e) {
+      // Dismiss the loading dialog if it's still showing
+      if (mounted) {
+        Navigator.pop(context);
+      }
+      
+      // Show elegant error dialog
+      if (mounted) {
+        _showCertificateErrorDialog();
+      }
+    }
+  }
+
+  void _showCertificateSuccessDialog(String pdfUrl, String code, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          backgroundColor: Colors.white,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Gold Premium Icon
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFEF3C7), // Light gold
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.workspace_premium_rounded,
+                      color: Color(0xFFD97706),
+                      size: 48,
+                    ),
+                  ).animate().scale(delay: 200.ms, duration: 400.ms, curve: Curves.elasticOut),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Congratulations!',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF111844),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Your certificate has been successfully generated.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Certificate Code Card
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Certificate Code: ',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF64748B),
+                          ),
+                        ),
+                        Text(
+                          code,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF10B981),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Options
+                  Row(
+                    children: [
+                      // View PDF
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(context); // Close dialog
+                            // Open in PdfViewerPage
+                            PdfViewerPage.open(
+                              this.context,
+                              pdfUrl,
+                              'Course Certificate',
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFF111844)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'View PDF',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: const Color(0xFF111844),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      
+                      // Download PDF (opens in default external browser/app for downloading)
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            Navigator.pop(context); // Close dialog
+                            final Uri uri = Uri.parse(pdfUrl);
+                            try {
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              } else {
+                                throw 'Could not launch $pdfUrl';
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(this.context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Could not open download link: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF10B981), // Green download button
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Download PDF',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showCertificateErrorDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          backgroundColor: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFEE2E2), // Light red
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.error_outline_rounded,
+                    color: Color(0xFFEF4444),
+                    size: 40,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Generation Failed',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF111844),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'We were unable to generate your certificate at this time. Please check your network connection and try again.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    color: const Color(0xFF64748B),
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF111844),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      'Close',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildCompleteAndNextButton() {
     final bool isLastModule = _selectedModuleIndex == _moduleGroups.length - 1;
     final Color color = const Color(0xFF6366F1);
+    final bool showGetCertificate =
+        (_currentCompletedModule == 'mod8' && _nextModule == null) ||
+        _progress >= 1.0;
+    final Color buttonColor = showGetCertificate
+        ? const Color(0xFF10B981)
+        : color;
 
     return Padding(
       padding: const EdgeInsets.only(top: 24),
@@ -700,51 +1087,131 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.2),
+              color: buttonColor.withOpacity(0.2),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
           ],
         ),
         child: ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
+            if (showGetCertificate) {
+              await _generateCertificate();
+              return;
+            }
+
+            // Check if they are on the last module but haven't achieved 100% progress
+            if (isLastModule) {
+              if (_progress < 1.0) {
+                if (!mounted) return;
+                showDialog(
+                  context: context,
+                  builder: (context) => Dialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    backgroundColor: Colors.white,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFFEF3C7), // Light gold/amber
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.warning_amber_rounded,
+                                color: Color(0xFFD97706), // Amber
+                                size: 36,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              'Course Incomplete',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF1E293B),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Please complete every module to get your course certificate.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 14,
+                                color: const Color(0xFF64748B),
+                                height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () => Navigator.pop(context),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1E293B),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  'Got it!',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+                return;
+              }
+            }
+
             final completedIdx = _selectedModuleIndex;
+
+            // Mark completed locally first
             setState(() {
-              _completedModuleIndices.add(_selectedModuleIndex);
+              _completedModuleIndices.add(completedIdx);
+            });
 
-              if (!isLastModule) {
-                final int nextIndex = _selectedModuleIndex + 1;
+            // If logged in, update progress on server immediately!
+            if (_isLoggedIn) {
+              await _updateProgressOnServer(completedIdx);
+            }
 
-                if (nextIndex >= 3) {
-                  if (!_isLoggedIn) {
-                    StudyLayersDialogs.showLoginRequiredDialog(
-                      context: context,
-                      l10n: _l10n,
-                      onLoginSuccess: () {
-                        setState(() {
-                          _checkSubscription();
-                          _fetchApiLayers();
-                        });
-                      },
-                    );
-                    return;
-                  }
-                  if (!_isPaidUser) {
-                    StudyLayersDialogs.showLockedDialog(
-                      context: context,
-                      l10n: _l10n,
-                      storage: _storage,
-                      onLoginSuccess: () {
-                        setState(() {
-                          _checkSubscription();
-                          _fetchApiLayers();
-                        });
-                      },
-                    );
-                    return;
-                  }
-                }
+            // Helper to handle advancing to the next module
+            void advanceToNext() {
+              if (isLastModule) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(_l10n.tr('all_modules_completed')),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                return;
+              }
 
+              final int nextIndex = completedIdx + 1;
+              setState(() {
                 _selectedModuleIndex = nextIndex;
                 _selectedChapterName = null;
 
@@ -755,19 +1222,73 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
                 } else if (_selectedModuleIndex == 7 && _mockTests.isEmpty) {
                   _fetchMockTests();
                 }
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(_l10n.tr('all_modules_completed')),
-                    behavior: SnackBarBehavior.floating,
-                  ),
+              });
+            }
+
+            // Check if next module requires login or subscription
+            if (!isLastModule && (completedIdx + 1) >= 3) {
+              if (!_isLoggedIn) {
+                if (!mounted) return;
+                StudyLayersDialogs.showLoginRequiredDialog(
+                  context: context,
+                  l10n: _l10n,
+                  onLoginSuccess: () async {
+                    // Update state after login
+                    setState(() {
+                      _checkSubscription();
+                      _fetchApiLayers();
+                    });
+
+                    // Now that they are logged in, save the progress of the module they just completed!
+                    await _updateProgressOnServer(completedIdx);
+
+                    if (!mounted) return;
+                    // If subscription is paid, advance
+                    if (_isPaidUser) {
+                      advanceToNext();
+                    } else {
+                      // If not paid, show locked dialog
+                      StudyLayersDialogs.showLockedDialog(
+                        context: context,
+                        l10n: _l10n,
+                        storage: _storage,
+                        onLoginSuccess: () {
+                          setState(() {
+                            _checkSubscription();
+                            _fetchApiLayers();
+                          });
+                          advanceToNext();
+                        },
+                      );
+                    }
+                  },
                 );
+                return;
               }
-            });
-            _updateProgressOnServer(completedIdx);
+
+              if (!_isPaidUser) {
+                if (!mounted) return;
+                StudyLayersDialogs.showLockedDialog(
+                  context: context,
+                  l10n: _l10n,
+                  storage: _storage,
+                  onLoginSuccess: () {
+                    setState(() {
+                      _checkSubscription();
+                      _fetchApiLayers();
+                    });
+                    advanceToNext();
+                  },
+                );
+                return;
+              }
+            }
+
+            // Finally, advance to next module
+            advanceToNext();
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: color,
+            backgroundColor: buttonColor,
             foregroundColor: Colors.white,
             minimumSize: const Size(double.infinity, 64),
             shape: RoundedRectangleBorder(
@@ -779,7 +1300,9 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                isLastModule
+                showGetCertificate
+                    ? 'Get Course Certificate'
+                    : isLastModule
                     ? _l10n.tr('finish_journey')
                     : _l10n.tr('complete_next_module'),
                 style: GoogleFonts.plusJakartaSans(
@@ -789,7 +1312,9 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
               ),
               const SizedBox(width: 12),
               Icon(
-                isLastModule
+                showGetCertificate
+                    ? Icons.workspace_premium_rounded
+                    : isLastModule
                     ? Icons.celebration_rounded
                     : Icons.arrow_forward_rounded,
                 size: 20,

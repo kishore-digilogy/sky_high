@@ -9,17 +9,35 @@ import 'package:sky_high/pages/dashboard/dashboard_page.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:sky_high/core/services/localization_service.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginPage extends StatefulWidget {
   final bool returnToPreviousPage;
-  const LoginPage({super.key, this.returnToPreviousPage = false});
+  final String? errorMessage;
+  
+  const LoginPage({
+    super.key, 
+    this.returnToPreviousPage = false,
+    this.errorMessage,
+  });
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showSnackBar(widget.errorMessage!);
+      });
+    }
+  }
+
   final _emailController = TextEditingController();
+  final _emailFocusNode = FocusNode();
   final _passwordController = TextEditingController();
   final _otpController = TextEditingController();
   bool _isLoading = false;
@@ -33,6 +51,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void dispose() {
     _emailController.dispose();
+    _emailFocusNode.dispose();
     _passwordController.dispose();
     _otpController.dispose();
     _resendTimer?.cancel();
@@ -56,6 +75,10 @@ class _LoginPageState extends State<LoginPage> {
       _showSnackBar(_l10n.tr('enter_email'));
       return;
     }
+
+    // Save email to local storage for autocomplete suggestions
+    await GetIt.I<StorageService>().saveEmail(_emailController.text);
+
     if (_isOtpLogin) {
       if (!_otpSent) {
         await _sendOtp();
@@ -212,216 +235,388 @@ class _LoginPageState extends State<LoginPage> {
                           horizontal: screenWidth * 0.08,
                         ),
                         child: Column(
-                    children: [
-                      SizedBox(height: screenHeight * 0.08),
-
-                      // Premium Logo Icon
-                      Container(
-                        width: screenWidth * 0.25,
-                        height: screenWidth * 0.25,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF3B82F6).withOpacity(0.05),
-                              blurRadius: 40,
-                              spreadRadius: 5,
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.auto_awesome_rounded,
-                          color: const Color(0xFFF9A826),
-                          size: screenWidth * 0.12,
-                        ),
-                      ).animate().scale(
-                        duration: 800.ms,
-                        curve: Curves.easeInOut,
-                      ),
-
-                      SizedBox(height: screenHeight * 0.04),
-
-                      Text(
-                        'Sky High Elite',
-                        style: GoogleFonts.inter(
-                          fontSize: screenWidth * 0.085,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF0F172A),
-                          letterSpacing: -0.5,
-                        ),
-                      ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
-
-                      SizedBox(height: screenHeight * 0.01),
-
-                      Text(
-                        _l10n.tr('access_premium_journey'),
-                        style: GoogleFonts.inter(
-                          fontSize: screenWidth * 0.038,
-                          color: const Color(0xFF64748B),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
-
-                      SizedBox(height: screenHeight * 0.06),
-
-                      // Login Method Toggle
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Row(
                           children: [
-                            _buildMethodTab(_l10n.tr('otp_login'), _isOtpLogin, () {
-                              setState(() {
-                                _isOtpLogin = true;
-                                _otpSent = false;
-                              });
-                            }),
-                            _buildMethodTab(_l10n.tr('password_tab'), !_isOtpLogin, () {
-                              setState(() {
-                                _isOtpLogin = false;
-                              });
-                            }),
-                          ],
-                        ),
-                      ).animate().fadeIn(delay: 600.ms),
+                            SizedBox(height: screenHeight * 0.08),
 
-                      SizedBox(height: screenHeight * 0.04),
+                            // Premium Logo Icon
+                            Container(
+                              width: screenWidth * 0.25,
+                              height: screenWidth * 0.25,
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFFE2E8F0),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFF3B82F6,
+                                    ).withOpacity(0.05),
+                                    blurRadius: 40,
+                                    spreadRadius: 5,
+                                  ),
+                                ],
+                              ),
+                              child: SvgPicture.asset(
+                                'assets/Images/app_logo.svg',
+                              ),
+                            ).animate().scale(
+                              duration: 800.ms,
+                              curve: Curves.easeInOut,
+                            ),
 
-                      // Form Section
-                      Column(
-                        children: [
-                          _buildModernInput(
-                            controller: _emailController,
-                            hint: _l10n.tr('email_address'),
-                            icon: Icons.alternate_email_rounded,
-                            keyboardType: TextInputType.emailAddress,
-                          ),
-                          SizedBox(height: screenHeight * 0.02),
-                          if (_isOtpLogin && _otpSent) ...[
-                            _buildModernInput(
-                              controller: _otpController,
-                              hint: _l10n.tr('otp_hint'),
-                              icon: Icons.security_rounded,
-                              keyboardType: TextInputType.number,
-                            ).animate().fadeIn().slideY(begin: 0.1),
-                            SizedBox(height: screenHeight * 0.015),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: GestureDetector(
-                                onTap: _resendSeconds == 0 ? _sendOtp : null,
-                                child: Text(
-                                  _resendSeconds > 0
-                                      ? "${_l10n.tr('resend_otp_in')} ${_resendSeconds}s"
-                                      : _l10n.tr('resend_otp'),
+                            SizedBox(height: screenHeight * 0.04),
+
+                            Text(
+                                  'Sky High Elite',
                                   style: GoogleFonts.inter(
-                                    color: _resendSeconds > 0
-                                        ? const Color(0xFF94A3B8)
-                                        : const Color(0xFF3B82F6),
-                                    fontWeight: FontWeight.w700,
+                                    fontSize: screenWidth * 0.085,
+                                    fontWeight: FontWeight.w800,
+                                    color: const Color(0xFF0F172A),
+                                    letterSpacing: -0.5,
+                                  ),
+                                )
+                                .animate()
+                                .fadeIn(delay: 200.ms)
+                                .slideY(begin: 0.2),
+
+                            SizedBox(height: screenHeight * 0.01),
+
+                            Text(
+                                  _l10n.tr('access_premium_journey'),
+                                  style: GoogleFonts.inter(
+                                    fontSize: screenWidth * 0.038,
+                                    color: const Color(0xFF64748B),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                )
+                                .animate()
+                                .fadeIn(delay: 400.ms)
+                                .slideY(begin: 0.2),
+
+                            SizedBox(height: screenHeight * 0.06),
+
+                            // Login Method Toggle
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: const Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  _buildMethodTab(
+                                    _l10n.tr('otp_login'),
+                                    _isOtpLogin,
+                                    () {
+                                      setState(() {
+                                        _isOtpLogin = true;
+                                        _otpSent = false;
+                                      });
+                                    },
+                                  ),
+                                  _buildMethodTab(
+                                    _l10n.tr('password_tab'),
+                                    !_isOtpLogin,
+                                    () {
+                                      setState(() {
+                                        _isOtpLogin = false;
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ).animate().fadeIn(delay: 600.ms),
+
+                            SizedBox(height: screenHeight * 0.04),
+
+                            // Form Section
+                            Column(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF8FAFC),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: const Color(0xFFE2E8F0),
+                                    ),
+                                  ),
+                                  child: RawAutocomplete<String>(
+                                    textEditingController: _emailController,
+                                    focusNode: _emailFocusNode,
+                                    optionsBuilder:
+                                        (TextEditingValue textEditingValue) {
+                                          final storage =
+                                              GetIt.I<StorageService>();
+                                          final List<String> saved = storage
+                                              .getSavedEmails();
+                                          // Suggest when empty, or filter based on input
+                                          if (textEditingValue.text.isEmpty) {
+                                            return saved;
+                                          }
+                                          return saved.where(
+                                            (email) => email.contains(
+                                              textEditingValue.text
+                                                  .toLowerCase(),
+                                            ),
+                                          );
+                                        },
+                                    onSelected: (String selection) {
+                                      _emailController.text = selection;
+                                    },
+                                    optionsViewBuilder: (context, onSelected, options) {
+                                      return Align(
+                                        alignment: Alignment.topLeft,
+                                        child: Material(
+                                          elevation: 8.0,
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          color: Colors.white,
+                                          child: Container(
+                                            width:
+                                                screenWidth *
+                                                0.84, // Matches the text field width
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              border: Border.all(
+                                                color: const Color(0xFFE2E8F0),
+                                              ),
+                                            ),
+                                            child: ListView.builder(
+                                              padding: EdgeInsets.zero,
+                                              shrinkWrap: true,
+                                              itemCount: options.length,
+                                              itemBuilder: (BuildContext context, int index) {
+                                                final String option = options
+                                                    .elementAt(index);
+                                                return InkWell(
+                                                  onTap: () =>
+                                                      onSelected(option),
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 16,
+                                                          vertical: 12,
+                                                        ),
+                                                    child: Row(
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.history_rounded,
+                                                          color: Color(
+                                                            0xFF94A3B8,
+                                                          ),
+                                                          size: 16,
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 12,
+                                                        ),
+                                                        Expanded(
+                                                          child: Text(
+                                                            option,
+                                                            style: GoogleFonts.inter(
+                                                              fontSize: 14,
+                                                              color:
+                                                                  const Color(
+                                                                    0xFF0F172A,
+                                                                  ),
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    fieldViewBuilder:
+                                        (
+                                          context,
+                                          controller,
+                                          focusNode,
+                                          onFieldSubmitted,
+                                        ) {
+                                          return TextField(
+                                            controller: controller,
+                                            focusNode: focusNode,
+                                            keyboardType:
+                                                TextInputType.emailAddress,
+                                            style: GoogleFonts.inter(
+                                              color: const Color(0xFF0F172A),
+                                              fontSize: 15,
+                                            ),
+                                            decoration: InputDecoration(
+                                              hintText: _l10n.tr(
+                                                'email_address',
+                                              ),
+                                              hintStyle: GoogleFonts.inter(
+                                                color: const Color(0xFF94A3B8),
+                                                fontSize: 15,
+                                              ),
+                                              prefixIcon: const Icon(
+                                                Icons.alternate_email_rounded,
+                                                color: Color(0xFF94A3B8),
+                                                size: 20,
+                                              ),
+                                              border: InputBorder.none,
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 20,
+                                                    vertical: 20,
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                  ),
+                                ),
+                                SizedBox(height: screenHeight * 0.02),
+                                if (_isOtpLogin && _otpSent) ...[
+                                  _buildModernInput(
+                                    controller: _otpController,
+                                    hint: _l10n.tr('otp_hint'),
+                                    icon: Icons.security_rounded,
+                                    keyboardType: TextInputType.number,
+                                  ).animate().fadeIn().slideY(begin: 0.1),
+                                  SizedBox(height: screenHeight * 0.015),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: GestureDetector(
+                                      onTap: _resendSeconds == 0
+                                          ? _sendOtp
+                                          : null,
+                                      child: Text(
+                                        _resendSeconds > 0
+                                            ? "${_l10n.tr('resend_otp_in')} ${_resendSeconds}s"
+                                            : _l10n.tr('resend_otp'),
+                                        style: GoogleFonts.inter(
+                                          color: _resendSeconds > 0
+                                              ? const Color(0xFF94A3B8)
+                                              : const Color(0xFF3B82F6),
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: screenWidth * 0.035,
+                                        ),
+                                      ),
+                                    ),
+                                  ).animate().fadeIn(delay: 200.ms),
+                                ] else if (!_isOtpLogin)
+                                  _buildModernInput(
+                                    controller: _passwordController,
+                                    hint: _l10n.tr('password_hint'),
+                                    icon: Icons.lock_outline_rounded,
+                                    isPassword: true,
+                                  ).animate().fadeIn().slideY(begin: 0.1),
+                              ],
+                            ).animate().fadeIn(delay: 800.ms),
+
+                            SizedBox(height: screenHeight * 0.05),
+
+                            // Main Action Button
+                            GestureDetector(
+                                  onTap: _isLoading ? null : _handleLogin,
+                                  child: Container(
+                                    height: screenHeight * 0.078,
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF3B82F6),
+                                          Color(0xFF2563EB),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(
+                                            0xFF3B82F6,
+                                          ).withOpacity(0.3),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, 10),
+                                        ),
+                                      ],
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: _isLoading
+                                        ? const SizedBox(
+                                            height: 24,
+                                            width: 24,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2.5,
+                                            ),
+                                          )
+                                        : Text(
+                                            _isOtpLogin
+                                                ? (_otpSent
+                                                      ? _l10n.tr(
+                                                          'activate_session',
+                                                        )
+                                                      : _l10n.tr(
+                                                          'get_otp_code',
+                                                        ))
+                                                : _l10n.tr('sign_in'),
+                                            style: GoogleFonts.inter(
+                                              color: Colors.white,
+                                              fontSize: screenWidth * 0.042,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: 1,
+                                            ),
+                                          ),
+                                  ),
+                                )
+                                .animate()
+                                .fadeIn(delay: 1.seconds)
+                                .slideY(begin: 0.2),
+
+                            SizedBox(height: screenHeight * 0.04),
+
+                            // Alternative Action
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  _l10n.tr('dont_have_account'),
+                                  style: GoogleFonts.inter(
+                                    color: const Color(0xFF94A3B8),
                                     fontSize: screenWidth * 0.035,
                                   ),
                                 ),
-                              ),
-                            ).animate().fadeIn(delay: 200.ms),
-                          ] else if (!_isOtpLogin)
-                            _buildModernInput(
-                              controller: _passwordController,
-                              hint: _l10n.tr('password_hint'),
-                              icon: Icons.lock_outline_rounded,
-                              isPassword: true,
-                            ).animate().fadeIn().slideY(begin: 0.1),
-                        ],
-                      ).animate().fadeIn(delay: 800.ms),
-
-                      SizedBox(height: screenHeight * 0.05),
-
-                      // Main Action Button
-                      GestureDetector(
-                        onTap: _isLoading ? null : _handleLogin,
-                        child: Container(
-                          height: screenHeight * 0.078,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF3B82F6).withOpacity(0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          alignment: Alignment.center,
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2.5,
-                                  ),
-                                )
-                              : Text(
-                                  _isOtpLogin
-                                      ? (_otpSent
-                                            ? _l10n.tr('activate_session')
-                                            : _l10n.tr('get_otp_code'))
-                                      : _l10n.tr('sign_in'),
-                                  style: GoogleFonts.inter(
-                                    color: Colors.white,
-                                    fontSize: screenWidth * 0.042,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 1,
+                                GestureDetector(
+                                  onTap: () {},
+                                  child: Text(
+                                    _l10n.tr('create_profile'),
+                                    style: GoogleFonts.inter(
+                                      color: const Color(0xFFF9A826),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: screenWidth * 0.038,
+                                    ),
                                   ),
                                 ),
+                              ],
+                            ).animate().fadeIn(delay: 1.2.seconds),
+
+                            SizedBox(height: screenHeight * 0.06),
+                          ],
                         ),
-                      ).animate().fadeIn(delay: 1.seconds).slideY(begin: 0.2),
-
-                      SizedBox(height: screenHeight * 0.04),
-
-                      // Alternative Action
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            _l10n.tr('dont_have_account'),
-                            style: GoogleFonts.inter(
-                              color: const Color(0xFF94A3B8),
-                              fontSize: screenWidth * 0.035,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {},
-                            child: Text(
-                              _l10n.tr('create_profile'),
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFFF9A826),
-                                fontWeight: FontWeight.w700,
-                                fontSize: screenWidth * 0.038,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ).animate().fadeIn(delay: 1.2.seconds),
-
-                      SizedBox(height: screenHeight * 0.06),
-                    ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
-          );
-        },
-      ),
           ),
 
           // Floating Back Button

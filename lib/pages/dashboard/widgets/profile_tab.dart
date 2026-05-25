@@ -6,14 +6,13 @@ import 'package:sky_high/core/services/storage_service.dart';
 import 'package:sky_high/core/services/localization_service.dart';
 import 'package:sky_high/pages/auth/login_page.dart';
 import 'package:sky_high/pages/subscription/payment_screen.dart';
+import 'package:sky_high/pages/exams/mock_test_history_page.dart';
+import 'package:sky_high/pages/courses/my_certificates_page.dart';
 
 class ProfileTab extends StatefulWidget {
   final VoidCallback onAuthStatusChanged;
 
-  const ProfileTab({
-    super.key,
-    required this.onAuthStatusChanged,
-  });
+  const ProfileTab({super.key, required this.onAuthStatusChanged});
 
   @override
   State<ProfileTab> createState() => _ProfileTabState();
@@ -215,6 +214,31 @@ class _ProfileTabState extends State<ProfileTab> {
                   Icons.person_outline_rounded,
                   l10n.tr('edit_profile'),
                   () => _showWIPAlert(context, 'Edit Profile'),
+                ),
+                _buildSettingsItem(
+                  Icons.assignment_turned_in_outlined,
+                  l10n.tr('test_results'),
+                  () {
+                    final userId = user?['id'] as int? ?? 14;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MockTestHistoryPage(userId: userId),
+                      ),
+                    );
+                  },
+                ),
+                _buildSettingsItem(
+                  Icons.card_membership_rounded,
+                  l10n.tr('my_certificates'),
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const MyCertificatesPage(),
+                      ),
+                    );
+                  },
                 ),
                 _buildSettingsItem(
                   Icons.workspace_premium_outlined,
@@ -581,9 +605,7 @@ class _ProfileTabState extends State<ProfileTab> {
             'Logout',
             style: GoogleFonts.inter(fontWeight: FontWeight.bold),
           ),
-          content: const Text(
-            'Are you sure you want to log out?',
-          ),
+          content: const Text('Are you sure you want to log out?'),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),

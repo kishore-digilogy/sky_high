@@ -826,72 +826,72 @@ class TestimonialsSection extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             itemBuilder: (context, index) {
               return Container(
-                width: 300,
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 5,
-                ),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                    width: 300,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 5,
+                    ),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFE2E8F0),
-                            shape: BoxShape.circle,
-                          ),
+                        Row(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFE2E8F0),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildSkeletonBox(width: 100, height: 14),
+                                  const SizedBox(height: 6),
+                                  _buildSkeletonBox(width: 60, height: 10),
+                                ],
+                              ),
+                            ),
+                            _buildSkeletonBox(
+                              width: 40,
+                              height: 24,
+                              borderRadius: 20,
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildSkeletonBox(width: 100, height: 14),
-                              const SizedBox(height: 6),
-                              _buildSkeletonBox(width: 60, height: 10),
-                            ],
+                        const SizedBox(height: 16),
+                        _buildSkeletonBox(height: 12),
+                        const SizedBox(height: 8),
+                        _buildSkeletonBox(height: 12),
+                        const SizedBox(height: 8),
+                        _buildSkeletonBox(width: 180, height: 12),
+                        const Spacer(),
+                        Row(
+                          children: List.generate(
+                            5,
+                            (i) => Padding(
+                              padding: const EdgeInsets.only(right: 4),
+                              child: _buildSkeletonBox(
+                                width: 16,
+                                height: 16,
+                                borderRadius: 4,
+                              ),
+                            ),
                           ),
-                        ),
-                        _buildSkeletonBox(
-                          width: 40,
-                          height: 24,
-                          borderRadius: 20,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    _buildSkeletonBox(height: 12),
-                    const SizedBox(height: 8),
-                    _buildSkeletonBox(height: 12),
-                    const SizedBox(height: 8),
-                    _buildSkeletonBox(width: 180, height: 12),
-                    const Spacer(),
-                    Row(
-                      children: List.generate(
-                        5,
-                        (i) => Padding(
-                          padding: const EdgeInsets.only(right: 4),
-                          child: _buildSkeletonBox(
-                            width: 16,
-                            height: 16,
-                            borderRadius: 4,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-              .animate(onPlay: (c) => c.repeat())
-              .shimmer(duration: 1200.ms, color: const Color(0xFFF8FAFC));
+                  )
+                  .animate(onPlay: (c) => c.repeat())
+                  .shimmer(duration: 1200.ms, color: const Color(0xFFF8FAFC));
             },
           ),
         ),

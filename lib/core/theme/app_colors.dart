@@ -5,11 +5,11 @@ class AppColors {
   static const Color primaryBlue = Color(0xFF1A237E);
   static const Color secondaryBlue = Color(0xFF283593);
   static const Color skyBlue = Color(0xFF03A9F4);
-  
+
   // Accents
   static const Color accentGold = Color(0xFFFFD700);
   static const Color accentOrange = Color(0xFFFF6D00);
-  
+
   // Neutral
   static const Color black = Color(0xFF0F172A);
   static const Color white = Colors.white;

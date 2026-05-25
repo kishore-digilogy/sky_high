@@ -66,7 +66,7 @@ class FreeExamsSection extends StatelessWidget {
               _buildEmptyState('No mock tests available')
             else
               SizedBox(
-                height: 250, // Increased height to prevent bottom overflow
+                height: 260, // Adjusted height to fix bottom overflow
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   scrollDirection: Axis.horizontal,
@@ -91,62 +91,39 @@ class FreeExamsSection extends StatelessWidget {
       {
         'color': const Color(0xFF3B82F6),
         'bg': const Color(0xFFF0F6FF),
-        'tagBg': const Color(0xFFDCEAFD),
-        'tagFg': const Color(0xFF1D4ED8),
       },
       {
         'color': const Color(0xFF8B5CF6),
         'bg': const Color(0xFFF5F3FF),
-        'tagBg': const Color(0xFFEDE9FE),
-        'tagFg': const Color(0xFF6D28D9),
       },
       {
         'color': const Color(0xFF059669),
         'bg': const Color(0xFFF0FDF8),
-        'tagBg': const Color(0xFFD1FAE5),
-        'tagFg': const Color(0xFF065F46),
       },
       {
         'color': const Color(0xFFF59E0B),
         'bg': const Color(0xFFFFFBEB),
-        'tagBg': const Color(0xFFFEF3C7),
-        'tagFg': const Color(0xFF92400E),
       },
       {
         'color': const Color(0xFFEF4444),
         'bg': const Color(0xFFFFF5F5),
-        'tagBg': const Color(0xFFFEE2E2),
-        'tagFg': const Color(0xFF991B1B),
       },
     ];
 
     final cfg = configs[index % configs.length];
     final color = cfg['color'] as Color;
     final bgColor = cfg['bg'] as Color;
-    final tagBg = cfg['tagBg'] as Color;
-    final tagFg = cfg['tagFg'] as Color;
-
-    IconData examIcon = Icons.quiz_outlined;
-    if (exam.setName.contains('ALP')) {
-      examIcon = Icons.train_outlined;
-    } else if (exam.setName.contains('NTPC')) {
-      examIcon = Icons.directions_railway_outlined;
-    } else if (exam.setName.contains('SSC')) {
-      examIcon = Icons.account_balance_outlined;
-    } else if (exam.setName.contains('UPSC')) {
-      examIcon = Icons.gavel_outlined;
-    }
 
     return SizedBox(
-      width: 180, // Fixed width instead of percentage to prevent weird scaling
+      width: 280,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         child: _HoverCard(
           color: color,
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
             ),
             child: Column(
@@ -154,140 +131,211 @@ class FreeExamsSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: bgColor,
                     borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(18),
-                      topRight: Radius.circular(18),
+                      topLeft: Radius.circular(15),
+                      topRight: Radius.circular(15),
                     ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: color.withOpacity(0.2),
-                            width: 1,
-                          ),
-                        ),
-                        child: Icon(examIcon, color: color, size: 20),
-                      ),
-                      const SizedBox(height: 10),
-                      // Removed SizedBox with hardcoded width, let it flex inside the card
-                      Text(
-                        exam.setName,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1E293B),
-                          height: 1.2,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                    const Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: Color(0xFFE2E8F0),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-                      child: Column(
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.assignment_outlined,
+                              color: color,
+                              size: 22,
+                            ),
+                          ),
+                          Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
+                              horizontal: 10,
+                              vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: tagBg,
-                              borderRadius: BorderRadius.circular(6),
+                              color: const Color(0xFFFFFBEB),
+                              border: Border.all(
+                                color: const Color(0xFFF59E0B).withOpacity(0.5),
+                              ),
+                              borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              exam.displayCategory,
+                              'FREE',
                               style: GoogleFonts.inter(
                                 fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: tagFg,
-                                letterSpacing: 0.3,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFFF59E0B),
+                                letterSpacing: 0.5,
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.help_outline_rounded,
-                                size: 12,
-                                color: Color(0xFF94A3B8),
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                '${exam.formattedCount} Qs',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF64748B),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Container(
-                                width: 3,
-                                height: 3,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFCBD5E1),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Free',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF059669),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            child: _ShimmerButton(
-                              color: color,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        MockTestPage(setName: exam.setName),
-                                  ),
-                                );
-                              },
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      Text(
+                        exam.setName,
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1E293B),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Attempt and analyze your performance.',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (exam.companyName != null &&
+                          exam.companyName!.trim().isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: color.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Text(
+                            exam.companyName!,
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: color,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
+                const Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Color(0xFFE2E8F0),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.help_outline_rounded,
+                            size: 14,
+                            color: Color(0xFF64748B),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${exam.formattedCount} Qs',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            width: 4,
+                            height: 4,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFCBD5E1),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Free',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF10B981),
+                            ),
+                          ),
+                        ],
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  MockTestPage(setName: exam.setName),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: color.withOpacity(0.5)),
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.white,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Start Now',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: color,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Icon(
+                                Icons.play_circle_outline_rounded,
+                                size: 16,
+                                color: color,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-        )
-        .animate()
-        .fadeIn(delay: (60 + 100 * index).ms, duration: 350.ms)
-        .slideY(begin: 0.15, curve: Curves.easeOutCubic);
+        ),
+      ),
+    )
+    .animate()
+    .fadeIn(delay: (60 + 100 * index).ms, duration: 350.ms)
+    .slideY(begin: 0.15, curve: Curves.easeOutCubic);
   }
 
   Widget _buildEmptyState(String message) {
@@ -539,7 +587,7 @@ class FreeExamsSection extends StatelessWidget {
         ),
         const SizedBox(height: 15),
         SizedBox(
-          height: 160,
+          height: 260,
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             scrollDirection: Axis.horizontal,

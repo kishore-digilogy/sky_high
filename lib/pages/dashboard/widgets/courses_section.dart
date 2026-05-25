@@ -10,10 +10,7 @@ import 'package:sky_high/pages/courses/all_categories_page.dart';
 class CoursesSection extends StatefulWidget {
   final Future<List<ExamCategoryModel>>? categoriesFuture;
 
-  const CoursesSection({
-    super.key,
-    required this.categoriesFuture,
-  });
+  const CoursesSection({super.key, required this.categoriesFuture});
 
   @override
   State<CoursesSection> createState() => _CoursesSectionState();
@@ -39,7 +36,9 @@ class _CoursesSectionState extends State<CoursesSection> {
           return _buildCourseSkeleton();
         }
 
-        final categories = snapshot.hasData ? snapshot.data! : <ExamCategoryModel>[];
+        final categories = snapshot.hasData
+            ? snapshot.data!
+            : <ExamCategoryModel>[];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,9 +83,8 @@ class _CoursesSectionState extends State<CoursesSection> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => AllCategoriesPage(
-                                  categories: categories,
-                                ),
+                                builder: (context) =>
+                                    AllCategoriesPage(categories: categories),
                               ),
                             );
                           },
@@ -208,11 +206,12 @@ class _CoursesSectionState extends State<CoursesSection> {
                               .hasContentDimensions &&
                           _categoriesScrollController.position.maxScrollExtent >
                               0) {
-                        scrollPercent = (_categoriesScrollController.offset /
-                                _categoriesScrollController
-                                    .position
-                                    .maxScrollExtent)
-                            .clamp(0.0, 1.0);
+                        scrollPercent =
+                            (_categoriesScrollController.offset /
+                                    _categoriesScrollController
+                                        .position
+                                        .maxScrollExtent)
+                                .clamp(0.0, 1.0);
                       }
                       return Center(
                         child: Container(
@@ -234,7 +233,9 @@ class _CoursesSectionState extends State<CoursesSection> {
                                     borderRadius: BorderRadius.circular(10),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFF6366F1).withOpacity(0.3),
+                                        color: const Color(
+                                          0xFF6366F1,
+                                        ).withOpacity(0.3),
                                         blurRadius: 4,
                                         offset: const Offset(0, 1),
                                       ),
@@ -512,36 +513,36 @@ class _CoursesSectionState extends State<CoursesSection> {
             physics: const NeverScrollableScrollPhysics(),
             itemBuilder: (context, index) {
               return Container(
-                width: 160,
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 5,
-                ),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFE2E8F0),
-                        shape: BoxShape.circle,
-                      ),
+                    width: 160,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 5,
                     ),
-                    const Spacer(),
-                    _buildSkeletonBox(width: 120, height: 16),
-                    const SizedBox(height: 8),
-                    _buildSkeletonBox(width: 80, height: 12),
-                  ],
-                ),
-              )
-              .animate(onPlay: (c) => c.repeat())
-              .shimmer(duration: 1200.ms, color: const Color(0xFFF8FAFC));
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE2E8F0),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const Spacer(),
+                        _buildSkeletonBox(width: 120, height: 16),
+                        const SizedBox(height: 8),
+                        _buildSkeletonBox(width: 80, height: 12),
+                      ],
+                    ),
+                  )
+                  .animate(onPlay: (c) => c.repeat())
+                  .shimmer(duration: 1200.ms, color: const Color(0xFFF8FAFC));
             },
           ),
         ),

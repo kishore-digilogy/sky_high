@@ -50,8 +50,14 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/Icons/spalsh_bg.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -110,6 +116,7 @@ class _SplashPageState extends State<SplashPage> {
             ).animate().fadeIn(delay: 1000.ms),
           ],
         ),
+      ),
       ),
     );
   }

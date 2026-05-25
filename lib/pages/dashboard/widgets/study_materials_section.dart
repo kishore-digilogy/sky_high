@@ -8,10 +8,7 @@ import 'package:sky_high/pages/study_materials/pdf_viewer_page.dart';
 class StudyMaterialsSection extends StatelessWidget {
   final Future<List<StudyMaterialModel>>? studyMaterialsFuture;
 
-  const StudyMaterialsSection({
-    super.key,
-    required this.studyMaterialsFuture,
-  });
+  const StudyMaterialsSection({super.key, required this.studyMaterialsFuture});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +21,9 @@ class StudyMaterialsSection extends StatelessWidget {
           return _buildMaterialSkeleton();
         }
 
-        final materials = snapshot.hasData ? snapshot.data! : <StudyMaterialModel>[];
+        final materials = snapshot.hasData
+            ? snapshot.data!
+            : <StudyMaterialModel>[];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,11 +74,7 @@ class StudyMaterialsSection extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   itemCount: materials.length,
                   itemBuilder: (context, index) {
-                    return _buildMaterialCard(
-                      context,
-                      materials[index],
-                      index,
-                    );
+                    return _buildMaterialCard(context, materials[index], index);
                   },
                 ),
               ),
@@ -484,52 +479,53 @@ class StudyMaterialsSection extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             itemBuilder: (context, index) {
               return Container(
-                width: 180,
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  children: [
-                    _buildSkeletonBox(height: 100, borderRadius: 24),
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildSkeletonBox(width: 60, height: 12),
-                          const SizedBox(height: 12),
-                          _buildSkeletonBox(
-                            width: double.infinity,
-                            height: 16,
-                          ),
-                          const SizedBox(height: 6),
-                          _buildSkeletonBox(width: 100, height: 16),
-                          const SizedBox(height: 15),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    width: 180,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildSkeletonBox(height: 100, borderRadius: 24),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildSkeletonBox(width: 40, height: 12),
+                              _buildSkeletonBox(width: 60, height: 12),
+                              const SizedBox(height: 12),
                               _buildSkeletonBox(
-                                width: 24,
-                                height: 24,
-                                borderRadius: 12,
+                                width: double.infinity,
+                                height: 16,
+                              ),
+                              const SizedBox(height: 6),
+                              _buildSkeletonBox(width: 100, height: 16),
+                              const SizedBox(height: 15),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _buildSkeletonBox(width: 40, height: 12),
+                                  _buildSkeletonBox(
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: 12,
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              )
-              .animate(onPlay: (c) => c.repeat())
-              .shimmer(duration: 1200.ms, color: const Color(0xFFF8FAFC));
+                  )
+                  .animate(onPlay: (c) => c.repeat())
+                  .shimmer(duration: 1200.ms, color: const Color(0xFFF8FAFC));
             },
           ),
         ),

@@ -9,9 +9,7 @@ class BannerCarousel extends StatefulWidget {
 }
 
 class _BannerCarouselState extends State<BannerCarousel> {
-  final PageController _bannerController = PageController(
-    initialPage: 300,
-  );
+  final PageController _bannerController = PageController(initialPage: 300);
   int _currentBannerPage = 0;
   Timer? _bannerTimer;
 

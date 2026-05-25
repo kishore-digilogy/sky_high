@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sky_high/core/services/localization_service.dart';
 
 class StudySidebar extends StatelessWidget {
+  final double progress;
   final List<Map<String, dynamic>> moduleGroups;
   final int selectedModuleIndex;
   final Set<int> completedModuleIndices;
@@ -16,6 +17,7 @@ class StudySidebar extends StatelessWidget {
 
   const StudySidebar({
     super.key,
+    required this.progress,
     required this.moduleGroups,
     required this.selectedModuleIndex,
     required this.completedModuleIndices,
@@ -100,9 +102,6 @@ class StudySidebar extends StatelessWidget {
   }
 
   Widget _buildProgressCard() {
-    final double progress = moduleGroups.isEmpty
-        ? 0.0
-        : completedModuleIndices.length / moduleGroups.length;
     final int percentage = (progress * 100).toInt();
 
     return Container(

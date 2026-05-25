@@ -9,10 +9,7 @@ import 'package:sky_high/pages/dashboard/widgets/dashboard_dialogs.dart';
 class QuickActionsGrid extends StatelessWidget {
   final Future<List<ExamCategoryModel>>? categoriesFuture;
 
-  const QuickActionsGrid({
-    super.key,
-    required this.categoriesFuture,
-  });
+  const QuickActionsGrid({super.key, required this.categoriesFuture});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +32,9 @@ class QuickActionsGrid extends StatelessWidget {
                 () async {
                   if (categoriesFuture != null) {
                     final categories = await categoriesFuture;
-                    if (categories != null && categories.isNotEmpty && context.mounted) {
+                    if (categories != null &&
+                        categories.isNotEmpty &&
+                        context.mounted) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(

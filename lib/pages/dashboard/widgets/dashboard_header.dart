@@ -164,10 +164,7 @@ class DashboardHeader extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                const Color(0xFFE8F5E9).withOpacity(0.3),
-                Colors.white,
-              ],
+              colors: [const Color(0xFFE8F5E9).withOpacity(0.3), Colors.white],
             ),
           ),
           child: Column(
@@ -315,9 +312,7 @@ class DashboardHeader extends StatelessWidget {
                               ),
                             )
                           else
-                            const SizedBox(
-                              height: 20,
-                            ),
+                            const SizedBox(height: 20),
                         ],
                       ),
                     ),
