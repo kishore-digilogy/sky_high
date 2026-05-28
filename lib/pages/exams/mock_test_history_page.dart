@@ -508,7 +508,9 @@ class _MockTestHistoryPageState extends State<MockTestHistoryPage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
                       children: [
                         // Category pill
                         Container(
@@ -529,7 +531,6 @@ class _MockTestHistoryPageState extends State<MockTestHistoryPage> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
                         // Language pill
                         Container(
                           padding: const EdgeInsets.symmetric(

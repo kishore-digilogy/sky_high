@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 class StorageService {
   static const String _isFirstTimeKey = 'is_first_time';
@@ -42,11 +43,34 @@ class StorageService {
     return null;
   }
 
+  static void initOneSignal([String? userId]) {
+    try {
+      print('StorageService: Initializing OneSignal...');
+      OneSignal.Debug.setLogLevel(OSLogLevel.debug);
+      OneSignal.initialize("8a517530-af11-446d-ae13-4ec77e3f99c9");
+      OneSignal.Notifications.requestPermission(true);
+      if (userId != null) {
+        print('StorageService: Logging into OneSignal with user ID: $userId');
+        OneSignal.login(userId);
+      }
+    } catch (e) {
+      print('StorageService: OneSignal init error: $e');
+    }
+  }
+
   Future<void> setUserData(Map<String, dynamic>? data) async {
     if (data == null) {
       await _prefs.remove(_userDataKey);
+      try {
+        print('StorageService: Logging out of OneSignal...');
+        await OneSignal.logout();
+      } catch (e) {
+        print('StorageService: OneSignal logout error: $e');
+      }
     } else {
       await _prefs.setString(_userDataKey, json.encode(data));
+      final userId = data['id']?.toString();
+      initOneSignal(userId);
     }
   }
 
@@ -69,18 +93,18 @@ class StorageService {
 
   Future<void> addRecentStudy(Map<String, dynamic> data) async {
     final List<Map<String, dynamic>> studies = getRecentStudies();
-    
+
     // Remove existing entry for the same company to move it to front
     studies.removeWhere((s) => s['company']['id'] == data['company']['id']);
-    
+
     // Add new study to the beginning
     studies.insert(0, data);
-    
+
     // Keep only top 5
     if (studies.length > 5) {
       studies.removeRange(5, studies.length);
     }
-    
+
     await _prefs.setString(_recentStudyKey, json.encode(studies));
   }
 
@@ -134,7 +158,14 @@ class StorageService {
     await _prefs.remove(_tokenKey);
     await _prefs.remove(_userDataKey);
     await _prefs.remove(_recentStudyKey);
-    
+
+    try {
+      print('StorageService: Logging out of OneSignal...');
+      await OneSignal.logout();
+    } catch (e) {
+      print('StorageService: OneSignal logout error: $e');
+    }
+
     // Also clear any company-specific last studied keys
     final keys = _prefs.getKeys();
     for (final key in keys) {

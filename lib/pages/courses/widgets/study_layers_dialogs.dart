@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:sky_high/core/services/storage_service.dart';
 import 'package:sky_high/core/services/localization_service.dart';
 import 'package:sky_high/pages/auth/login_page.dart';
+import 'package:sky_high/pages/subscription/payment_screen.dart';
 
 class StudyLayersDialogs {
   static void showWIPAlert(BuildContext context) {
@@ -109,17 +110,52 @@ class StudyLayersDialogs {
           style: GoogleFonts.inter(),
         ),
         actions: [
-          Center(
-            child: TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                l10n.tr('close'),
-                style: GoogleFonts.inter(
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.bold,
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    l10n.tr('close'),
+                    style: GoogleFonts.inter(
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PaymentScreen(),
+                      ),
+                    ).then((_) {
+                      onLoginSuccess();
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    l10n.tr('subscribe_now'),
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

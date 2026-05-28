@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:sky_high/core/services/socket_service.dart';
 import 'package:sky_high/core/services/exam_service.dart';
 import 'package:sky_high/core/services/storage_service.dart';
 import 'package:sky_high/core/services/api_service.dart';
@@ -67,6 +69,7 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
   final LocalizationService _l10n = LocalizationService();
 
   late final List<Map<String, dynamic>> _moduleGroups;
+  StreamSubscription? _socketSubscription;
 
   @override
   void initState() {
@@ -126,6 +129,23 @@ class _StudyLayersPageState extends State<StudyLayersPage> {
     } else if (_selectedModuleIndex == 7) {
       _fetchMockTests();
     }
+
+    // Listen to Socket.IO subscription changes
+    _socketSubscription = GetIt.I<SocketService>().onSubscriptionStatusChanged.listen((status) {
+      debugPrint('StudyLayersPage: Received socket subscription status update: $status');
+      if (mounted) {
+        setState(() {
+          _checkSubscription();
+          _fetchApiLayers();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _socketSubscription?.cancel();
+    super.dispose();
   }
 
   void _checkSubscription() {
