@@ -7,6 +7,10 @@ class LocalizationService {
   LocalizationService._internal();
   final StorageService _storage = GetIt.I<StorageService>();
 
+  String getSelectedLanguage() {
+    return _storage.getSelectedLanguage();
+  }
+
   static const Map<String, Map<String, String>> _translations = {
     'English': {
       'free_study_materials': 'Free Study Materials',

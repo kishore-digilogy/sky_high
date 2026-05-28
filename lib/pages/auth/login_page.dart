@@ -14,9 +14,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 class LoginPage extends StatefulWidget {
   final bool returnToPreviousPage;
   final String? errorMessage;
-  
+
   const LoginPage({
-    super.key, 
+    super.key,
     this.returnToPreviousPage = false,
     this.errorMessage,
   });
