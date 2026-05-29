@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:sky_high/core/services/deeplink_service.dart';
+import 'package:sky_high/core/services/api_service.dart';
 
 class StorageService {
   static const String _isFirstTimeKey = 'is_first_time';
@@ -43,18 +45,76 @@ class StorageService {
     return null;
   }
 
-  static void initOneSignal([String? userId]) {
+  static void initOneSignal([String? userId]) async {
     try {
       print('StorageService: Initializing OneSignal...');
       OneSignal.Debug.setLogLevel(OSLogLevel.debug);
       OneSignal.initialize("8a517530-af11-446d-ae13-4ec77e3f99c9");
-      OneSignal.Notifications.requestPermission(true);
+      final granted = await OneSignal.Notifications.requestPermission(true);
+      print('StorageService: Notification permission granted: $granted');
+
+      // Register click listener for deep linking
+      OneSignal.Notifications.addClickListener((event) {
+        final additionalData = event.notification.additionalData;
+        print('====================================================');
+        print('🔔 STORAGE_SERVICE: NOTIFICATION CLICKED EVENT!');
+        print('🔔 Title: ${event.notification.title}');
+        print('🔔 Body: ${event.notification.body}');
+        print('🔔 Custom Payload (additionalData): $additionalData');
+        print('====================================================');
+
+        if (additionalData != null) {
+          DeeplinkService().onNotificationClicked(additionalData);
+        } else {
+          print('🔔 STORAGE_SERVICE: Warning! Custom payload is null.');
+        }
+      });
+
       if (userId != null) {
         print('StorageService: Logging into OneSignal with user ID: $userId');
         OneSignal.login(userId);
+
+        if (granted) {
+          // Poll briefly to ensure the subscription ID is registered and retrieved
+          String? subscriptionId = OneSignal.User.pushSubscription.id;
+          int attempts = 0;
+          while ((subscriptionId == null || subscriptionId.isEmpty) &&
+              attempts < 10) {
+            await Future.delayed(const Duration(milliseconds: 500));
+            subscriptionId = OneSignal.User.pushSubscription.id;
+            attempts++;
+          }
+
+          if (subscriptionId != null && subscriptionId.isNotEmpty) {
+            print(
+              'StorageService: OneSignal subscription ID obtained: $subscriptionId',
+            );
+            _sendOneSignalIdToBackend(subscriptionId);
+          } else {
+            print(
+              'StorageService: Failed to retrieve OneSignal subscription ID after several attempts.',
+            );
+          }
+        }
       }
     } catch (e) {
       print('StorageService: OneSignal init error: $e');
+    }
+  }
+
+  static Future<void> _sendOneSignalIdToBackend(String onesignalId) async {
+    try {
+      print('StorageService: Sending OneSignal ID to backend: $onesignalId');
+      final dio = ApiService().dio;
+      final response = await dio.post(
+        '${ApiService.baseUrl}/auth/update-onesignal',
+        data: {'onesignal_id': onesignalId},
+      );
+      print(
+        'StorageService: Backend response for OneSignal ID update: ${response.data}',
+      );
+    } catch (e) {
+      print('StorageService: Error sending OneSignal ID to backend: $e');
     }
   }
 
