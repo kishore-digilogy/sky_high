@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:sky_high/pages/other/no_internet_page.dart';
+import 'package:sky_high/core/services/payment_service.dart';
 
 class ConnectivityWrapper extends StatefulWidget {
   final Widget child;
@@ -16,6 +17,7 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
   List<ConnectivityResult> _connectivityResults = [ConnectivityResult.wifi];
   StreamSubscription<List<ConnectivityResult>>? _subscription;
   bool _isChecking = false;
+  bool _wasConnected = true;
 
   @override
   void initState() {
@@ -24,6 +26,12 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
     try {
       _subscription = Connectivity().onConnectivityChanged.listen(
         (List<ConnectivityResult> results) {
+          final isCurrentlyConnected =
+              results.isNotEmpty && !results.contains(ConnectivityResult.none);
+          if (isCurrentlyConnected && !_wasConnected) {
+            PaymentService().checkAndVerifyPendingPayment();
+          }
+          _wasConnected = isCurrentlyConnected;
           setState(() {
             _connectivityResults = results;
           });
@@ -40,12 +48,18 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
   Future<void> _checkInitialConnectivity() async {
     try {
       final results = await Connectivity().checkConnectivity();
+      _wasConnected =
+          results.isNotEmpty && !results.contains(ConnectivityResult.none);
+      if (_wasConnected) {
+        PaymentService().checkAndVerifyPendingPayment();
+      }
       setState(() {
         _connectivityResults = results;
       });
     } catch (e) {
       debugPrint("ConnectivityWrapper: Failed to check connectivity: $e");
       // Optimistic fallback to avoid locking user out if native plugin fails to initialize
+      _wasConnected = true;
       setState(() {
         _connectivityResults = [ConnectivityResult.wifi];
       });
@@ -83,16 +97,20 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
                 try {
                   results = await Connectivity().checkConnectivity();
                 } catch (e) {
-                  debugPrint("ConnectivityWrapper: Error checking connectivity on retry: $e");
+                  debugPrint(
+                    "ConnectivityWrapper: Error checking connectivity on retry: $e",
+                  );
                 }
 
                 bool actuallyConnected = false;
 
-                if (results.isNotEmpty && !results.contains(ConnectivityResult.none)) {
+                if (results.isNotEmpty &&
+                    !results.contains(ConnectivityResult.none)) {
                   try {
                     // Double check with a quick lookup to verify real internet access
-                    final lookup = await InternetAddress.lookup('google.com')
-                        .timeout(const Duration(seconds: 4));
+                    final lookup = await InternetAddress.lookup(
+                      'google.com',
+                    ).timeout(const Duration(seconds: 4));
                     if (lookup.isNotEmpty && lookup[0].rawAddress.isNotEmpty) {
                       actuallyConnected = true;
                     }
@@ -106,9 +124,11 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
                     _isChecking = false;
                     if (actuallyConnected) {
                       _connectivityResults = results;
+                      _wasConnected = true;
+                      PaymentService().checkAndVerifyPendingPayment();
                     } else {
                       _connectivityResults = [ConnectivityResult.none];
-                      
+
                       // Show attractive floating notification on retry failure
                       ScaffoldMessenger.of(childContext).showSnackBar(
                         SnackBar(
@@ -126,7 +146,10 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 20,
+                          ),
                         ),
                       );
                     }

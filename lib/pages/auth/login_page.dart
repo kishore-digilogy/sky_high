@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sky_high/core/services/storage_service.dart';
+import 'package:sky_high/core/services/payment_service.dart';
 import 'package:sky_high/core/services/api_service.dart';
 import 'package:sky_high/pages/dashboard/dashboard_page.dart';
 import 'dart:math' as math;
@@ -187,6 +188,7 @@ class _LoginPageState extends State<LoginPage> {
       if (user != null) {
         await storage.setUserData(user);
       }
+      PaymentService().checkAndVerifyPendingPayment();
       if (mounted) {
         if (widget.returnToPreviousPage) {
           Navigator.of(context).pop(true);

@@ -1046,34 +1046,6 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => StudyLayersPage(company: widget.company),
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _kPurple,
-                foregroundColor: _kWhite,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                _l10n.tr('browse_materials'),
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );

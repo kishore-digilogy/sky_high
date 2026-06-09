@@ -4,7 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sky_high/core/services/storage_service.dart';
 import 'package:sky_high/core/services/api_service.dart';
-import 'package:sky_high/pages/auth/login_page.dart';
+import 'package:sky_high/core/services/payment_service.dart';
 import 'package:dio/dio.dart';
 import 'package:sky_high/pages/dashboard/dashboard_page.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
@@ -55,7 +55,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
-    _verifyPayment(response);
+    _saveAndNavigateToVerification(response);
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
@@ -70,9 +70,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
     // Optional: Handle external wallet
   }
 
-  Future<void> _verifyPayment(PaymentSuccessResponse response) async {
-    setState(() => _isProcessing = true);
-
+  Future<void> _saveAndNavigateToVerification(
+    PaymentSuccessResponse response,
+  ) async {
     // Format DOB to YYYY-MM-DD
     String dobFormatted = "";
     if (_dobController.text.isNotEmpty) {
@@ -82,6 +82,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
       }
     }
 
+    String qualificationValue = _educationController.text.trim();
+    if (qualificationValue.contains('(10th)') ||
+        qualificationValue.toLowerCase().contains('sslc')) {
+      qualificationValue = '10';
+    } else if (qualificationValue.contains('(12th)') ||
+        qualificationValue.toLowerCase().contains('hsc') ||
+        qualificationValue.toLowerCase().contains('hlc')) {
+      qualificationValue = '12';
+    }
+
     final payload = {
       "razorpay_order_id": _currentOrderId ?? response.orderId ?? "",
       "razorpay_payment_id": response.paymentId ?? "",
@@ -89,7 +99,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       "user_details": {
         "father_name": _fathersNameController.text.trim(),
         "dob": dobFormatted,
-        "qualification": _educationController.text.trim(),
+        "qualification": qualificationValue,
         "languages_known": _languagesController.text.trim(),
       },
     };
@@ -324,10 +334,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               'Languages Known',
               isRequired: true,
             ).animate().fadeIn(delay: 600.ms),
-            _buildTextField(
-              controller: _languagesController,
-              hintText: 'Languages Known',
-            ).animate().fadeIn(delay: 600.ms),
+            _buildLanguagesMultiSelect().animate().fadeIn(delay: 600.ms),
             const SizedBox(height: 24),
 
             _buildLabel(
@@ -529,6 +536,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
         boxShadow: [
           BoxShadow(
+            // ignore: deprecated_member_use
             color: const Color(0xFF64748B).withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -563,6 +571,384 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String value,
+    required String hintText,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            // ignore: deprecated_member_use
+            color: const Color(0xFF64748B).withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButtonFormField<String>(
+          initialValue: () {
+            if (value.isEmpty) return null;
+            if (items.contains(value)) return value;
+            final match = items.firstWhere(
+              (item) => item.toLowerCase() == value.toLowerCase(),
+              orElse: () => '',
+            );
+            if (match.isNotEmpty) return match;
+
+            final cleanVal = value
+                .replaceAll(RegExp(r'[\(\)\s\-\/\dth]'), '')
+                .toLowerCase();
+            final normalizedMatch = items.firstWhere((item) {
+              final cleanItem = item
+                  .replaceAll(RegExp(r'[\(\)\s\-\/\dth]'), '')
+                  .toLowerCase();
+              return cleanItem == cleanVal && cleanItem.isNotEmpty;
+            }, orElse: () => '');
+            if (normalizedMatch.isNotEmpty) return normalizedMatch;
+
+            if (value == '12' ||
+                value == '12th' ||
+                value.toLowerCase() == 'hlc') {
+              if (items.contains('HSC (12th)')) return 'HSC (12th)';
+            }
+            if (value == '10' || value == '10th') {
+              if (items.contains('SSLC (10th)')) return 'SSLC (10th)';
+            }
+            return null;
+          }(),
+          hint: Text(
+            hintText,
+            style: GoogleFonts.inter(
+              color: const Color(0xFF94A3B8),
+              fontSize: 15,
+            ),
+          ),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: Color(0xFF64748B),
+          ),
+          decoration: const InputDecoration(border: InputBorder.none),
+          style: GoogleFonts.inter(
+            fontSize: 15,
+            color: const Color(0xFF1E293B),
+            fontWeight: FontWeight.w500,
+          ),
+          items: items.map((String item) {
+            return DropdownMenuItem<String>(value: item, child: Text(item));
+          }).toList(),
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguagesMultiSelect() {
+    final List<String> selected = _languagesController.text.isEmpty
+        ? []
+        : _languagesController.text
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+
+    return GestureDetector(
+      onTap: () => _showLanguagesBottomSheet(selected),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 58),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              // ignore: deprecated_member_use
+              color: const Color(0xFF64748B).withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.language_rounded,
+              color: Color(0xFF64748B),
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: selected.isEmpty
+                  ? Text(
+                      'Select Languages Known',
+                      style: GoogleFonts.inter(
+                        color: const Color(0xFF94A3B8),
+                        fontSize: 15,
+                      ),
+                    )
+                  : Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: selected.map((lang) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFBFDBFE)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                lang,
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF1D4ED8),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    selected.remove(lang);
+                                    _languagesController.text = selected.join(
+                                      ', ',
+                                    );
+                                  });
+                                },
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 14,
+                                  color: Color(0xFF1D4ED8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+            ),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Color(0xFF64748B),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showLanguagesBottomSheet(List<String> selectedInitially) {
+    final List<String> allLanguages = [
+      'Tamil',
+      'Telugu',
+      'Kannada',
+      'Malayalam',
+      'Hindi',
+      'English',
+      'Bengali',
+      'Marathi',
+    ];
+
+    List<String> tempSelected = List.from(selectedInitially);
+    String searchQuery = "";
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final filtered = allLanguages
+                .where(
+                  (lang) =>
+                      lang.toLowerCase().contains(searchQuery.toLowerCase()),
+                )
+                .toList();
+
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.7,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  // Pull bar
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Languages Known',
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Search Box
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: TextField(
+                      onChanged: (val) {
+                        setModalState(() {
+                          searchQuery = val;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Search languages...',
+                        hintStyle: GoogleFonts.inter(
+                          color: const Color(0xFF94A3B8),
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search_rounded,
+                          color: Color(0xFF94A3B8),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Options List
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) {
+                        final lang = filtered[index];
+                        final isSelected = tempSelected.contains(lang);
+
+                        return InkWell(
+                          onTap: () {
+                            setModalState(() {
+                              if (isSelected) {
+                                tempSelected.remove(lang);
+                              } else {
+                                tempSelected.add(lang);
+                              }
+                            });
+                            setState(() {
+                              _languagesController.text = tempSelected.join(
+                                ', ',
+                              );
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 8,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    lang,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 16,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w600
+                                          : FontWeight.w500,
+                                      color: isSelected
+                                          ? const Color(0xFF1D4ED8)
+                                          : const Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                ),
+                                Checkbox(
+                                  value: isSelected,
+                                  activeColor: const Color(0xFF2563EB),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  onChanged: (val) {
+                                    setModalState(() {
+                                      if (isSelected) {
+                                        tempSelected.remove(lang);
+                                      } else {
+                                        tempSelected.add(lang);
+                                      }
+                                    });
+                                    setState(() {
+                                      _languagesController.text = tempSelected
+                                          .join(', ');
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Done Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _languagesController.text = tempSelected.join(', ');
+                        });
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        'Apply Selection',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -1086,14 +1472,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
 }
 
 class PaymentStatusScreen extends StatefulWidget {
-  final bool success;
+  final bool? success;
   final String? message;
+  final bool isVerifying;
+  final Map<String, dynamic>? pendingPayload;
   final ConfettiController confettiController;
 
   const PaymentStatusScreen({
     super.key,
-    required this.success,
+    this.success,
     this.message,
+    this.isVerifying = false,
+    this.pendingPayload,
     required this.confettiController,
   });
 
@@ -1102,81 +1492,264 @@ class PaymentStatusScreen extends StatefulWidget {
 }
 
 class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
+  late bool _isVerifying;
+  bool _success = false;
+  bool _isPendingOffline = false;
+  String? _message;
+
   @override
   void initState() {
     super.initState();
-    if (widget.success) {
+    _isVerifying = widget.isVerifying;
+    _success = widget.success ?? false;
+    _message = widget.message;
+
+    if (_isVerifying && widget.pendingPayload != null) {
+      _runVerification();
+    } else if (_success) {
       widget.confettiController.play();
+    }
+  }
+
+  Future<void> _runVerification() async {
+    try {
+      final success = await PaymentService().verifyPayment(
+        widget.pendingPayload!,
+      );
+      if (success) {
+        await PaymentService().clearPendingPayment();
+        if (mounted) {
+          setState(() {
+            _isVerifying = false;
+            _success = true;
+          });
+          widget.confettiController.play();
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isVerifying = false;
+            _success = false;
+            _message = "Verification failed. Please contact support.";
+          });
+        }
+      }
+    } catch (e) {
+      // Offline / Network timeout / server error
+      if (mounted) {
+        setState(() {
+          _isVerifying = false;
+          _isPendingOffline = true;
+          _message =
+              "Your payment was successful! However, we couldn't connect to our server to verify it. We will automatically finish activation in the background once internet is restored.";
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        alignment: Alignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Icon Animation
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: widget.success
-                        ? const Color(0xFF10B981).withOpacity(0.1)
-                        : const Color(0xFFEF4444).withOpacity(0.1),
-                    shape: BoxShape.circle,
+    Color statusColor;
+    Color iconBgColor;
+    IconData statusIcon;
+    String titleText;
+    String descText;
+
+    if (_isVerifying) {
+      statusColor = const Color(0xFF6366F1); // Indigo
+      iconBgColor = const Color(0xFF6366F1).withOpacity(0.1);
+      statusIcon = Icons.hourglass_empty_rounded;
+      titleText = 'Verifying Payment...';
+      descText =
+          'Confirming transaction details with Razorpay and updating your profile.';
+    } else if (_isPendingOffline) {
+      statusColor = const Color(0xFFF59E0B); // Amber
+      iconBgColor = const Color(0xFFF59E0B).withOpacity(0.1);
+      statusIcon = Icons.cloud_off_rounded;
+      titleText = 'Verification Pending';
+      descText =
+          _message ??
+          'Payment captured successfully! We will verify it automatically in the background once you are back online.';
+    } else if (_success) {
+      statusColor = const Color(0xFF10B981); // Green
+      iconBgColor = const Color(0xFF10B981).withOpacity(0.1);
+      statusIcon = Icons.check_circle_rounded;
+      titleText = 'Payment Successful!';
+      descText =
+          'Welcome to the Elite circle. You now have access to all premium modules for one year.';
+    } else {
+      statusColor = const Color(0xFFEF4444); // Red
+      iconBgColor = const Color(0xFFEF4444).withOpacity(0.1);
+      statusIcon = Icons.error_outline_rounded;
+      titleText = 'Payment Failed';
+      descText =
+          _message ??
+          'Something went wrong while processing your payment. Please try again.';
+    }
+
+    return PopScope(
+      canPop: !_isVerifying,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Stack(
+          alignment: Alignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Icon / Animation Container
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: iconBgColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: _isVerifying
+                        ? Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Container(
+                                    width: 90,
+                                    height: 90,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: const Color(
+                                          0xFF6366F1,
+                                        ).withOpacity(0.15),
+                                        width: 2,
+                                      ),
+                                    ),
+                                  )
+                                  .animate(
+                                    onPlay: (controller) =>
+                                        controller.repeat(reverse: true),
+                                  )
+                                  .scale(
+                                    begin: const Offset(0.9, 0.9),
+                                    end: const Offset(1.1, 1.1),
+                                    duration: 1500.ms,
+                                    curve: Curves.easeInOut,
+                                  ),
+                              Container(
+                                    width: 76,
+                                    height: 76,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: SweepGradient(
+                                        colors: [
+                                          const Color(0xFF6366F1),
+                                          const Color(0xFFF43F5E),
+                                          const Color(
+                                            0xFF6366F1,
+                                          ).withOpacity(0.1),
+                                          const Color(0xFF6366F1),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                  .animate(
+                                    onPlay: (controller) => controller.repeat(),
+                                  )
+                                  .rotate(duration: 2000.ms),
+                              Container(
+                                width: 70,
+                                height: 70,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const Icon(
+                                Icons.security_rounded,
+                                color: Color(0xFF6366F1),
+                                size: 36,
+                              ),
+                            ],
+                          )
+                        : Icon(
+                            statusIcon,
+                            size: 80,
+                            color: statusColor,
+                          ).animate().scale(
+                            duration: 600.ms,
+                            curve: Curves.elasticOut,
+                          ),
                   ),
-                  child: Icon(
-                    widget.success
-                        ? Icons.check_circle_rounded
-                        : Icons.error_outline_rounded,
-                    size: 80,
-                    color: widget.success
-                        ? const Color(0xFF10B981)
-                        : const Color(0xFFEF4444),
-                  ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
-                ),
-                const SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
-                // Status Text
-                Text(
-                  widget.success ? 'Payment Successful!' : 'Payment Failed',
-                  style: GoogleFonts.inter(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
-                  ),
-                ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
+                  // Status Text
+                  Text(
+                    titleText,
+                    style: GoogleFonts.inter(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                Text(
-                  widget.success
-                      ? 'Welcome to the Elite circle. You now have access to all premium modules for one year.'
-                      : (widget.message ??
-                            'Something went wrong while processing your payment. Please try again.'),
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    color: const Color(0xFF64748B),
-                    height: 1.5,
-                  ),
-                ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
+                  Text(
+                    descText,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      color: const Color(0xFF64748B),
+                      height: 1.5,
+                    ),
+                  ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
 
-                const SizedBox(height: 48),
+                  const SizedBox(height: 48),
 
-                // Primary Action Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (widget.success) {
+                  // Primary Action Button
+                  if (!_isVerifying)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_success || _isPendingOffline) {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const DashboardPage(),
+                              ),
+                              (route) => false,
+                            );
+                          } else {
+                            Navigator.pop(context);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: (_success || _isPendingOffline)
+                              ? const Color(0xFF2563EB)
+                              : const Color(0xFF0F172A),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          (_success || _isPendingOffline)
+                              ? 'Go to Dashboard'
+                              : 'Try Again',
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2),
+
+                  if (_success || _isPendingOffline) ...[
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () {
                         Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(
@@ -1184,76 +1757,41 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
                           ),
                           (route) => false,
                         );
-                      } else {
-                        Navigator.pop(context);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.success
-                          ? const Color(0xFF2563EB)
-                          : const Color(0xFF0F172A),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      widget.success ? 'Go to Dashboard' : 'Try Again',
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2),
-
-                if (widget.success) ...[
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const DashboardPage(),
+                      },
+                      child: Text(
+                        'Explore Courses',
+                        style: GoogleFonts.inter(
+                          color: const Color(0xFF64748B),
+                          fontWeight: FontWeight.w600,
                         ),
-                        (route) => false,
-                      );
-                    },
-                    child: Text(
-                      'Explore Courses',
-                      style: GoogleFonts.inter(
-                        color: const Color(0xFF64748B),
-                        fontWeight: FontWeight.w600,
                       ),
-                    ),
-                  ).animate().fadeIn(delay: 800.ms),
+                    ).animate().fadeIn(delay: 800.ms),
+                  ],
                 ],
-              ],
-            ),
-          ),
-
-          // Confetti
-          if (widget.success)
-            Align(
-              alignment: Alignment.topCenter,
-              child: ConfettiWidget(
-                confettiController: widget.confettiController,
-                blastDirectionality: BlastDirectionality.explosive,
-                shouldLoop: false,
-                colors: const [
-                  Colors.green,
-                  Colors.blue,
-                  Colors.pink,
-                  Colors.orange,
-                  Colors.purple,
-                ],
-                numberOfParticles: 20,
-                gravity: 0.1,
               ),
             ),
-        ],
+
+            // Confetti
+            if (_success)
+              Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiWidget(
+                  confettiController: widget.confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  shouldLoop: false,
+                  colors: const [
+                    Colors.green,
+                    Colors.blue,
+                    Colors.pink,
+                    Colors.orange,
+                    Colors.purple,
+                  ],
+                  numberOfParticles: 20,
+                  gravity: 0.1,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

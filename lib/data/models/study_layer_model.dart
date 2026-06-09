@@ -105,11 +105,21 @@ class StudyLayerModel {
     if (path == null || path.isEmpty) return '';
     if (path.startsWith('http')) return path;
     final cleanPath = path.startsWith('/') ? path.substring(1) : path;
-    return 'https://digilogy-skyhigh.s3.eu-north-1.amazonaws.com/$cleanPath';
+    return 'https://skyhighedujobs.s3.ap-south-1.amazonaws.com/$cleanPath';
+  }
+
+  String _normalizeLangCode(String lang) {
+    final lower = lang.toLowerCase();
+    if (lower == 'ta' || lower == 'tamil') return 'ta';
+    if (lower == 'te' || lower == 'telugu') return 'te';
+    if (lower == 'kn' || lower == 'kannada') return 'kn';
+    if (lower == 'ml' || lower == 'malayalam') return 'ml';
+    if (lower == 'hi' || lower == 'hindi') return 'hi';
+    return lower;
   }
 
   String getLocalizedTitle(String langCode) {
-    switch (langCode.toLowerCase()) {
+    switch (_normalizeLangCode(langCode)) {
       case 'ta':
         return titleTa ?? title;
       case 'te':
@@ -124,7 +134,7 @@ class StudyLayerModel {
   }
 
   String? getLocalizedContent(String langCode) {
-    switch (langCode.toLowerCase()) {
+    switch (_normalizeLangCode(langCode)) {
       case 'ta':
         return contentTa ?? content;
       case 'te':
@@ -140,7 +150,7 @@ class StudyLayerModel {
 
   String? getLocalizedUrl(String langCode) {
     String? resolvedUrl;
-    switch (langCode.toLowerCase()) {
+    switch (_normalizeLangCode(langCode)) {
       case 'ta':
         resolvedUrl = urlTa ?? url;
         break;
@@ -163,7 +173,7 @@ class StudyLayerModel {
     final cleanPath = resolvedUrl.startsWith('/')
         ? resolvedUrl.substring(1)
         : resolvedUrl;
-    return 'https://digilogy-skyhigh.s3.eu-north-1.amazonaws.com/$cleanPath';
+    return 'https://skyhighedujobs.s3.ap-south-1.amazonaws.com/$cleanPath';
   }
 
   String getFormattedDate() {

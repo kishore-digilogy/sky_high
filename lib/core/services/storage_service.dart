@@ -12,6 +12,7 @@ class StorageService {
   static const String _studyGuideShownKey = 'study_guide_shown';
   static const String _languageKey = 'selected_language';
   static const String _savedEmailsKey = 'saved_emails';
+  static const String _pendingPaymentKey = 'pending_payment';
 
   final SharedPreferences _prefs;
 
@@ -232,6 +233,26 @@ class StorageService {
       if (key.startsWith('last_studied_')) {
         await _prefs.remove(key);
       }
+    }
+  }
+
+  Map<String, dynamic>? getPendingPayment() {
+    final dataStr = _prefs.getString(_pendingPaymentKey);
+    if (dataStr != null) {
+      try {
+        return json.decode(dataStr) as Map<String, dynamic>;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  Future<void> setPendingPayment(Map<String, dynamic>? data) async {
+    if (data == null) {
+      await _prefs.remove(_pendingPaymentKey);
+    } else {
+      await _prefs.setString(_pendingPaymentKey, json.encode(data));
     }
   }
 

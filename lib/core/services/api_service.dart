@@ -10,8 +10,7 @@ class ApiService {
 
   factory ApiService() => _instance;
 
-  static const String baseUrl =
-      'https://skyhighdevapi.digilogy.dev/api';
+  static const String baseUrl = 'https://skyhighapi.digilogy.dev/api';
 
   late final Dio dio;
 
@@ -28,16 +27,13 @@ class ApiService {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           try {
-            final token =
-                GetIt.I<StorageService>().getToken();
+            final token = GetIt.I<StorageService>().getToken();
 
             if (token != null && token.isNotEmpty) {
-              options.headers['Authorization'] =
-                  'Bearer $token';
+              options.headers['Authorization'] = 'Bearer $token';
             }
 
-            options.headers['Accept'] =
-                'application/json';
+            options.headers['Accept'] = 'application/json';
 
             /// ==============================
             /// PRINT REQUEST DETAILS
@@ -64,9 +60,7 @@ ${options.data}
 ════════════════════════════════════════════
 ''');
           } catch (e) {
-            print(
-              "ApiService: Error getting token: $e",
-            );
+            print("ApiService: Error getting token: $e");
           }
 
           return handler.next(options);
@@ -135,25 +129,28 @@ ${e.message}
           // Check if response contains the session expired message
           final responseData = e.response?.data;
           bool isSessionExpired = false;
-          
+
           if (responseData != null) {
             final responseString = responseData.toString().toLowerCase();
-            if (responseString.contains('session expired or logged in from another device')) {
+            if (responseString.contains(
+              'session expired or logged in from another device',
+            )) {
               isSessionExpired = true;
             }
           }
-          
+
           if (isSessionExpired) {
             try {
               // 1. Clear local storage token and user related data
               await GetIt.I<StorageService>().clearUserRelatedData();
-              
+
               // 2. Redirect globally using navigatorKey to LoginPage with the expired message
               MyApp.navigatorKey.currentState?.pushAndRemoveUntil(
                 MaterialPageRoute(
                   builder: (context) => const LoginPage(
                     returnToPreviousPage: false,
-                    errorMessage: 'Session expired or logged in from another device',
+                    errorMessage:
+                        'Session expired or logged in from another device',
                   ),
                 ),
                 (route) => false,

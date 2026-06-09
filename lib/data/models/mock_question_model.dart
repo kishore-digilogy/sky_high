@@ -91,7 +91,7 @@ class MockQuestionModel {
     if (path == null || path.isEmpty) return '';
     if (path.startsWith('http')) return path;
     final cleanPath = path.startsWith('/') ? path.substring(1) : path;
-    return 'https://digilogy-skyhigh.s3.eu-north-1.amazonaws.com/$cleanPath';
+    return 'https://skyhighedujobs.s3.ap-south-1.amazonaws.com/$cleanPath';
   }
 
   String get fullQuestionImage => getFullImageUrl(questionImage);

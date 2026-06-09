@@ -143,7 +143,7 @@ class ExamItemModel {
     if (logo == null || logo!.isEmpty) return '';
     if (logo!.startsWith('http')) return logo!;
     final cleanPath = logo!.startsWith('/') ? logo!.substring(1) : logo!;
-    return 'https://digilogy-skyhigh.s3.eu-north-1.amazonaws.com/$cleanPath';
+    return 'https://skyhighedujobs.s3.ap-south-1.amazonaws.com/$cleanPath';
   }
 }
 
@@ -193,6 +193,6 @@ class ExamSubcategoryModel {
     final cleanPath = thumbnailImage!.startsWith('/')
         ? thumbnailImage!.substring(1)
         : thumbnailImage!;
-    return 'https://digilogy-skyhigh.s3.eu-north-1.amazonaws.com/$cleanPath';
+    return 'https://skyhighedujobs.s3.ap-south-1.amazonaws.com/$cleanPath';
   }
 }

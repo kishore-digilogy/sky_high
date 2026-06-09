@@ -126,7 +126,92 @@ class TestimonialsSection extends StatelessWidget {
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () => _showFeedbackDialog(context),
+                    onTap: () async {
+                      final navigator = Navigator.of(context);
+                      final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) =>
+                            const Center(child: CircularProgressIndicator()),
+                      );
+
+                      try {
+                        final checkRes = await ExamService().checkTestimonial();
+                        if (!context.mounted) return;
+                        navigator.pop(); // Dismiss loading
+
+                        if (checkRes['hasSubmitted'] == true) {
+                          showDialog(
+                            context: context,
+                            builder: (dialogContext) => AlertDialog(
+                              backgroundColor: Colors.white,
+                              surfaceTintColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              title: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.info_outline_rounded,
+                                    color: Color(0xFF6366F1),
+                                    size: 28,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Already Submitted',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 20,
+                                      color: const Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              content: Text(
+                                'You have already submitted a testimonial. Thank you for your feedback!',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 14,
+                                  color: const Color(0xFF64748B),
+                                  height: 1.5,
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(dialogContext),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFF6366F1),
+                                    textStyle: GoogleFonts.plusJakartaSans(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            ),
+                          );
+                        } else {
+                          _showFeedbackDialog(context);
+                        }
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        navigator.pop(); // Dismiss loading
+                        scaffoldMessenger.showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Error: ${e.toString().replaceAll('Exception:', '')}',
+                              style: GoogleFonts.inter(),
+                            ),
+                            backgroundColor: const Color(0xFFEF4444),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        );
+                      }
+                    },
                     borderRadius: BorderRadius.circular(30),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(

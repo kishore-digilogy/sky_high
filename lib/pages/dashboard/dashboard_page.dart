@@ -8,6 +8,7 @@ import 'package:sky_high/core/services/exam_service.dart';
 import 'package:sky_high/core/services/localization_service.dart';
 import 'package:sky_high/core/services/notification_service.dart';
 import 'package:sky_high/core/services/deeplink_service.dart';
+import 'package:sky_high/core/services/payment_service.dart';
 import 'package:sky_high/data/models/exam_category_model.dart';
 import 'package:sky_high/data/models/free_exam_model.dart';
 import 'package:sky_high/data/models/study_material_model.dart';
@@ -62,6 +63,7 @@ class _DashboardPageState extends State<DashboardPage> {
     _loadRecentStudy();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       DeeplinkService().setAppInitialized();
+      PaymentService().checkAndVerifyPendingPayment();
     });
   }
 
@@ -72,6 +74,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _refreshData() async {
+    PaymentService().checkAndVerifyPendingPayment();
     setState(() {
       final selectedLang = GetIt.I<StorageService>().getSelectedLanguage();
       _categoriesFuture = ExamService().getCategories();

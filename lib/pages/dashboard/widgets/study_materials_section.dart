@@ -23,6 +23,8 @@ class StudyMaterialsSection extends StatelessWidget {
 
         final materials = snapshot.hasData
             ? snapshot.data!
+                .where((m) => m.visibility.toLowerCase() == 'free')
+                .toList()
             : <StudyMaterialModel>[];
 
         return Column(

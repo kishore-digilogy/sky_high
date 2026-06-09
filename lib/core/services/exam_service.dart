@@ -315,6 +315,23 @@ class ExamService {
     }
   }
 
+  Future<Map<String, dynamic>> checkTestimonial() async {
+    try {
+      print(
+        "ExamService: Checking testimonial status at $baseUrl/testimonials/check",
+      );
+      final response = await _dio.get('$baseUrl/testimonials/check');
+      print("ExamService: Check testimonial response: ${response.data}");
+      if (response.data is Map<String, dynamic>) {
+        return response.data as Map<String, dynamic>;
+      }
+      return {};
+    } catch (e) {
+      print("ExamService: Error checking testimonial: $e");
+      throw Exception('Failed to check testimonial status: $e');
+    }
+  }
+
   Future<Map<String, dynamic>> submitTestimonial({
     required String content,
     required int stars,
@@ -322,20 +339,23 @@ class ExamService {
     int? categoryId,
   }) async {
     try {
-      final payload = {
+      final formData = FormData.fromMap({
         "content": content,
         "stars": stars,
-        "category_id": categoryId,
         "user_name": userName,
-      };
+        if (categoryId != null) "category_id": categoryId,
+      });
       print(
-        "ExamService: Posting testimonial to $baseUrl/testimonials with payload: $payload",
+        "ExamService: Posting testimonial to $baseUrl/testimonials with form data",
       );
 
-      final response = await _dio.post('$baseUrl/testimonials', data: payload);
+      final response = await _dio.post('$baseUrl/testimonials', data: formData);
 
       print("ExamService: Testimonial response: ${response.data}");
-      return response.data;
+      if (response.data is Map<String, dynamic>) {
+        return response.data as Map<String, dynamic>;
+      }
+      return {};
     } catch (e) {
       print("ExamService: Error posting testimonial: $e");
       throw Exception('Failed to submit testimonial: $e');

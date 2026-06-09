@@ -601,7 +601,8 @@ class StudyMaterialsView extends StatelessWidget {
     if (url == null && !isLocked) return const SizedBox.shrink();
 
     final bool isPdf = url?.toLowerCase().endsWith('.pdf') ?? false;
-    final bool isVideo = url?.toLowerCase().endsWith('.mp4') ?? false;
+    final bool isVideo = url?.toLowerCase().endsWith('.mp4') == true ||
+        url?.toLowerCase().endsWith('.m3u8') == true;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
