@@ -159,7 +159,6 @@ ${e.message}
               print('ApiService: Error handling session expiration: $err');
             }
           }
-
           return handler.next(e);
         },
       ),

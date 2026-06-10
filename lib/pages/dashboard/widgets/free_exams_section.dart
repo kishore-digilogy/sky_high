@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:get_it/get_it.dart';
+import 'package:sky_high/core/services/storage_service.dart';
 import 'package:sky_high/core/services/localization_service.dart';
 import 'package:sky_high/data/models/free_exam_model.dart';
 import 'package:sky_high/pages/exams/mock_test_page.dart';
+import 'package:sky_high/widgets/login_dialog.dart';
 
 class FreeExamsSection extends StatelessWidget {
   final Future<List<FreeExamModel>>? freeExamsFuture;
@@ -287,14 +290,29 @@ class FreeExamsSection extends StatelessWidget {
                         ],
                       ),
                       GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  MockTestPage(setName: exam.setName),
-                            ),
-                          );
+                        onTap: () async {
+                          final storage = GetIt.I<StorageService>();
+                          final token = storage.getToken();
+                          if (token != null && token.isNotEmpty) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    MockTestPage(setName: exam.setName),
+                              ),
+                            );
+                          } else {
+                            final success = await LoginDialog.show(context);
+                            if (success == true && context.mounted) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      MockTestPage(setName: exam.setName),
+                                ),
+                              );
+                            }
+                          }
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
