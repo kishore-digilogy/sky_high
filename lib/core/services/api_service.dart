@@ -10,7 +10,7 @@ class ApiService {
 
   factory ApiService() => _instance;
 
-  static const String baseUrl = 'https://skyhighapi.digilogy.dev/api';
+  static const String baseUrl = 'https://api.skyhighedujobs.com/api/';
 
   late final Dio dio;
 

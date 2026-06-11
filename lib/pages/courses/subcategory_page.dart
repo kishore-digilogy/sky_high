@@ -349,14 +349,16 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => StudyLayersPage(company: item),
+                              builder: (context) =>
+                                  StudyLayersPage(company: item),
                             ),
                           );
                         } else {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CompanyDetailsPage(company: item),
+                              builder: (context) =>
+                                  CompanyDetailsPage(company: item),
                             ),
                           );
                         }
@@ -368,80 +370,8 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
               ],
             );
           },
+          // const SizedBox(height: 40),
         ),
-        const SizedBox(height: 32),
-        // Bottom Banner
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFF),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEEF2FF),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.bookmark_outline_rounded,
-                  color: Color(0xFF6366F1),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _l10n.tr('cant_find_looking'),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1E293B),
-                      ),
-                      maxLines: 2,
-                    ),
-                    Text(
-                      _l10n.tr('help_find_category'),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        color: const Color(0xFF64748B),
-                      ),
-                      maxLines: 2,
-                    ),
-                  ],
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.headset_mic_rounded, size: 14),
-                label: Text(_l10n.tr('contact_us')),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366F1),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  textStyle: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 40),
       ],
     );
   }
@@ -477,7 +407,7 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
@@ -488,32 +418,23 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
         ),
         child: Stack(
           children: [
-            // Grid Background Pattern Placeholder (Subtle dots)
-            Positioned(
-              right: 15,
-              top: 15,
-              child: Opacity(
-                opacity: 0.1,
-                child: Icon(
-                  Icons.grid_view_rounded,
-                  size: 40,
-                  color: theme['text'],
-                ),
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Icon Chip
+                  // Logo Container
                   Container(
-                    width: 48,
-                    height: 48,
-                    padding: const EdgeInsets.all(8),
+                    width: 44,
+                    height: 44,
+                    padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: theme['bg'],
-                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFF1F5F9),
+                        width: 1.5,
+                      ),
                     ),
                     child: (logoUrl.isNotEmpty && logoUrl.startsWith('http'))
                         ? CachedNetworkImage(
@@ -536,28 +457,28 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                           )
                         : Icon(Icons.business_rounded, color: theme['text']),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Text(
                     name.toUpperCase(),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
+                      fontSize: 12,
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF1E293B),
                       height: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     subtitle,
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: FontWeight.w500,
                       color: const Color(0xFF94A3B8),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 4),
                   // Count Badge
                   if (count > 0)
                     Container(
@@ -593,16 +514,16 @@ class _SubcategoryPageState extends State<SubcategoryPage> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withOpacity(0.04),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.arrow_forward_ios_rounded,
-                  size: 14,
-                  color: theme['text'],
+                  size: 12,
+                  color: Color(0xFF1E293B),
                 ),
               ),
             ),

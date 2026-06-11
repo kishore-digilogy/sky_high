@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sky_high/data/models/study_material_model.dart';
 import 'package:sky_high/core/services/exam_service.dart';
 import 'package:sky_high/pages/study_materials/pdf_viewer_page.dart';
+import 'package:sky_high/pages/study_materials/video_viewer_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -222,16 +223,14 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
         : const Color(0xFF4AC2E3);
 
     return GestureDetector(
-          onTap: () {
-            if (material.isPdf) {
-              PdfViewerPage.open(context, material.fullFileUrl, material.title);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(_l10n.tr('video_player_coming_soon'))),
-              );
-            }
-          },
-          child: Container(
+      onTap: () {
+        if (material.isPdf) {
+          PdfViewerPage.open(context, material.fullFileUrl, material.title);
+        } else if (material.isVideo) {
+          VideoViewerPage.open(context, material.fullFileUrl, material.title);
+        }
+      },
+      child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),

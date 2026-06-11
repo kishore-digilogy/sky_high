@@ -7,9 +7,12 @@ import 'package:sky_high/data/models/exam_category_model.dart';
 import 'package:sky_high/data/models/job_model.dart';
 import 'package:sky_high/pages/courses/study_layers_page.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'dart:async';
 import 'package:sky_high/core/services/localization_service.dart';
+import 'package:sky_high/core/utils/localization_helper.dart';
 
 // ─────────────────────────────────────────────
 //  CONSTANTS
@@ -37,7 +40,6 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
   List<JobModel> _jobs = [];
   List<JobModel> _filteredJobs = [];
   bool _isLoading = true;
-  String? _error;
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
   List<dynamic> _subJobs = [];
@@ -50,12 +52,118 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
 
   Map<String, dynamic>? _lastStudiedSubJob;
   final LocalizationService _l10n = LocalizationService();
+  Map<String, dynamic>? _entityDetails;
+  String? _wikiLogoUrl;
+  bool _loadingWikiLogo = false;
+  bool _showLogo = true;
+  bool _logoLoadedSuccessfully = false;
+  Timer? _logoTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchJobs();
+    _fetchEntityDetails();
     _loadLastStudied();
+    _fetchWikiLogo();
+    _startLogoTimeoutTimer();
+  }
+
+  Future<void> _fetchEntityDetails() async {
+    try {
+      final response = await _dio.get(
+        '${ApiService.baseUrl}/entity-details',
+        queryParameters: {'type': 'company', 'id': widget.company.id},
+      );
+      if (response.statusCode == 200 && response.data != null) {
+        setState(() {
+          _entityDetails = response.data;
+        });
+      }
+    } catch (e) {
+      print('CompanyDetailsPage: Error fetching entity details: $e');
+    }
+  }
+
+  Future<void> _fetchWikiLogo() async {
+    final companyName = widget.company.name;
+    if (companyName.isEmpty) return;
+
+    if (mounted) {
+      setState(() {
+        _loadingWikiLogo = true;
+      });
+    }
+
+    try {
+      final response = await _dio.get(
+        'https://en.wikipedia.org/w/api.php',
+        queryParameters: {
+          'action': 'query',
+          'format': 'json',
+          'generator': 'search',
+          'gsrnamespace': '0',
+          'gsrsearch': companyName,
+          'gsrlimit': '1',
+          'prop': 'pageimages',
+          'pithumbsize': '200',
+          'origin': '*',
+        },
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final query = response.data['query'];
+        if (query != null && query['pages'] != null) {
+          final pages = query['pages'] as Map<String, dynamic>;
+          if (pages.isNotEmpty) {
+            final firstPage = pages.values.first;
+            final thumbnail = firstPage['thumbnail'];
+            if (thumbnail != null && thumbnail['source'] != null) {
+              if (mounted) {
+                setState(() {
+                  _wikiLogoUrl = thumbnail['source'];
+                  _loadingWikiLogo = false;
+                });
+                return;
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      print('CompanyDetailsPage: Error fetching logo from Wikipedia: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _loadingWikiLogo = false;
+      });
+    }
+  }
+
+  void _startLogoTimeoutTimer() {
+    _logoTimer = Timer(const Duration(seconds: 10), () {
+      if (mounted && !_logoLoadedSuccessfully) {
+        setState(() {
+          _showLogo = false;
+        });
+      }
+    });
+  }
+
+  String _getAboutText() {
+    if (_entityDetails != null) {
+      final localizedAbout = LocalizationHelper.getLocalized(
+        _entityDetails!,
+        'about',
+      );
+      if (localizedAbout.isNotEmpty) {
+        return localizedAbout;
+      }
+    }
+    return widget.company.description?.isNotEmpty == true
+        ? widget.company.description!
+        : _l10n.tr('company_default_desc');
   }
 
   Future<void> _loadLastStudied() async {
@@ -93,13 +201,11 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
         });
       } else {
         setState(() {
-          _error = _l10n.tr('failed_load_jobs');
           _isLoading = false;
         });
       }
     } catch (_) {
       setState(() {
-        _error = 'Something went wrong';
         _isLoading = false;
       });
     }
@@ -136,6 +242,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
+    _logoTimer?.cancel();
     super.dispose();
   }
 
@@ -165,28 +272,438 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
   // ── Build ─────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900;
+
     return Scaffold(
       backgroundColor: _kSurface,
       body: SafeArea(
         top: false,
-        child: CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            _buildTopBar(),
-            SliverToBoxAdapter(child: _buildHeroSection()),
-            // SliverToBoxAdapter(child: _buildStartLearningBanner()),
-            if (_lastStudiedSubJob != null)
-              SliverToBoxAdapter(child: _buildContinueLearningSection()),
-            SliverToBoxAdapter(child: _buildAboutSection()),
-            SliverToBoxAdapter(child: _buildOpportunitiesSection()),
-            if (_expandedJobIndex != null)
-              SliverToBoxAdapter(
-                key: _subPostsKey,
-                child: _buildExpandedSubPosts(),
-              ),
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
-          ],
+        child: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout() {
+    return CustomScrollView(
+      controller: _scrollController,
+      slivers: [
+        _buildTopBar(),
+        SliverToBoxAdapter(child: _buildHeroSection()),
+        SliverToBoxAdapter(child: _buildMobileHeroImage()),
+        if (_lastStudiedSubJob != null)
+          SliverToBoxAdapter(child: _buildContinueLearningSection()),
+        SliverToBoxAdapter(child: _buildAboutSection()),
+        SliverToBoxAdapter(child: _buildOpportunitiesSection()),
+        if (_expandedJobIndex != null)
+          SliverToBoxAdapter(
+            key: _subPostsKey,
+            child: _buildExpandedSubPosts(),
+          ),
+        const SliverToBoxAdapter(child: SizedBox(height: 40)),
+      ],
+    );
+  }
+
+  Widget _buildMobileHeroImage() {
+    final heroImg = _entityDetails?['hero_image']?.toString();
+    if (heroImg == null || heroImg.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: CachedNetworkImage(
+          imageUrl: heroImg,
+          height: 180,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => Shimmer.fromColors(
+            baseColor: const Color(0xFFE2E8F0),
+            highlightColor: const Color(0xFFF8FAFC),
+            child: Container(
+              height: 180,
+              width: double.infinity,
+              color: Colors.white,
+            ),
+          ),
+          errorWidget: (context, url, error) => const SizedBox.shrink(),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout() {
+    final heroImg = _entityDetails?['hero_image']?.toString();
+    final aboutText = _getAboutText();
+
+    return SingleChildScrollView(
+      controller: _scrollController,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Dark Header Container
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Back button
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.arrow_back_rounded,
+                          color: Colors.white70,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Back',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: Colors.white70,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Hero image container (left side)
+                    if (heroImg != null && heroImg.isNotEmpty)
+                      Container(
+                        width: 380,
+                        height: 240,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: CachedNetworkImage(
+                            imageUrl: heroImg,
+                            fit: BoxFit.cover,
+                            placeholder: (c, u) => Shimmer.fromColors(
+                              baseColor: const Color(0xFF1E293B),
+                              highlightColor: const Color(0xFF334155),
+                              child: Container(color: Colors.white),
+                            ),
+                            errorWidget: (c, u, e) => Container(
+                              color: const Color(0xFF1E293B),
+                              child: const Icon(
+                                Icons.image_not_supported_rounded,
+                                color: Colors.white24,
+                                size: 48,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        width: 380,
+                        height: 240,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E293B),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.business_rounded,
+                          color: Colors.white24,
+                          size: 64,
+                        ),
+                      ),
+                    const SizedBox(width: 48),
+                    // Details container (right side)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.company.name,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'About',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            aboutText,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14.5,
+                              color: Colors.white70,
+                              height: 1.6,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Main content section below header
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 80,
+                  vertical: 40,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_lastStudiedSubJob != null) ...[
+                      _buildContinueLearningSection(),
+                      const SizedBox(height: 32),
+                    ],
+                    // Opportunities Title Section
+                    Text(
+                      'Departmental Openings',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: _kDark,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Parent departments and their specialized training paths',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        color: _kGrey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    if (_isLoading)
+                      _buildDesktopShimmer()
+                    else if (_filteredJobs.isEmpty)
+                      _buildEmptyState()
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _filteredJobs.length,
+                        itemBuilder: (context, i) {
+                          final job = _filteredJobs[i];
+                          final accent = _jobAccent(i);
+                          final matchingSubs = _subJobs
+                              .where((sj) => sj['parent_job_id'] == job.id)
+                              .toList();
+                          final isSelected = _expandedJobIndex == i;
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isSelected
+                                    ? accent
+                                    : const Color(0xFFE5E7EB),
+                                width: isSelected ? 2 : 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.02),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                // Expandable header row
+                                InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _expandedJobIndex = isSelected ? null : i;
+                                    });
+                                  },
+                                  borderRadius: BorderRadius.circular(18),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(24),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 48,
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: accent.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            _jobIcon(i),
+                                            color: accent,
+                                            size: 24,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 20),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Text(
+                                                    job.title,
+                                                    style:
+                                                        GoogleFonts.plusJakartaSans(
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          color: _kDark,
+                                                        ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 3,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: accent.withOpacity(
+                                                        0.1,
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            6,
+                                                          ),
+                                                    ),
+                                                    child: Text(
+                                                      'DEPARTMENT',
+                                                      style:
+                                                          GoogleFonts.plusJakartaSans(
+                                                            color: accent,
+                                                            fontSize: 9,
+                                                            fontWeight:
+                                                                FontWeight.w800,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                '${matchingSubs.length} SPECIALIZED SUB-POSTS AVAILABLE',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: accent,
+                                                      letterSpacing: 0.5,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Icon(
+                                          isSelected
+                                              ? Icons.keyboard_arrow_up_rounded
+                                              : Icons
+                                                    .keyboard_arrow_down_rounded,
+                                          color: _kGrey,
+                                          size: 24,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                // Expandable content row
+                                if (isSelected)
+                                  Container(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      24,
+                                      0,
+                                      24,
+                                      24,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        const Divider(
+                                          height: 1,
+                                          color: Color(0xFFF1F5F9),
+                                        ),
+                                        const SizedBox(height: 20),
+                                        if (matchingSubs.isEmpty)
+                                          _SubJobEmptyCard(
+                                            accent: accent,
+                                            company: widget.company,
+                                            jobId: job.id,
+                                          )
+                                        else
+                                          ...matchingSubs.asMap().entries.map((
+                                            entry,
+                                          ) {
+                                            final idx = entry.key;
+                                            final sj = entry.value;
+                                            return _SubJobTile(
+                                              subJob: sj,
+                                              accent: accent,
+                                              company: widget.company,
+                                              index: idx,
+                                              onTap: () =>
+                                                  _saveStudyProgress(sj),
+                                            );
+                                          }),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -243,22 +760,6 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
     );
   }
 
-  Widget _topActionBtn(IconData icon, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: _kSurface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Icon(icon, size: 18, color: _kDark),
-      ),
-    );
-  }
-
   // ── Hero Section ──────────────────────────────
   Widget _buildHeroSection() {
     return Container(
@@ -271,70 +772,27 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Verified badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _kSurface,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.shield_outlined,
-                        size: 13,
-                        color: _kGrey,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        _l10n.tr('government_org'),
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          color: _kGrey,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      const Icon(
-                        Icons.verified_rounded,
-                        size: 13,
-                        color: _kPurple,
-                      ),
-                    ],
-                  ),
-                ).animate().fadeIn(duration: 400.ms),
-                const SizedBox(height: 12),
+                // (Verified badge removed)
                 // Logo + Name row
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: _kWhite,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: widget.company.fullLogoUrl.isNotEmpty
-                            ? CachedNetworkImage(
-                                imageUrl: widget.company.fullLogoUrl,
-                                fit: BoxFit.fill,
-                                placeholder: (c, u) =>
-                                    Container(color: _kSurface),
-                                errorWidget: (c, u, e) => _buildFallbackIcon(),
-                              )
-                            : _buildFallbackIcon(),
-                      ),
-                    ).animate().scale(duration: 400.ms),
-                    const SizedBox(width: 14),
+                    if (_showLogo) ...[
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: _kWhite,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: _buildLogoWidget(),
+                        ),
+                      ).animate().scale(duration: 400.ms),
+                      const SizedBox(width: 14),
+                    ],
                     Expanded(
                       child: Text(
                         widget.company.name,
@@ -358,63 +816,11 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
                     fontWeight: FontWeight.w500,
                   ),
                 ).animate().fadeIn(delay: 200.ms),
-                const SizedBox(height: 16),
-                // Meta pills row
-                Wrap(
-                  spacing: 16,
-                  children: [
-                    _metaPill(
-                      Icons.location_on_outlined,
-                      'Worldwide',
-                      color: _kGrey,
-                    ),
-                    _metaPill(
-                      Icons.work_outline_rounded,
-                      '${_jobs.length} Openings',
-                      color: _kGrey,
-                    ),
-                    _metaPill(
-                      Icons.local_fire_department_outlined,
-                      'Trending',
-                      color: Colors.deepOrange,
-                    ),
-                  ],
-                ).animate().fadeIn(delay: 250.ms),
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _metaPill(IconData icon, String label, {required Color color}) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 12,
-            color: _kDark,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTrainPlaceholder() {
-    return Container(
-      width: 120,
-      height: 120,
-      decoration: BoxDecoration(
-        color: _kPurpleLight,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: const Icon(Icons.train_rounded, size: 60, color: _kPurple),
     );
   }
 
@@ -578,9 +984,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
 
   // ── About Section ─────────────────────────────
   Widget _buildAboutSection() {
-    final desc = widget.company.description?.isNotEmpty == true
-        ? widget.company.description!
-        : _l10n.tr('company_default_desc');
+    final desc = _getAboutText();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -619,6 +1023,147 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
     );
   }
 
+  Widget _buildDesktopShimmer() {
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFFE2E8F0),
+      highlightColor: const Color(0xFFF8FAFC),
+      child: Column(
+        children: List.generate(3, (idx) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 20),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 200,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        width: 120,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildMobileShimmer() {
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFFE2E8F0),
+      highlightColor: const Color(0xFFF8FAFC),
+      child: SizedBox(
+        height: 410,
+        child: GridView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.only(bottom: 8),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 14,
+            crossAxisSpacing: 14,
+            childAspectRatio: 190 / 155,
+          ),
+          itemCount: 4,
+          itemBuilder: (context, idx) {
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    width: 110,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: 70,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const Spacer(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   // ── Top Opportunities (2-row horizontal grid) ──
   Widget _buildOpportunitiesSection() {
     return Padding(
@@ -641,7 +1186,7 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
           ),
           const SizedBox(height: 14),
           if (_isLoading)
-            const Center(child: CircularProgressIndicator(color: _kPurple))
+            _buildMobileShimmer()
           else if (_filteredJobs.isEmpty)
             _buildEmptyState()
           else
@@ -846,163 +1391,6 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
     );
   }
 
-  // ── Quick Access ──────────────────────────────
-  Widget _buildQuickAccess() {
-    final items = [
-      _QuickItem(
-        Icons.quiz_outlined,
-        _l10n.tr('mock_tests'),
-        const Color(0xFF6C63FF),
-      ),
-      _QuickItem(
-        Icons.menu_book_outlined,
-        _l10n.tr('study_material'),
-        const Color(0xFFEC4899),
-      ),
-      _QuickItem(
-        Icons.history_edu_rounded,
-        _l10n.tr('previous_year'),
-        const Color(0xFF10B981),
-      ),
-      _QuickItem(
-        Icons.format_list_bulleted_rounded,
-        _l10n.tr('syllabus'),
-        const Color(0xFFF59E0B),
-      ),
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _l10n.tr('quick_access'),
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: _kDark,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 14),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 4,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            children: items
-                .asMap()
-                .entries
-                .map((e) => _buildQuickItem(e.value, e.key))
-                .toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickItem(_QuickItem item, int i) {
-    return GestureDetector(
-          onTap: () => _showComingSoonDialog(item.label, item.icon, item.color),
-          child: Column(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: item.color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(item.icon, color: item.color, size: 24),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                item.label,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: _kDark,
-                ),
-              ),
-            ],
-          ),
-        )
-        .animate(delay: Duration(milliseconds: i * 60))
-        .fadeIn()
-        .slideY(begin: 0.1);
-  }
-
-  void _showComingSoonDialog(String title, IconData icon, Color color) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 32),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                title,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: _kDark,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _l10n.tr('no_files_available_desc'),
-                textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  color: _kGrey,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: color,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    _l10n.tr('got_it'),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   // ── Empty State ───────────────────────────────
   Widget _buildEmptyState() {
     return Container(
@@ -1049,6 +1437,46 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildLogoWidget() {
+    if (_loadingWikiLogo) {
+      return Shimmer.fromColors(
+        baseColor: const Color(0xFFE2E8F0),
+        highlightColor: const Color(0xFFF8FAFC),
+        child: Container(color: Colors.white),
+      );
+    }
+
+    final logoUrl = widget.company.fullLogoUrl.isNotEmpty
+        ? widget.company.fullLogoUrl
+        : _wikiLogoUrl;
+
+    if (logoUrl != null && logoUrl.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: logoUrl,
+        fit: BoxFit.cover,
+        imageBuilder: (context, imageProvider) {
+          if (!_logoLoadedSuccessfully) {
+            _logoLoadedSuccessfully = true;
+            _logoTimer?.cancel();
+          }
+          return Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
+            ),
+          );
+        },
+        placeholder: (c, u) => Shimmer.fromColors(
+          baseColor: const Color(0xFFE2E8F0),
+          highlightColor: const Color(0xFFF8FAFC),
+          child: Container(color: Colors.white),
+        ),
+        errorWidget: (c, u, e) => _buildFallbackIcon(),
+      );
+    }
+
+    return _buildFallbackIcon();
   }
 
   Widget _buildFallbackIcon() {
@@ -1261,10 +1689,52 @@ class _SubJobEmptyCardState extends State<_SubJobEmptyCard> {
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: _loading
-          ? Center(
-              child: CircularProgressIndicator(
-                color: widget.accent,
-                strokeWidth: 2,
+          ? Shimmer.fromColors(
+              baseColor: const Color(0xFFE2E8F0),
+              highlightColor: const Color(0xFFF8FAFC),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 18,
+                        height: 18,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 120,
+                        height: 15,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ],
               ),
             )
           : Column(
@@ -1341,14 +1811,4 @@ class _SubJobEmptyCardState extends State<_SubJobEmptyCard> {
             ),
     );
   }
-}
-
-// ─────────────────────────────────────────────
-//  Quick Access data model
-// ─────────────────────────────────────────────
-class _QuickItem {
-  final IconData icon;
-  final String label;
-  final Color color;
-  const _QuickItem(this.icon, this.label, this.color);
 }
