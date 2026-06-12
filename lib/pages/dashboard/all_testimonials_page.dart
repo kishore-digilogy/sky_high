@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sky_high/data/models/testimonial_model.dart';
-import 'package:sky_high/pages/dashboard/widgets/testimonials_section.dart';
+import 'package:sky_high/pages/dashboard/widgets/testimonial_card.dart';
 
 class AllTestimonialsPage extends StatelessWidget {
   final List<TestimonialModel> testimonials;

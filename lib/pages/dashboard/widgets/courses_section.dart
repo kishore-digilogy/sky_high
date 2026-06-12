@@ -153,43 +153,41 @@ class _CoursesSectionState extends State<CoursesSection> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Row 1
-                        IntrinsicHeight(
-                          child: Row(
-                            children: [
-                              for (int i = 0; i < categories.length; i += 2)
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 16),
-                                  child: SizedBox(
-                                    width: 170,
-                                    child: CategoryCard(
-                                      category: categories[i],
-                                      index: i,
-                                      isTrending: i == 1,
-                                    ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (int i = 0; i < categories.length; i += 2)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 16),
+                                child: SizedBox(
+                                  width: 170,
+                                  child: CategoryCard(
+                                    category: categories[i],
+                                    index: i,
+                                    isTrending: i == 1,
                                   ),
                                 ),
-                            ],
-                          ),
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 16),
                         // Row 2
-                        IntrinsicHeight(
-                          child: Row(
-                            children: [
-                              for (int i = 1; i < categories.length; i += 2)
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 16),
-                                  child: SizedBox(
-                                    width: 170,
-                                    child: CategoryCard(
-                                      category: categories[i],
-                                      index: i,
-                                      isTrending: i == 1,
-                                    ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (int i = 1; i < categories.length; i += 2)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 16),
+                                child: SizedBox(
+                                  width: 170,
+                                  child: CategoryCard(
+                                    category: categories[i],
+                                    index: i,
+                                    isTrending: i == 1,
                                   ),
                                 ),
-                            ],
-                          ),
+                              ),
+                          ],
                         ),
                       ],
                     ),

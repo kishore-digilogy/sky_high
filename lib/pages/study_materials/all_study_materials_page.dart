@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sky_high/data/models/study_material_model.dart';
 import 'package:sky_high/core/services/exam_service.dart';
 import 'package:sky_high/pages/study_materials/pdf_viewer_page.dart';
+import 'package:sky_high/pages/study_materials/widgets/mini_pdf_preview.dart';
 import 'package:sky_high/pages/study_materials/video_viewer_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -251,35 +252,41 @@ class _AllStudyMaterialsPageState extends State<AllStudyMaterialsPage> {
                   height: 120, // Give a reasonable base height instead of flex
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.05),
+                    color: material.isPdf ? Colors.white : color.withOpacity(0.05),
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(24),
                     ),
                   ),
-                  child: Center(
-                    child:
-                        material.thumbnailPath != null &&
-                            material.thumbnailPath!.isNotEmpty
-                        ? ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(24),
-                            ),
-                            child: CachedNetworkImage(
-                              imageUrl: material.fullThumbnailUrl,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              placeholder: (context, url) => const Center(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                              errorWidget: (context, url, error) =>
-                                  _buildIconPlaceholder(color),
-                            ),
-                          )
-                        : _buildIconPlaceholder(color),
-                  ),
+                  child: material.isPdf
+                      ? ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(24),
+                          ),
+                          child: MiniPdfPreview(pdfUrl: material.fullFileUrl),
+                        )
+                      : Center(
+                          child: material.thumbnailPath != null &&
+                                  material.thumbnailPath!.isNotEmpty
+                              ? ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(24),
+                                  ),
+                                  child: CachedNetworkImage(
+                                    imageUrl: material.fullThumbnailUrl,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    placeholder: (context, url) => const Center(
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                    errorWidget: (context, url, error) =>
+                                        _buildIconPlaceholder(color),
+                                  ),
+                                )
+                              : _buildIconPlaceholder(color),
+                        ),
                 ),
                 // Text Details Section
                 Padding(

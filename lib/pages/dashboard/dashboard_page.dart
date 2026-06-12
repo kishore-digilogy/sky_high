@@ -149,8 +149,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 const SizedBox(height: 4),
                 DashboardSearchBar(categoriesFuture: _categoriesFuture),
-                const SizedBox(height: 12),
-                const BannerCarousel(),
+                BannerCarousel(categoriesFuture: _categoriesFuture),
                 const SizedBox(height: 12),
                 // QuickActionsGrid(categoriesFuture: _categoriesFuture),
                 ContinueStudyingSection(

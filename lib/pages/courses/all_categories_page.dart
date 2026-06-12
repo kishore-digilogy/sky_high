@@ -6,7 +6,6 @@ import 'package:sky_high/pages/courses/subcategory_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sky_high/core/services/localization_service.dart';
 import 'package:sky_high/widgets/category_icon.dart';
-import 'package:sky_high/widgets/category_card.dart';
 
 class AllCategoriesPage extends StatefulWidget {
   final List<ExamCategoryModel> categories;
@@ -127,26 +126,112 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
       ),
       body: _filteredCategories.isEmpty
           ? _buildEmptyState()
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final itemWidth = (constraints.maxWidth - 16) / 2;
-                  return Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    children: List.generate(_filteredCategories.length, (index) {
-                      return SizedBox(
-                        width: itemWidth,
-                        child: CategoryCard(
-                          category: _filteredCategories[index],
-                          index: index,
+          : ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              itemCount: _filteredCategories.length,
+              itemBuilder: (context, index) {
+                final category = _filteredCategories[index];
+                final color = Color(category.displayColorValue);
+
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SubcategoryPage(category: category),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFFF1F5F9),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withOpacity(0.04),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
                         ),
-                      );
-                    }),
-                  );
-                },
-              ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        // Icon Container
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.08),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            category.displayIcon.isEmpty ? '🎓' : category.displayIcon,
+                            style: const TextStyle(fontSize: 24),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // Title & Count
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                category.title.toUpperCase(),
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF1E293B),
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.menu_book_rounded,
+                                    size: 12,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${category.totalCount} Courses',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Arrow icon on the right
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF1F5F9),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 14,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(
+                        duration: 350.ms,
+                        delay: Duration(milliseconds: index * 40),
+                      ).slideX(begin: 0.05, end: 0),
+                );
+              },
             ),
     );
   }

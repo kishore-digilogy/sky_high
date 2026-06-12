@@ -19,6 +19,8 @@ class CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Color(category.displayColorValue);
+    final double topPadding = index % 2 == 0 ? 32 : 20;
+    final double bottomPadding = index % 2 == 0 ? 24 : 16;
 
     return GestureDetector(
           onTap: () {
@@ -30,16 +32,11 @@ class CategoryCard extends StatelessWidget {
             );
           },
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(16, topPadding, 16, bottomPadding),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: isTrending
-                    ? const Color(0xFF6366F1).withOpacity(0.3)
-                    : const Color(0xFFF1F5F9),
-                width: isTrending ? 2 : 1,
-              ),
+              border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
               boxShadow: [
                 BoxShadow(
                   color: color.withOpacity(0.06),
@@ -86,7 +83,7 @@ class CategoryCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    // Title & Badge Section (Flexible)
+                    // Title
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -100,36 +97,6 @@ class CategoryCard extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                             color: const Color(0xFF1E293B),
                             height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: color.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.business_center_rounded,
-                                size: 10,
-                                color: color,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Government Body',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w700,
-                                  color: color,
-                                ),
-                              ),
-                            ],
                           ),
                         ),
                       ],
@@ -180,40 +147,40 @@ class CategoryCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (isTrending)
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6366F1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.local_fire_department_rounded,
-                            size: 10,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Trending',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                // if (isTrending)
+                //   Positioned(
+                //     top: 0,
+                //     right: 0,
+                //     child: Container(
+                //       padding: const EdgeInsets.symmetric(
+                //         horizontal: 8,
+                //         vertical: 4,
+                //       ),
+                //       decoration: BoxDecoration(
+                //         color: const Color(0xFF6366F1),
+                //         borderRadius: BorderRadius.circular(20),
+                //       ),
+                //       child: Row(
+                //         mainAxisSize: MainAxisSize.min,
+                //         children: [
+                //           const Icon(
+                //             Icons.local_fire_department_rounded,
+                //             size: 10,
+                //             color: Colors.white,
+                //           ),
+                //           const SizedBox(width: 4),
+                //           Text(
+                //             'Trending',
+                //             style: GoogleFonts.plusJakartaSans(
+                //               fontSize: 8,
+                //               fontWeight: FontWeight.w800,
+                //               color: Colors.white,
+                //             ),
+                //           ),
+                //         ],
+                //       ),
+                //     ),
+                //   ),
               ],
             ),
           ),
